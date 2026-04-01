@@ -604,7 +604,7 @@ class ApplicationController extends Controller
      */
     private function createFinalDeclaration(Application $application, array $validated): void
     {
-        $application->declarations()->create([
+        $declaration = $application->declarations()->create([
             'declaration_type'    => 'final_submission',
             'declaration_text'    => 'I declare that all information provided in this application is true and accurate to the best of my knowledge. I understand that providing false or misleading information may result in rejection of this application or legal action.',
             'is_agreed'           => true,
@@ -615,6 +615,12 @@ class ApplicationController extends Controller
             'signatory_name'      => auth()->user()->name,
             'signatory_position'  => $validated['signatory_position'] ?? null,
             'signature_timestamp' => now(),
+        ]);
+
+        $application->update([
+            'electronic_signature_id' => $declaration->id,
+            'signature_signed_at'     => now(),
+            'signature_ip'            => request()->ip(),
         ]);
     }
 
