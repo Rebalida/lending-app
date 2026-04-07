@@ -15,6 +15,7 @@ class LivingExpense extends Model
         'expense_category',
         'expense_name',
         'client_declared_amount',
+        'provider_amount',
         'verified_amount',
         'frequency',
         'client_notes',
@@ -27,6 +28,7 @@ class LivingExpense extends Model
 
     protected $casts = [
         'client_declared_amount' => 'decimal:2',
+        'provider_amount'        => 'decimal:2',
         'verified_amount' => 'decimal:2',
         'verified_at' => 'datetime',
         'is_verified' => 'boolean',
@@ -75,5 +77,25 @@ class LivingExpense extends Model
             'debt' => 'Debt Repayments',
             'other' => 'Other',
         ];
+    }
+
+    public function latestVerificationNote(): ?string
+    {
+        return $this->application
+            ->comments()
+            ->where('type', 'internal')
+            ->where('comment', 'like', '[Expense Verification] ' . $this->expense_name . ':%')
+            ->latest()
+            ->value('comment');
+    }
+
+    public function latestVerificationNoteText(): ?string
+    {
+        $raw = $this->latestVerificationNote();
+        if (!$raw) return null;
+
+        // Split on first ": " — everything after is the note text
+        $pos = strpos($raw, ': ');
+        return $pos !== false ? substr($raw, $pos + 2) : $raw;
     }
 }
