@@ -23,10 +23,10 @@ class TwilioService
 
     public function __construct()
     {
-        if (!app()->environment('production')) {
-            Log::info('Twilio disabled (non-production environment).');
-            return;
-        }
+        // if (!app()->environment('production')) {
+        //     Log::info('Twilio disabled (non-production environment).');
+        //     return;
+        // }
 
         $sid   = Setting::get('twilio_sid')        ?: config('services.twilio.sid');
         $token = Setting::get('twilio_auth_token') ?: config('services.twilio.auth_token');
