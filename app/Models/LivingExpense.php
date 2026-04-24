@@ -66,16 +66,16 @@ class LivingExpense extends Model
     public static function getExpenseCategories(): array
     {
         return [
-            'housing' => 'Housing (Rent/Mortgage)',
-            'utilities' => 'Utilities',
-            'food' => 'Food & Groceries',
-            'transport' => 'Transport',
-            'insurance' => 'Insurance',
-            'education' => 'Education/Childcare',
-            'personal' => 'Personal & Discretionary',
-            'healthcare' => 'Healthcare',
-            'debt' => 'Debt Repayments',
-            'other' => 'Other',
+            'housing'    => 'Housing and Utilities',
+            'internet'   => 'Internet Telephone and Pay TV',
+            'groceries'  => 'Groceries',
+            'recreation' => 'Recreation and Entertainment',
+            'clothing'   => 'Clothing and Personal Care',
+            'medical'    => 'Medical and Health',
+            'transport'  => 'Transport',
+            'education'  => 'Education and Childcare',
+            'insurance'  => 'Insurance',
+            'other'      => 'Other Expenses',
         ];
     }
 

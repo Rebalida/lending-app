@@ -341,7 +341,7 @@
                         </button>
 
                         <p class="text-xs text-gray-500 text-center">
-                            * Rates shown are illustrative. Actual rates may vary based on creditworthiness.
+                            * Normal lending terms and condition apply, subject to normal lending assessment
                         </p>
                     </div>
                 </div>

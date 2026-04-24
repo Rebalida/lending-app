@@ -2,15 +2,16 @@
 
 @php
     $standardCategories = [
-        'housing'     => ['label' => 'Rent / Mortgage',        'icon' => '🏠'],
-        'utilities'   => ['label' => 'Utilities',              'icon' => '💡'],
-        'food'        => ['label' => 'Food & Groceries',       'icon' => '🛒'],
-        'transport'   => ['label' => 'Transport',              'icon' => '🚗'],
-        'insurance'   => ['label' => 'Insurance',              'icon' => '🛡️'],
-        'education'   => ['label' => 'Education / Childcare',  'icon' => '🎓'],
-        'healthcare'  => ['label' => 'Healthcare',             'icon' => '🏥'],
-        'personal'    => ['label' => 'Personal & Discretionary','icon' => '👤'],
-        'debt'        => ['label' => 'Debt Repayments',        'icon' => '💳'],
+        'housing'     => ['label' => 'Housing and Utilities',         'icon' => '🏠'],
+        'internet'    => ['label' => 'Internet Telephone and Pay TV', 'icon' => '📱'],
+        'groceries'   => ['label' => 'Groceries',                     'icon' => '🛒'],
+        'recreation'  => ['label' => 'Recreation and Entertainment',  'icon' => '🎭'],
+        'clothing'    => ['label' => 'Clothing and Personal Care',    'icon' => '👔'],
+        'medical'     => ['label' => 'Medical and Health',            'icon' => '🏥'],
+        'transport'   => ['label' => 'Transport',                     'icon' => '🚗'],
+        'education'   => ['label' => 'Education and Childcare',       'icon' => '🎓'],
+        'insurance'   => ['label' => 'Insurance',                     'icon' => '🛡️'],
+        'other'       => ['label' => 'Other Expenses',                'icon' => '💰'],
     ];
 
     // Index existing expenses by category for pre-population

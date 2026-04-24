@@ -849,7 +849,7 @@
                             </button>
 
                             <p class="text-xs text-gray-400 text-center leading-relaxed">
-                                * Rates shown are illustrative. Actual rates may vary based on creditworthiness.
+                                * Normal lending terms and condition apply, subject to normal lending assessment
                             </p>
                         </div>
                     </div>
@@ -914,19 +914,19 @@
                                 <svg class="w-5 h-5 text-indigo-200 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="text-sm text-indigo-100">No hidden fees or charges</span>
+                                <span class="text-sm text-indigo-100">Relationship Lending that cares</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-indigo-200 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="text-sm text-indigo-100">256-bit bank-level encryption</span>
+                                <span class="text-sm text-indigo-100">Flexible Repayment Term</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-indigo-200 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
-                                <span class="text-sm text-indigo-100">Decision within 24-48 hours</span>
+                                <span class="text-sm text-indigo-100">Easy and Fast Approval</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-indigo-200 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -936,7 +936,7 @@
                             </div>
                         </div>
 
-                        <div class="mt-5 pt-5 border-t border-indigo-500 grid grid-cols-2 gap-3 text-center">
+                        {{-- <div class="mt-5 pt-5 border-t border-indigo-500 grid grid-cols-2 gap-3 text-center">
                             <div>
                                 <div class="text-2xl font-bold">4.9★</div>
                                 <div class="text-xs text-indigo-200">Customer Rating</div>
@@ -945,7 +945,7 @@
                                 <div class="text-2xl font-bold">10K+</div>
                                 <div class="text-xs text-indigo-200">Happy Clients</div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
 
                     <!-- Need Help -->
