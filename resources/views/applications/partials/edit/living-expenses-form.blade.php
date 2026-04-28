@@ -11,6 +11,10 @@
         'transport'   => ['label' => 'Transport',                     'icon' => '🚗'],
         'education'   => ['label' => 'Education and Childcare',       'icon' => '🎓'],
         'insurance'   => ['label' => 'Insurance',                     'icon' => '🛡️'],
+        'atm'         => ['label' => 'ATM',                           'icon' => '📠'],
+        'debt'        => ['label' => 'Loans',                         'icon' => '💳'],
+        'transfer'    => ['label' => 'Transfers',                     'icon' => '📤'],
+        'dishonours'  => ['label' => 'Dishonours',                    'icon' => '⚠️'],
         'other'       => ['label' => 'Other Expenses',                'icon' => '💰'],
     ];
 

@@ -139,6 +139,11 @@ class CreditSenseReportParser
      */
     public function getExpenseCategories(): array
     {
+        // PDF upload shape — categories already extracted, return directly
+        if (($this->report['source'] ?? null) === 'pdf_upload') {
+            return $this->report['categories'] ?? [];
+        }
+
         return $this->getCategories(includeIncome: false);
     }
 
@@ -277,13 +282,13 @@ class CreditSenseReportParser
 
     private function getAccounts(): array
     {
-        $accounts = data_get($this->report, 'Applications.Application.Accounts.Account', []);
-
-        // Normalise single-account responses (object instead of array)
-        if (isset($accounts['AccountID'])) {
-            return [$accounts];
+        // PDF upload shape has no Accounts structure
+        if (($this->report['source'] ?? null) === 'pdf_upload') {
+            return [];
         }
 
+        $accounts = data_get($this->report, 'Applications.Application.Accounts.Account', []);
+        if (isset($accounts['AccountID'])) return [$accounts];
         return is_array($accounts) ? $accounts : [];
     }
 }

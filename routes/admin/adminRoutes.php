@@ -138,3 +138,7 @@ Route::get('/users',                    [UserController::class, 'index'])
     ->name('users.index');
 Route::patch('/users/{user}/unlock',    [UserController::class, 'unlock'])
     ->name('users.unlock');
+
+Route::post('applications/{application}/creditsense/upload-report',
+    [CreditSenseController::class, 'uploadReport'])
+    ->name('creditsense.uploadReport');
