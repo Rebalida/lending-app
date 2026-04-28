@@ -37,6 +37,10 @@ class Application extends Model
         'signature_ip',
         'assigned_to',
         'verified_expenses',
+        'credit_sense_app_id',
+        'credit_sense_completed_at',
+        'credit_sense_report',
+        'credit_sense_report_received_at',
     ];
 
     protected $casts = [

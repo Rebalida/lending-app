@@ -149,7 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 elementSelector:     `#creditSenseIFrame-${questionId}`,
                 enableDynamicHeight: true,
                 params: { appRef: config.app_ref, centrelink: true },
-                callback: (code) => handleCsCallback(code, questionId, completeRoute, card),
+                // callback: (code) => handleCsCallback(code, questionId, completeRoute, card),
+
+                callback: (code, appId) => handleCsCallback(code, appId, questionId, completeRoute, card, config),
             });
 
             // SDK initialised — hide the connect button row; the iframe loading
@@ -188,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } // end launchCreditSense
 
-    function handleCsCallback(code, questionId, completeRoute, card) {
+    function handleCsCallback(code, appId, questionId, completeRoute, card, config) {
         const iframeLoading = card.querySelector('.cs-iframe-loading');
         const iframeEl      = card.querySelector('.cs-iframe');
         const iframeError   = card.querySelector('.cs-iframe-error');
@@ -203,6 +205,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     iframeEl.setAttribute('aria-busy', 'false');
                 }
                 break;
+
+            case '3':
+            if (appId && config?.saveAppIdRoute) {
+                fetch(config.saveAppIdRoute, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf(),
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ app_id: appId }),
+                }).catch(() => {});
+            }
+            break;
 
             case '99':
             case '100':
