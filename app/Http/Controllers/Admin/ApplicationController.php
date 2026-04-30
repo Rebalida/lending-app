@@ -20,7 +20,7 @@
  *  - `assessor` — scoped to applications assigned to themselves
  *
  * Valid statuses:
- *  draft | submitted | under_review | additional_info_required |
+ *  draft | submitted | wip | outstanding_document |
  *  approved | declined | withdrawn
  *
  * @author  Your Name <you@example.com>
@@ -63,7 +63,7 @@ class ApplicationController extends Controller
      *
      * @var string[]
      */
-    private const RETURNABLE_STATUSES = ['submitted', 'under_review'];
+    private const RETURNABLE_STATUSES = ['submitted', 'wip', 'outstanding_document', 'waiting_for_signature'];
 
     /**
      * Valid application status values accepted by updateStatus().
@@ -71,8 +71,9 @@ class ApplicationController extends Controller
      * @var string[]
      */
     private const VALID_STATUSES = [
-        'draft', 'submitted', 'under_review',
-        'additional_info_required', 'approved', 'declined', 'withdrawn',
+        'draft', 'submitted', 'wip',
+        'outstanding_document', 'waiting_for_signature',
+        'approved', 'declined', 'deferred', 'withdrawn',
     ];
 
     // =========================================================================
@@ -207,7 +208,7 @@ class ApplicationController extends Controller
      *
      * Requires the `assign` policy gate. Terminal-status applications cannot
      * be reassigned. If the application is currently `submitted`, it is
-     * automatically promoted to `under_review` on assignment. Both the
+     * automatically promoted to `wip` on assignment. Both the
      * assignment and any automatic status change are wrapped in a single
      * database transaction.
      *
@@ -266,8 +267,8 @@ class ApplicationController extends Controller
     /**
      * Return an application to the client for amendments.
      *
-     * Only applications in `submitted` or `under_review` status may be
-     * returned. Sets status to `additional_info_required`, records the reason
+     * Only applications in `submitted` or `wip` status may be
+     * returned. Sets status to `outstanding_document`, records the reason
      * as a client-visible comment, and dispatches `ApplicationReturned`. If
      * `notify_sms` is true and a mobile number is available, an SMS is also
      * sent to the client.
@@ -551,7 +552,7 @@ class ApplicationController extends Controller
     // =========================================================================
 
     /**
-     * Promote a `submitted` application to `under_review` on first assignment.
+     * Promote a `submitted` application to `wip` on first assignment.
      *
      * Only acts when the application's current status is `submitted`; all
      * other statuses are left unchanged.
@@ -565,14 +566,14 @@ class ApplicationController extends Controller
             return;
         }
 
-        $application->update(['status' => 'under_review']);
+        $application->update(['status' => 'wip']);
 
         ActivityLog::logActivity(
             'status_changed',
-            'Status automatically changed to under_review when application was assigned',
+            'Status automatically changed to wip when application was assigned',
             $application,
             ['old_status' => 'submitted'],
-            ['new_status' => 'under_review']
+            ['new_status' => 'wip']
         );
     }
 
@@ -616,8 +617,9 @@ class ApplicationController extends Controller
     private function validateReturnToClient(Request $request): array
     {
         return $request->validate([
-            'return_reason' => ['required', 'string', 'min:10', 'max:1000'],
-            'notify_sms'    => ['nullable', 'boolean'],
+            'return_reason'  => ['required', 'string', 'min:10', 'max:1000'],
+            'return_status'  => ['required', 'string', 'in:outstanding_document,waiting_for_signature'],
+            'notify_sms'     => ['nullable', 'boolean'],
         ]);
     }
 
@@ -635,7 +637,7 @@ class ApplicationController extends Controller
     private function applyReturnToClient(Request $request, Application $application, array $validated): void
     {
         $application->update([
-            'status'        => 'additional_info_required',
+            'status'        => $validated['return_status'], // was hardcoded 'outstanding_document'
             'return_reason' => $validated['return_reason'],
             'returned_at'   => now(),
             'returned_by'   => auth()->id(),

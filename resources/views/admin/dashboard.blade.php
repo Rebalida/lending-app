@@ -20,8 +20,8 @@
                     ['key' => 'total_applications',       'label' => 'Total',         'color' => 'indigo', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'route' => route('admin.applications.index')],
                     ['key' => 'draft',                    'label' => 'Draft',         'color' => 'gray',   'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'],
                     ['key' => 'submitted',                'label' => 'Submitted',     'color' => 'blue',   'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
-                    ['key' => 'under_review',             'label' => 'Under Review',  'color' => 'yellow', 'icon' => 'M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'],
-                    ['key' => 'additional_info_required', 'label' => 'Info Required', 'color' => 'orange', 'icon' => 'M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'],
+                    ['key' => 'wip',             'label' => 'Work in Progress',  'color' => 'yellow', 'icon' => 'M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'],
+                    ['key' => 'outstanding_document', 'label' => 'Outstanding Document', 'color' => 'orange', 'icon' => 'M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'],
                     ['key' => 'approved',                 'label' => 'Approved',      'color' => 'green',  'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
                     ['key' => 'declined',                 'label' => 'Declined',      'color' => 'red',    'icon' => 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ];
@@ -148,8 +148,8 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($recentApplications as $application)
                                     @php
-                                        $statusColors = ['draft' => 'gray', 'submitted' => 'blue', 'under_review' => 'yellow', 'additional_info_required' => 'orange', 'approved' => 'green', 'declined' => 'red'];
-                                        $statusLabels = ['draft' => 'Draft', 'submitted' => 'Submitted', 'under_review' => 'Review', 'additional_info_required' => 'Info Req.', 'approved' => 'Approved', 'declined' => 'Declined'];
+                                        $statusColors = ['draft' => 'gray', 'submitted' => 'blue', 'wip' => 'yellow', 'outstanding_document' => 'orange', 'approved' => 'green', 'declined' => 'red'];
+                                        $statusLabels = ['draft' => 'Draft', 'submitted' => 'Submitted', 'wip' => 'Review', 'outstanding_document' => 'Outstanding Document.', 'approved' => 'Approved', 'declined' => 'Declined'];
                                         $color  = $statusColors[$application->status] ?? 'gray';
                                         $label  = $statusLabels[$application->status] ?? ucwords(str_replace('_', ' ', $application->status));
                                         $qCount = $application->questions_count ?? 0;

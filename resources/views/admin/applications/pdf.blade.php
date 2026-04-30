@@ -19,7 +19,7 @@
         .status-declined { background-color: #f8d7da; color: #721c24; }
         .status-pending { background-color: #fff3cd; color: #856404; }
         .status-submitted { background-color: #cce5ff; color: #004085; }
-        .status-under_review { background-color: #fff3cd; color: #856404; }
+        .status-wip { background-color: #fff3cd; color: #856404; }
         .status-draft { background-color: #e2e3e5; color: #383d41; }
         .net-positive { color: #155724; font-weight: bold; }
         .net-negative { color: #721c24; font-weight: bold; }

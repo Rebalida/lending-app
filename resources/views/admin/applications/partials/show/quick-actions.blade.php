@@ -60,6 +60,41 @@
                 <span id="export-pdf-label">Export PDF</span>
             </a>
 
+            {{-- ── Approve / Decline ──────────────────────────────────────────────── --}}
+            @if (!in_array($application->status, ['approved', 'declined']))
+
+                <button type="button"
+                        id="btn-approve"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 border border-transparent
+                            rounded-md font-semibold text-xs text-white uppercase tracking-widest
+                            hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500
+                            focus:ring-offset-2 transition"
+                        aria-haspopup="dialog"
+                        aria-controls="adl-modal">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Approve
+                </button>
+
+                <button type="button"
+                        id="btn-decline"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 border border-transparent
+                            rounded-md font-semibold text-xs text-white uppercase tracking-widest
+                            hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500
+                            focus:ring-offset-2 transition"
+                        aria-haspopup="dialog"
+                        aria-controls="adl-modal">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Decline
+                </button>
+
+            @endif
+
         </div>
     </div>
 </div>

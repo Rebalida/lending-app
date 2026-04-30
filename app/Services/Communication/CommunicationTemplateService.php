@@ -49,7 +49,7 @@ class CommunicationTemplateService
                 'subject' => 'Interview Scheduled - Application ' . $application->application_number,
                 'body' => "Dear {$application->user->name},\n\nWe would like to schedule a brief interview to discuss your loan application.\n\nApplication Number: {$application->application_number}\n\nProposed Date: [Date]\nTime: [Time]\nDuration: Approximately 30 minutes\nMethod: [Phone/Video/In-person]\n\nPlease confirm your availability or suggest an alternative time.\n\nBest regards,\nLoan Assessment Team",
             ],
-            'under_review' => [
+            'wip' => [
                 'label' => 'Application Under Review',
                 'subject' => 'Your Application is Under Review - ' . $application->application_number,
                 'body' => "Dear {$application->user->name},\n\nYour loan application (#{$application->application_number}) is currently under review by our assessment team.\n\nApplication Details:\n• Loan Amount: $" . number_format($application->loan_amount, 2) . "\n• Term: {$application->term_months} months\n• Status: Under Review\n\nExpected Timeline: We aim to complete our review within 2-3 business days.\n\nYou will receive an update once our assessment is complete.\n\nBest regards,\nLoan Assessment Team",
@@ -92,7 +92,7 @@ class CommunicationTemplateService
                 'label' => 'Interview Scheduled',
                 'body' => "Hi {$application->user->name}, we've scheduled an interview for your loan application #{$application->application_number}. Please check your email for date and time. - Loan Team",
             ],
-            'under_review' => [
+            'wip' => [
                 'label' => 'Under Review',
                 'body' => "Hi {$application->user->name}, your loan application #{$application->application_number} is now under review. We'll update you within 2-3 business days. - Loan Team",
             ],

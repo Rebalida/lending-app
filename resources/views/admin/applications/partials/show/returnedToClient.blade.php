@@ -1,5 +1,5 @@
 {{-- resources/views/admin/applications/partials/show/returnedToClient.blade.php --}}
-@if(in_array($application->status, ['submitted', 'under_review']))
+@if(in_array($application->status, ['submitted', 'wip']))
     <div x-data="{ showReturnModal: false }" class="contents">
 
         <button @click="showReturnModal = true"
@@ -68,6 +68,20 @@
                                     <p class="mt-1">The client will automatically receive an email notification with your reason and an SMS/WhatsApp if enabled below.</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div>
+                            <label for="return-status" class="block text-sm font-medium text-gray-700">
+                                Return Status
+                            </label>
+                            <select id="return-status"
+                                    name="return_status"
+                                    required
+                                    class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm
+                                        focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="outstanding_document">Outstanding Document</option>
+                                <option value="waiting_for_signature">Waiting for Signature</option>
+                            </select>
                         </div>
 
                         <div class="mb-4">

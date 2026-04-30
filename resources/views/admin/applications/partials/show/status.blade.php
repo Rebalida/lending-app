@@ -16,11 +16,13 @@
                 required
                 class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm
                         focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            <option value="submitted"                {{ $application->status === 'submitted'                ? 'selected' : '' }}>Submitted</option>
-            <option value="under_review"             {{ $application->status === 'under_review'             ? 'selected' : '' }}>Under Review</option>
-            <option value="additional_info_required" {{ $application->status === 'additional_info_required' ? 'selected' : '' }}>Additional Info Required</option>
-            <option value="approved"                 {{ $application->status === 'approved'                 ? 'selected' : '' }}>Approved</option>
-            <option value="declined"                 {{ $application->status === 'declined'                 ? 'selected' : '' }}>Declined</option>
+            <option value="submitted"              {{ $application->status === 'submitted'              ? 'selected' : '' }}>Submitted</option>
+            <option value="wip"                    {{ $application->status === 'wip'                    ? 'selected' : '' }}>Work In Progress</option>
+            <option value="outstanding_document"   {{ $application->status === 'outstanding_document'   ? 'selected' : '' }}>Outstanding Document</option>
+            <option value="waiting_for_signature"  {{ $application->status === 'waiting_for_signature'  ? 'selected' : '' }}>Waiting for Signature</option>
+            <option value="deferred"               {{ $application->status === 'deferred'               ? 'selected' : '' }}>Deferred</option>
+            <option value="approved"               {{ $application->status === 'approved'               ? 'selected' : '' }}>Approved</option>
+            <option value="declined"               {{ $application->status === 'declined'               ? 'selected' : '' }}>Declined</option>
         </select>
     </div>
 

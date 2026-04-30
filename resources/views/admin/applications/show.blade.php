@@ -102,6 +102,9 @@
             {{-- Expense Calculator Modal --}}
             @include('admin.applications.partials.show.expense-calculator-modal', ['application' => $application])
 
+            {{-- Approval / Decline Letter Modal --}}
+            @include('admin.applications.partials.show.approval-decline-modal', ['application' => $application])
+
         </div>
     </div>
 </x-app-layout>

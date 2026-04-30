@@ -43,8 +43,8 @@
                                     <option value="">All Statuses</option>
                                     <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
                                     <option value="submitted" {{ request('status') == 'submitted' ? 'selected' : '' }}>Submitted</option>
-                                    <option value="under_review" {{ request('status') == 'under_review' ? 'selected' : '' }}>Under Review</option>
-                                    <option value="additional_info_required" {{ request('status') == 'additional_info_required' ? 'selected' : '' }}>Additional Info Required</option>
+                                    <option value="wip" {{ request('status') == 'wip' ? 'selected' : '' }}>Work in Progress</option>
+                                    <option value="outstanding_document" {{ request('status') == 'outstanding_document' ? 'selected' : '' }}>Outstanding Document</option>
                                     <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
                                     <option value="declined" {{ request('status') == 'declined' ? 'selected' : '' }}>Declined</option>
                                 </select>
@@ -129,8 +129,8 @@
                                                 $statusColors = [
                                                     'draft' => 'gray',
                                                     'submitted' => 'blue',
-                                                    'under_review' => 'yellow',
-                                                    'additional_info_required' => 'orange',
+                                                    'wip' => 'yellow',
+                                                    'outstanding_document' => 'orange',
                                                     'approved' => 'green',
                                                     'declined' => 'red',
                                                 ];
@@ -138,8 +138,8 @@
                                                 $statusLabels = [
                                                     'draft' => 'Draft',
                                                     'submitted' => 'Submitted',
-                                                    'under_review' => 'Review',
-                                                    'additional_info_required' => 'Info Req.',
+                                                    'wip' => 'Review',
+                                                    'outstanding_document' => 'Info Req.',
                                                     'approved' => 'Approved',
                                                     'declined' => 'Declined',
                                                 ];

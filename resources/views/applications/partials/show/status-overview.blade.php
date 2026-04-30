@@ -3,8 +3,8 @@
     $statusConfig = [
         'draft'                      => ['color' => 'gray',   'label' => 'Draft'],
         'submitted'                  => ['color' => 'blue',   'label' => 'Submitted'],
-        'under_review'               => ['color' => 'yellow', 'label' => 'Under Review'],
-        'additional_info_required'   => ['color' => 'orange', 'label' => 'Additional Info Required'],
+        'wip'               => ['color' => 'yellow', 'label' => 'Work in Progress'],
+        'outstanding_document'   => ['color' => 'orange', 'label' => 'Additional Info Required'],
         'approved'                   => ['color' => 'green',  'label' => 'Approved'],
         'declined'                   => ['color' => 'red',    'label' => 'Declined'],
     ];

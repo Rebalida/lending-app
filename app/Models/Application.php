@@ -170,18 +170,18 @@ class Application extends Model
 
     public function scopeUnderReview($query)
     {
-        return $query->where('status', 'under_review');
+        return $query->where('status', 'wip');
     }
 
     // Helper methods
     public function isEditable(): bool
     {
-        return in_array($this->status, ['draft', 'additional_info_required']);
+        return in_array($this->status, ['draft', 'outstanding_document']);
     }
 
    public function canBeSubmitted(): bool
     {
-        $isDraft = in_array($this->status, ['draft', 'additional_info_required']);
+        $isDraft = in_array($this->status, ['draft', 'outstanding_document']);
 
         $hasPersonalDetails        = $this->personalDetails !== null;
         $hasResidentialAddresses   = $this->residentialAddresses()->count() > 0;
@@ -274,7 +274,7 @@ class Application extends Model
 
     public function isReturned(): bool
     {
-        return $this->status === 'additional_info_required';
+        return $this->status === 'outstanding_document';
     }
 
     public function directorAssets(): \Illuminate\Database\Eloquent\Relations\HasMany

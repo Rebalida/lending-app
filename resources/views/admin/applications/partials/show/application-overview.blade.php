@@ -6,12 +6,36 @@
             <div>
                 <span class="text-sm font-medium text-gray-500">Status:</span>
                 @php
-                    $statusColors = ['draft' => 'gray', 'submitted' => 'blue', 'under_review' => 'yellow', 'approved' => 'green', 'declined' => 'red'];
+                    $statusColors = [
+                        'draft'                 => 'gray',
+                        'submitted'             => 'blue',
+                        'wip'                   => 'yellow',
+                        'outstanding_document'  => 'orange',
+                        'waiting_for_signature' => 'purple',
+                        'approved'              => 'green',
+                        'declined'              => 'red',
+                        'deferred'              => 'yellow',
+                        'withdrawn'             => 'gray',
+                    ];
+
+                    $statusLabels = [
+                        'draft'                 => 'Draft',
+                        'submitted'             => 'Submitted',
+                        'wip'                   => 'Work In Progress',
+                        'outstanding_document'  => 'Outstanding Document',
+                        'waiting_for_signature' => 'Waiting for Signature',
+                        'approved'              => 'Approved',
+                        'declined'              => 'Declined',
+                        'deferred'              => 'Deferred',
+                        'withdrawn'             => 'Withdrawn',
+                    ];
+
                     $color = $statusColors[$application->status] ?? 'gray';
+                    $label = $statusLabels[$application->status] ?? ucwords(str_replace('_', ' ', $application->status));
                 @endphp
                 <p class="mt-1">
                     <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-{{ $color }}-100 text-{{ $color }}-800">
-                        {{ ucwords(str_replace('_', ' ', $application->status)) }}
+                        {{ $label }}
                     </span>
                 </p>
             </div>

@@ -18,10 +18,10 @@ class SendStatusChangeNotifications
 
         try {
             match ($event->newStatus) {
-                'under_review'             => $this->underReview($application, $phone, $number),
+                'wip'             => $this->underReview($application, $phone, $number),
                 'approved'                 => $this->approved($application, $phone, $number),
                 'declined'                 => $this->declined($application, $phone, $number),
-                'additional_info_required' => $this->additionalInfo($application, $phone, $number),
+                'outstanding_document' => $this->additionalInfo($application, $phone, $number),
                 default                    => null,
             };
         } catch (\Exception $e) {

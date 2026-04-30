@@ -119,8 +119,8 @@ class DashboardController extends Controller
             'total_applications'       => (clone $baseQuery)->count(),
             'draft'                    => (clone $baseQuery)->where('status', 'draft')->count(),
             'submitted'                => (clone $baseQuery)->where('status', 'submitted')->count(),
-            'under_review'             => (clone $baseQuery)->where('status', 'under_review')->count(),
-            'additional_info_required' => (clone $baseQuery)->where('status', 'additional_info_required')->count(),
+            'wip'             => (clone $baseQuery)->where('status', 'wip')->count(),
+            'outstanding_document' => (clone $baseQuery)->where('status', 'outstanding_document')->count(),
             'approved'                 => (clone $baseQuery)->where('status', 'approved')->count(),
             'declined'                 => (clone $baseQuery)->where('status', 'declined')->count(),
         ];
