@@ -21,7 +21,9 @@
                 $isOutbound = $comm->direction === 'outbound' || $comm->sent_by !== null;
             @endphp
 
-            <div class="flex {{ $isOutbound ? 'justify-end' : 'justify-start' }}">
+            <div class="flex {{ $isOutbound ? 'justify-end' : 'justify-start' }}"
+                data-comm-id="{{ $comm->id }}"
+                data-comm-created-at="{{ $comm->created_at->toDateTimeString() }}">
                 <div class="max-w-[80%] {{ $isOutbound ? 'items-end' : 'items-start' }} flex flex-col gap-1">
 
                     {{-- Sender label --}}

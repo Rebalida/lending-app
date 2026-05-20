@@ -23,7 +23,9 @@
                 $isWhatsApp = $comm->type === 'whatsapp';
             @endphp
 
-            <div class="flex {{ $isOutbound ? 'justify-end' : 'justify-start' }}">
+            <div class="flex {{ $isOutbound ? 'justify-end' : 'justify-start' }}"
+                data-comm-id="{{ $comm->id }}"
+                data-comm-created-at="{{ $comm->created_at->toDateTimeString() }}">
                 <div class="max-w-[75%] flex flex-col gap-1 {{ $isOutbound ? 'items-end' : 'items-start' }}">
 
                     {{-- Meta --}}

@@ -138,8 +138,16 @@ class EmailCommunicationController extends Controller
      */
     public function incoming(Request $request): JsonResponse
     {
+        Log::debug('Mailgun webhook payload:', $request->all());  // ← put back
+
+        $messageId = $request->input('Message-Id') ?? $request->input('message-id') ?? null;
+        if ($messageId && Communication::where('external_id', $messageId)->exists()) {
+            Log::info('Inbound email: duplicate webhook ignored.', ['message_id' => $messageId]);
+            return response()->json(['success' => true, 'duplicate' => true]);
+        }
+
         $from    = $request->input('from');
-        $to      = $request->input('to');
+        $to      = $request->input('recipient');
         $subject = $request->input('subject');
 
         $body = $this->extractEmailBody($request);
@@ -175,7 +183,7 @@ class EmailCommunicationController extends Controller
         }
 
         try {
-            $communication = $this->logInboundCommunication($request, $application, $fromEmail, $subject, $body);
+            $communication = $this->logInboundCommunication($request, $application, $fromEmail, $subject, $body, $messageId);
 
             ActivityLog::logActivity('email_received', 'Inbound email received from client', $application);
 
@@ -470,7 +478,8 @@ class EmailCommunicationController extends Controller
         Application $application,
         string $fromEmail,
         ?string $subject,
-        string $body
+        string $body,
+        ?string $messageId = null
     ): Communication {
         return Communication::create([
             'application_id' => $application->id,
@@ -484,6 +493,7 @@ class EmailCommunicationController extends Controller
             'status'         => 'delivered',
             'delivered_at'   => now(),
             'sender_ip'      => $request->ip(),
+            'external_id'     => $messageId,
         ]);
     }
 
