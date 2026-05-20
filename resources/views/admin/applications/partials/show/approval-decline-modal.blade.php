@@ -162,25 +162,39 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>`,
-                subject: `Loan Application ${APP_NO} — Approved`,
+                subject: `Loan Application ${APP_NO} — Conditional Approval`,
                 body:
-    `Dear ${CLIENT},
+`Dear ${CLIENT},
+We refer to your application for finance with AHA Global Pty Ltd ("AHA Global", "we", "us").
+Following our preliminary assessment, we advise that your application has been conditionally approved for a loan facility in the amount of $[Insert Loan Amount] ("Facility"), subject strictly to the conditions set out below and any additional requirements notified prior to settlement.
+Conditions Precedent to Funding
 
-    We are pleased to inform you that your loan application (${APP_NO}) has been approved.
+1. Security Perfection
+2. Successful registration and perfection of AHA Global Pty Ltd's security interest over the nominated collateral, including (as applicable) registration on the Personal Property Securities Register (PPSR), lodgement of caveat, mortgage registration, or any other security deemed necessary by us.
+3. Execution of Documentation
+4. Full execution of the Loan Agreement, Security Documents, Guarantees (if applicable), and any ancillary documents, in a form and substance satisfactory to AHA Global.
+5. Verification of Information
+6. Completion of all outstanding due diligence requirements, including verification of identity (KYC), financial position, income, liabilities, and supporting documentation. AHA Global reserves the right to request further information at its discretion.
+7. No Material Adverse Change
+8. There must be no material adverse change in your financial position, creditworthiness, or the value/condition of the security prior to settlement.
+9. Fees and Costs
+10. Payment of all applicable fees and charges, including but not limited to establishment fees, legal costs, registration costs, and any third-party disbursements.
+11. Insurance Requirement
+12. Where applicable, evidence of adequate insurance over the secured asset must be provided, noting AHA Global's interest as an interested party.
+13. Valuation / Asset Confirmation
+14. Where required, satisfactory valuation or confirmation of the security asset(s) must be obtained.
+Important Notice
+This conditional approval:
 
-    Loan Details:
-    • Amount:   $${AMOUNT}
-    • Purpose:  ${PURPOSE}
-    • Term:     ${TERM} months
+* Is not a binding offer of finance and does not create any legal obligation on AHA Global to provide the Facility;
+* Is subject to final credit approval, completion of documentation, and satisfaction of all conditions precedent;
+* May be withdrawn, varied, or amended at any time prior to settlement, at AHA Global's absolute discretion.
+No reliance should be placed on this conditional approval for any financial commitments until formal documentation has been executed and funding has been confirmed in writing.
+Please contact us to proceed with the next steps, including documentation and settlement arrangements.
 
-    Our team will be in touch shortly with the formal offer documents and next steps to finalise your loan.
-
-    If you have any questions in the meantime, please do not hesitate to contact us.
-
-    Congratulations and thank you for choosing us.
-
-    Warm regards,
-    ${FROM_NAME}`,
+Should you have any queries, please do not hesitate to contact our office.
+Yours faithfully,
+AHA Global Pty Ltd`,
             },
 
             decline: {
@@ -196,22 +210,31 @@
                         </svg>`,
                 subject: `Loan Application ${APP_NO} — Outcome`,
                 body:
-    `Dear ${CLIENT},
+`Dear ${CLIENT},
+We refer to your recent application for finance with AHA Global Pty Ltd ("AHA Global", "we", "us").
+Following our assessment, we regret to advise that we are unable to approve your loan application at this time.
+Assessment Outcome
+This decision has been made based on AHA Global's internal credit assessment framework, which includes (but is not limited to):
 
-    Thank you for submitting your loan application (${APP_NO}) and for taking the time to provide the required information.
+* Review of your financial position, income, liabilities, and serviceability;
+* Assessment of the proposed security and its suitability;
+* Verification of supporting documentation and information provided; and
+* Consideration of overall lending risk in accordance with our commercial lending policies.
+Based on the above, your application does not meet our current lending and/or security requirements.
+Credit Assessment & Enquiries
+As part of our assessment process, and in accordance with the consent provided by you, AHA Global may have conducted credit enquiries and/or obtained information from credit reporting bodies and other relevant sources.
+These enquiries may be recorded on your credit file. You are entitled to request access to your credit information directly from the relevant credit reporting bodies.
+Important Information
 
-    After careful consideration of your application, we regret to inform you that we are unable to approve your request for financing at this time.
+* This decision is based solely on AHA Global's internal lending criteria and risk appetite and does not constitute a statement about your overall creditworthiness.
+* AHA Global does not provide detailed reasons for credit decisions beyond the information outlined above.
+* This outcome does not create any obligation on AHA Global to provide finance.
+Future Applications
+You are welcome to reapply in the future should your circumstances change or if additional supporting information becomes available that may materially impact our assessment.
+We appreciate the opportunity to have considered your application.
 
-    This decision was reached after a thorough review of the information provided. Unfortunately we are not able to disclose the specific reasons for this outcome.
-
-    We encourage you to continue building your financial position and welcome you to re-apply in the future should your circumstances change.
-
-    If you have any questions or would like to discuss your options, please do not hesitate to contact our office.
-
-    Thank you again for considering us.
-
-    Kind regards,
-    ${FROM_NAME}`,
+Yours sincerely,
+AHA Global Pty Ltd`,
             },
         };
 
