@@ -40,11 +40,13 @@ use App\Models\Application;
 use App\Models\User;
 use App\Notifications\Application\ApplicationCreated;
 use App\Notifications\Application\ApplicationUpdated;
+use App\Actions\Application\GenerateSubmissionPdf;
 use App\Notifications\NewUser\WelcomeNewUser;
 use App\Services\MessagingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -343,7 +345,7 @@ class ApplicationController extends Controller
      * @bodyParam string  signature_type      nullable  Signature method (default: `drawn`).
      * @bodyParam string  signatory_position  nullable  Role or position of the signatory.
      */
-    public function submit(Application $application, SubmitApplication $action): RedirectResponse
+    public function submit(Application $application,SubmitApplication $action): RedirectResponse 
     {
         $this->authorize('update', $application);
 
@@ -351,20 +353,18 @@ class ApplicationController extends Controller
             'signature'           => ['required', 'string'],
             'signature_agreement' => ['accepted'],
             'signature_type'      => ['nullable', 'string'],
+            'signatory_name'      => ['nullable', 'string', 'max:255'],
             'signatory_position'  => ['nullable', 'string'],
         ]);
+
+        if (! $this->canBeSubmittedWithoutSignature($application)) {
+            return back()->with('error', 'Please complete all required sections before submitting.');
+        }
 
         DB::beginTransaction();
         try {
             $this->createFinalDeclaration($application, $validated);
-
-            if (! $application->canBeSubmitted()) {
-                DB::rollBack();
-                return back()->with('error', 'Please complete all required sections before submitting.');
-            }
-
             DB::commit();
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create signature: ' . $e->getMessage());
@@ -373,15 +373,28 @@ class ApplicationController extends Controller
 
         try {
             $action->handle($application, $validated);
-
-            return redirect()
-                ->route('applications.show', $application)
-                ->with('success', 'Application submitted successfully.');
-
         } catch (\Exception $e) {
             Log::error('Application submission failed: ' . $e->getMessage());
             return back()->with('error', 'Failed to submit application. Please try again.');
         }
+        
+        return redirect()->route('applications.show', $application)
+            ->with('just_submitted', true)
+            ->with('success', 'Application submitted successfully!');
+    }
+
+    /**
+     * Stream the submission confirmation PDF.
+     *
+     * Separate GET route called by the show page after a successful submission.
+     * Keeping this separate from submit() means:
+     *  - The browser redirects to show first (correct URL, no 403 on reload)
+     *  - JS on the show page opens this URL in a new tab / iframe to trigger download
+     */
+    public function downloadConfirmation(Application $application, GenerateSubmissionPdf $pdfAction): Response 
+    {
+        $this->authorize('view', $application);
+        return $pdfAction->handle($application);
     }
 
     // =========================================================================
@@ -737,5 +750,36 @@ class ApplicationController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to queue SMS: ' . $e->getMessage());
         }
+    }
+
+    private function canBeSubmittedWithoutSignature(Application $application): bool
+    {
+        // Mirrors $progressState in edit.blade.php exactly — same keys, same logic.
+        // The frontend and backend must agree on what "complete" means.
+        $application->loadMissing([
+            'personalDetails',
+            'residentialAddresses',
+            'employmentDetails',
+            'livingExpenses',
+        ]);
+    
+        $progressState = [
+            'loanDetails'    => true,
+            'personalDetails'=> $application->hasCompletePersonalDetails(),
+            'addresses'      => $application->residentialAddresses->count() > 0,
+            'employment'     => $application->employmentDetails->count() > 0,
+            'expenses'       => $application->livingExpenses->count() > 0,
+        ];
+    
+        $missing = array_keys(array_filter($progressState, fn($v) => ! $v));
+    
+        if (! empty($missing)) {
+            \Log::warning('Application pre-signature check failed', [
+                'application_id' => $application->id,
+                'missing'        => $missing,
+            ]);
+        }
+    
+        return empty($missing);
     }
 }

@@ -241,18 +241,17 @@ class Application extends Model
 
     public function hasCompletePersonalDetails(): bool
     {
-        if (!$this->personalDetails) {
+        if (! $this->personalDetails) {
             return false;
         }
-
+    
         $pd = $this->personalDetails;
 
-        return !empty($pd->full_name)
-            && !empty($pd->email)
-            && !empty($pd->mobile_phone)
-            && !empty($pd->date_of_birth)
-            && !empty($pd->gender)
-            && !empty($pd->marital_status);
+        return ! empty($pd->mobile_phone)
+            && ! empty($pd->marital_status)
+            && ! is_null($pd->number_of_dependants)
+            && ! empty($pd->date_of_birth)
+            && ! empty($pd->citizenship_status);
     }
 
     /**

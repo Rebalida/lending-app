@@ -110,3 +110,9 @@
         </div>
     </div>
 </x-app-layout>
+
+@if(session('just_submitted'))
+<script>
+    window.open('/applications/{{ $application->id }}/download-confirmation', '_blank');
+</script>
+@endif

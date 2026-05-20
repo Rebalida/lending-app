@@ -133,6 +133,10 @@ Route::prefix('applications/{application}')->name('applications.')->group(functi
     Route::delete('company-liabilities/{liability}',[CompanyAssetsLiabilitiesController::class, 'destroyLiability'])->name('company-liabilities.destroy');
 });
 
+Route::get('applications/{application}/download-confirmation',
+    [ApplicationController::class, 'downloadConfirmation']
+)->name('applications.download-confirmation');
+
 // Accountant Details
 Route::post(
     'applications/{application}/accountant-details',
