@@ -28,6 +28,7 @@ use App\Services\Communication\CommunicationTemplateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class EmailCommunicationController extends Controller
 {
@@ -186,6 +187,8 @@ class EmailCommunicationController extends Controller
             $communication = $this->logInboundCommunication($request, $application, $fromEmail, $subject, $body, $messageId);
 
             ActivityLog::logActivity('email_received', 'Inbound email received from client', $application);
+
+            $this->forwardToArchive($fromEmail, $subject, $body, $application);
 
             Log::info('Inbound email logged', [
                 'application_id'   => $application->id,
@@ -628,5 +631,50 @@ class EmailCommunicationController extends Controller
             ->whereNull('read_at')
             ->where('direction', 'inbound')
             ->count();
+    }
+
+    // =========================================================================
+    // Private Helpers — Archiving
+    // =========================================================================
+
+    /**
+     * Forward an inbound email to the Yahoo archive mailbox.
+     *
+     * @param  string       $fromEmail    The original sender's email address.
+     * @param  string|null  $subject      The email subject line.
+     * @param  string       $body         The stripped plain-text body.
+     * @param  Application  $application  The associated application.
+     * @return void
+     */
+    private function forwardToArchive(string $fromEmail, ?string $subject, string $body, Application $application): void 
+    {
+        $archiveEmail = config('mail.archive_email');
+
+        if (! $archiveEmail) {
+            return;
+        }
+
+        try {
+            Mail::raw(
+                implode("\n\n", [
+                    'Application: ' . $application->application_number,
+                    'From: ' . $fromEmail,
+                    'Subject: ' . ($subject ?? '(no subject)'),
+                    str_repeat('-', 40),
+                    $body,
+                ]),
+                function ($message) use ($subject, $archiveEmail, $application) {
+                    $message
+                        ->to($archiveEmail)
+                        ->subject('[INBOUND] [' . $application->application_number . '] ' . ($subject ?? '(no subject)'))
+                        ->from(config('mail.from.address'), config('app.name'));
+                }
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to forward inbound email to archive.', [
+                'error'          => $e->getMessage(),
+                'application_id' => $application->id,
+            ]);
+        }
     }
 }

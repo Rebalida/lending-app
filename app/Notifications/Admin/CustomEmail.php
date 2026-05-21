@@ -29,6 +29,7 @@ class CustomEmail extends Notification
                 'reply-' . $this->application->application_number . '@commercial-loan.endurego.com',
                 config('app.name')
             )
+            ->bcc(config('mail.archive_email'))
             ->subject($this->subject)
             ->greeting('Hello!')
             ->line('Dear ' . $notifiable->name . ',')
