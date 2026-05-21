@@ -2,9 +2,22 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Review Application — {{ $application->application_number }}
-            </h2>
+            <div>
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Review Application — {{ $application->application_number }}
+                </h2>
+                @if($application->personalDetails)
+                    @php $pd = $application->personalDetails; @endphp
+                    <h3 class="mt-1 text-xl text-gray-500">
+                        {{ trim(collect([
+                            $pd->user->first_name,
+                            $pd->user->middle_name ?? null,
+                            $pd->user->last_name,
+                            $pd->user->name_extension ?? null,
+                        ])->filter()->implode(' ')) }}
+                    </h3>
+                @endif
+            </div>
             <a href="{{ route('admin.applications.index') }}"
                class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent
                       rounded-md font-semibold text-xs text-white uppercase tracking-widest

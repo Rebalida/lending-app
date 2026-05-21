@@ -89,7 +89,7 @@ class SubmitApplication
 
         ActivityLog::logActivity(
             'auto_declined',
-            'Application auto-declined',
+            $reason,  // Include the actual decline reason
             $application
         );
 

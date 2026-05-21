@@ -96,6 +96,7 @@ Route::post('applications/{application}/declarations', [DeclarationController::c
 Route::prefix('applications/{application}/creditsense')->name('creditsense.')->group(function () {
     Route::get('config',    [CreditSenseController::class, 'iframeConfig'])->name('config');
     Route::post('complete', [CreditSenseController::class, 'complete'])->name('complete');
+    Route::post('save-app-id', [CreditSenseController::class, 'saveAppId'])->name('saveAppId');
 });
 
 // Borrower

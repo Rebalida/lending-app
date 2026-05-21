@@ -142,3 +142,14 @@ Route::patch('/users/{user}/unlock',    [UserController::class, 'unlock'])
 Route::post('applications/{application}/creditsense/upload-report',
     [CreditSenseController::class, 'uploadReport'])
     ->name('creditsense.uploadReport');
+
+Route::get('submissions/{filename}', function ($filename) {
+    // Security: only allow accessing PDF files with valid application numbers
+    $path = public_path('submissions/' . $filename);
+    
+    if (!file_exists($path) || !str_ends_with($filename, '.pdf')) {
+        abort(404);
+    }
+    
+    return response()->download($path);
+})->name('submissions.download');
