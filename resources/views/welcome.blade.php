@@ -218,7 +218,7 @@
                     </h1>
 
                     <p class="text-xl text-gray-600 mb-8 leading-relaxed">
-                        Access capital in as little as 24 hours. Simple application, transparent terms, and personalized service every step of the way.
+                        ZYA Capital, lender that put you as the priority, and bring that solution which will bring you from A to Z. Simple, transparent, and fast. Come and talk to us
                     </p>
 
                     <div class="flex flex-col sm:flex-row gap-4 mb-8">
@@ -242,19 +242,7 @@
                             <svg class="w-6 h-6 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
-                            <span class="text-sm font-medium text-gray-700">No Hidden Fees</span>
-                        </div>
-                        <div class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <span class="text-sm font-medium text-gray-700">Bank-Level Security</span>
-                        </div>
-                        <div class="flex items-center">
-                            <svg class="w-6 h-6 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <span class="text-sm font-medium text-gray-700">24/7 Support</span>
+                            <span class="text-sm font-medium text-gray-700">When Bank Says No, We Say Yes</span>
                         </div>
                     </div>
                 </div>
@@ -477,7 +465,7 @@
             <!-- Footer -->
             <div class="mt-16 pt-8 border-t border-gray-200 text-center">
                 <div class="flex flex-col md:flex-row justify-between items-center text-gray-600">
-                    <p class="mb-4 md:mb-0">Commercial Loan CRM v1.0 - Powered by Innovation</p>
+                    <p class="mb-4 md:mb-0">Simple Loan V1 - Powered by WisTec</p>
                     <p class="text-sm">Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})</p>
                 </div>
             </div>

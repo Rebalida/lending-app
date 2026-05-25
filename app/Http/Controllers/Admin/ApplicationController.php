@@ -330,23 +330,37 @@ class ApplicationController extends Controller
      */
     public function exportPdf(Application $application): Response
     {
-        $application->load([
-            'personalDetails',
+        $application->loadMissing([
+            'user',
+            'personalDetails.user',
+            'borrowerInformation',
+            'borrowerDirectors',
             'residentialAddresses',
             'employmentDetails',
             'livingExpenses',
-            'documents',
-            'comments',
-            'activityLogs',
+            'directorAssets',
+            'directorLiabilities',
+            'companyAssets',
+            'companyLiabilities',
+            'accountantDetail',
+            'declarations',
         ]);
+
+        // Grab the final submission declaration if it exists
+        $declaration = $application->declarations()
+            ->where('declaration_type', 'final_submission')
+            ->where('is_agreed', true)
+            ->first();
 
         $pdf = Pdf::loadView('admin.applications.pdf', [
             'application' => $application,
-            'exportDate'  => now(),
-            'exportedBy'  => auth()->user(),
+            'declaration' => $declaration,
+            'generatedAt' => now(),
         ]);
 
-        return $pdf->download("application-{$application->application_number}.pdf");
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download("loan-application-{$application->application_number}.pdf");
     }
 
     // =========================================================================

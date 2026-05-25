@@ -107,6 +107,54 @@ class CommunicationTemplateService
         ];
     }
 
+    public static function getAdHocEmailTemplates(Application $application): array
+    {
+        return [
+            'blank' => [
+                'label'   => 'Blank Email',
+                'subject' => '',
+                'body'    => '',
+            ],
+            'document_request' => [
+                'label'   => 'Document Request',
+                'subject' => 'Document Request - Application ' . $application->application_number,
+                'body'    => "Dear [Recipient Name],\n\nWe are writing regarding loan application {$application->application_number}.\n\nWe kindly request the following documents:\n\n[List required documents here]\n\nPlease send these at your earliest convenience.\n\nBest regards,\nLoan Assessment Team",
+            ],
+            'verification' => [
+                'label'   => 'Verification Request',
+                'subject' => 'Verification Required - Application ' . $application->application_number,
+                'body'    => "Dear [Recipient Name],\n\nWe are currently assessing loan application {$application->application_number} and require your assistance to verify the following information:\n\n[Describe what needs verification]\n\nYour prompt response would be greatly appreciated.\n\nBest regards,\nLoan Assessment Team",
+            ],
+            'general_enquiry' => [
+                'label'   => 'General Enquiry',
+                'subject' => 'Enquiry - Application ' . $application->application_number,
+                'body'    => "Dear [Recipient Name],\n\nWe are contacting you in relation to loan application {$application->application_number}.\n\n[Add your message here]\n\nPlease don't hesitate to contact us if you have any questions.\n\nBest regards,\nLoan Assessment Team",
+            ],
+        ];
+    }
+ 
+    public static function getAdHocSmsTemplates(Application $application): array
+    {
+        return [
+            'blank' => [
+                'label' => 'Blank SMS',
+                'body'  => '',
+            ],
+            'document_request' => [
+                'label' => 'Document Request',
+                'body'  => "Hi [Recipient Name], we require documents for loan application #{$application->application_number}. Please check your email for details or contact us. - Loan Team",
+            ],
+            'verification' => [
+                'label' => 'Verification Request',
+                'body'  => "Hi [Recipient Name], we need to verify some information for application #{$application->application_number}. Please check your email or call us. - Loan Team",
+            ],
+            'general_enquiry' => [
+                'label' => 'General Enquiry',
+                'body'  => "Hi [Recipient Name], we're reaching out regarding loan application #{$application->application_number}. Please check your email or contact us. - Loan Team",
+            ],
+        ];
+    }
+
     public static function getTemplateByKey(string $type, string $key, Application $application): ?array
     {
         $templates = $type === 'email'

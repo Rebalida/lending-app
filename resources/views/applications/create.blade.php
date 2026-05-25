@@ -688,14 +688,19 @@
                                 </div>
 
                                 <div class="space-y-4">
-                                    <label class="flex items-start gap-3 p-4 rounded-2xl border-2 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all">
-                                        <input id="privacy_consent" name="privacy_consent" type="checkbox" value="1" required
-                                               class="custom-checkbox @error('privacy_consent') error @enderror">
+                                    <label id="privacy_label" class="flex items-start gap-3 p-4 rounded-2xl border-2 border-gray-100 {{ old('privacy_consent') ? 'hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer' : 'opacity-60 cursor-not-allowed' }} transition-all">
+                                        <input id="privacy_consent" name="privacy_consent" type="checkbox" value="1" required 
+                                            {{ old('privacy_consent') ? '' : 'disabled' }} 
+                                            {{ old('privacy_consent') ? 'checked' : '' }}
+                                            class="custom-checkbox @error('privacy_consent') error @enderror">
                                         <div>
                                             <span class="text-sm font-semibold text-gray-800">I consent to the collection and use of my personal information</span>
                                             <p class="text-xs text-gray-500 mt-1">
                                                 I have read and agree to the
-                                                <a href="{{ route('privacy-policy') }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-medium underline decoration-dotted">Privacy Policy</a>
+                                                <a id="privacy_link" href="{{ route('privacy-policy') }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-medium underline decoration-dotted cursor-pointer">Privacy Policy</a>
+                                                @if(!old('privacy_consent'))
+                                                    <span id="privacy_hint" class="text-indigo-500 ml-1 font-medium text-xs animate-pulse">(Required review)</span>
+                                                @endif
                                             </p>
                                         </div>
                                     </label>
@@ -706,14 +711,19 @@
                                         </p>
                                     @enderror
 
-                                    <label class="flex items-start gap-3 p-4 rounded-2xl border-2 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer transition-all">
-                                        <input id="terms_consent" name="terms_consent" type="checkbox" value="1" required
-                                               class="custom-checkbox @error('terms_consent') error @enderror">
+                                    <label id="terms_label" class="flex items-start gap-3 p-4 rounded-2xl border-2 border-gray-100 {{ old('terms_consent') ? 'hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer' : 'opacity-60 cursor-not-allowed' }} transition-all">
+                                        <input id="terms_consent" name="terms_consent" type="checkbox" value="1" required 
+                                            {{ old('terms_consent') ? '' : 'disabled' }} 
+                                            {{ old('terms_consent') ? 'checked' : '' }}
+                                            class="custom-checkbox @error('terms_consent') error @enderror">
                                         <div>
                                             <span class="text-sm font-semibold text-gray-800">I agree to the Terms and Conditions</span>
                                             <p class="text-xs text-gray-500 mt-1">
                                                 I have read and agree to the
-                                                <a href="{{ route('terms-and-conditions') }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-medium underline decoration-dotted">Terms and Conditions</a>
+                                                <a id="terms_link" href="{{ route('terms-and-conditions') }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-medium underline decoration-dotted cursor-pointer">Terms and Conditions</a>
+                                                @if(!old('terms_consent'))
+                                                    <span id="terms_hint" class="text-indigo-500 ml-1 font-medium text-xs animate-pulse">(Required review)</span>
+                                                @endif
                                             </p>
                                         </div>
                                     </label>
@@ -1063,11 +1073,17 @@
                 max: 9_000_000_000,
             });
 
-            // ── Submit button state ──
+            // ── Submit button state & Link Unlocking ──
             const form             = document.querySelector('form');
             const submitBtn        = document.getElementById('submitBtn');
             const privacy          = document.getElementById('privacy_consent');
             const terms            = document.getElementById('terms_consent');
+            const privacyLink      = document.getElementById('privacy_link');
+            const termsLink        = document.getElementById('terms_link');
+            const privacyLabel     = document.getElementById('privacy_label');
+            const termsLabel       = document.getElementById('terms_label');
+            const privacyHint      = document.getElementById('privacy_hint');
+            const termsHint        = document.getElementById('terms_hint');
             const originalBtnHTML  = submitBtn.innerHTML;
 
             function updateSubmitState() {
@@ -1075,6 +1091,26 @@
                 submitBtn.disabled = !enabled;
                 submitBtn.classList.toggle('opacity-50', !enabled);
                 submitBtn.classList.toggle('cursor-not-allowed', !enabled);
+            }
+
+            // Unlock Privacy Checkbox when link is clicked
+            if (privacyLink) {
+                privacyLink.addEventListener('click', function () {
+                    privacy.disabled = false;
+                    privacyLabel.classList.remove('opacity-60', 'cursor-not-allowed');
+                    privacyLabel.classList.add('hover:border-indigo-200', 'hover:bg-indigo-50/30', 'cursor-pointer');
+                    if (privacyHint) privacyHint.remove();
+                });
+            }
+
+            // Unlock Terms Checkbox when link is clicked
+            if (termsLink) {
+                termsLink.addEventListener('click', function () {
+                    terms.disabled = false;
+                    termsLabel.classList.remove('opacity-60', 'cursor-not-allowed');
+                    termsLabel.classList.add('hover:border-indigo-200', 'hover:bg-indigo-50/30', 'cursor-pointer');
+                    if (termsHint) termsHint.remove();
+                });
             }
 
             function showLoadingState() {

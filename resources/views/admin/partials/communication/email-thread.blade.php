@@ -11,20 +11,25 @@
 <div class="flex flex-col h-full min-h-0">
 
     {{-- ── Thread ──────────────────────────────────────────────────────────── --}}
-    <div id="email-thread-scroll"
-         class="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-gray-50"
-         aria-label="Email conversation thread"
-         aria-live="polite">
+    <div id="email-thread-scroll" class="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-gray-50" aria-label="Email conversation thread" aria-live="polite">
 
         @forelse($emailComms as $comm)
             @php
                 $isOutbound = $comm->direction === 'outbound' || $comm->sent_by !== null;
             @endphp
 
-            <div class="flex {{ $isOutbound ? 'justify-end' : 'justify-start' }}"
-                data-comm-id="{{ $comm->id }}"
-                data-comm-created-at="{{ $comm->created_at->toDateTimeString() }}">
+            <div class="flex {{ $isOutbound ? 'justify-end' : 'justify-start' }}" data-comm-id="{{ $comm->id }}" data-comm-created-at="{{ $comm->created_at->toDateTimeString() }}">
                 <div class="max-w-[80%] {{ $isOutbound ? 'items-end' : 'items-start' }} flex flex-col gap-1">
+
+                    @if($isOutbound && !empty($comm->metadata['is_ad_hoc']))
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200 self-end">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            Third Party · {{ $comm->metadata['recipient_name'] ?? $comm->to_address }}
+                        </span>
+                    @endif
 
                     {{-- Sender label --}}
                     <span class="text-xs text-gray-400 px-1 {{ $isOutbound ? 'text-right' : 'text-left' }}">
@@ -90,12 +95,7 @@
     <div class="flex-shrink-0 border-t border-gray-200 bg-white">
 
         {{-- Expand/collapse compose --}}
-        <button type="button"
-                id="email-compose-toggle"
-                aria-expanded="false"
-                aria-controls="email-compose-area"
-                class="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-gray-700
-                       hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition">
+        <button type="button" id="email-compose-toggle" aria-expanded="false" aria-controls="email-compose-area" class="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition">
             <span class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -113,11 +113,7 @@
              aria-label="Compose email form">
 
             {{-- Toast --}}
-            <div id="email-toast"
-                 class="hidden p-2.5 rounded-lg text-xs"
-                 role="status"
-                 aria-live="polite"
-                 aria-atomic="true"></div>
+            <div id="email-toast" class="hidden p-2.5 rounded-lg text-xs" role="status" aria-live="polite" aria-atomic="true"></div>
 
             {{-- Template --}}
             <div>
@@ -125,8 +121,7 @@
                     Template
                 </label>
                 <select id="email-template-select"
-                        class="w-full text-sm border-gray-300 rounded-md shadow-sm
-                               focus:ring-indigo-500 focus:border-indigo-500">
+                        class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                     <option value="">— Select a template —</option>
                 </select>
             </div>
@@ -136,13 +131,7 @@
                 <label for="email-subject" class="block text-xs font-medium text-gray-600 mb-1">
                     Subject <span class="text-red-500" aria-hidden="true">*</span>
                 </label>
-                <input type="text"
-                       id="email-subject"
-                       autocomplete="off"
-                       placeholder="Email subject…"
-                       aria-required="true"
-                       class="w-full text-sm border-gray-300 rounded-md shadow-sm
-                              focus:ring-indigo-500 focus:border-indigo-500">
+                <input type="text" id="email-subject" autocomplete="off" placeholder="Email subject…" aria-required="true" class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
             </div>
 
             {{-- Message --}}
@@ -153,13 +142,7 @@
                     </label>
                     <span id="email-char-count" class="text-xs text-gray-400" aria-live="polite">0 / 5000</span>
                 </div>
-                <textarea id="email-message"
-                          rows="6"
-                          maxlength="5000"
-                          placeholder="Type your message…"
-                          aria-required="true"
-                          class="w-full text-sm border-gray-300 rounded-md shadow-sm resize-none
-                                 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                <textarea id="email-message" rows="6" maxlength="5000" placeholder="Type your message…" aria-required="true" class="w-full text-sm border-gray-300 rounded-md shadow-sm resize-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
             </div>
 
             {{-- Recipient + send --}}
@@ -170,10 +153,7 @@
                 <button type="button"
                         id="email-send-btn"
                         disabled
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs
-                               font-semibold rounded-md hover:bg-indigo-700 focus:outline-none
-                               focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
-                               disabled:opacity-50 disabled:cursor-not-allowed transition flex-shrink-0">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition flex-shrink-0">
                     <svg id="email-send-spinner" class="hidden animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>

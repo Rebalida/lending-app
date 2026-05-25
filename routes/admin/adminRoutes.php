@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\Question\QuestionController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\Communication\EmailCommunicationController;
 use App\Http\Controllers\Admin\Communication\SmsCommunicationController;
+use App\Http\Controllers\Admin\Communication\AdHocCommunicationController;
 use App\Http\Controllers\Admin\CreditControllers\CreditSenseController;
 use App\Http\Controllers\Admin\CommunicationController;
 use App\Http\Controllers\Admin\UserController;
@@ -88,6 +89,21 @@ Route::prefix('applications/{application}')->group(function () {
 
     // Manual inbound email logging (admin use)
     Route::post('email-incoming',  [EmailCommunicationController::class, 'incoming'])->name('email.incoming');
+});
+
+// Ad-hoc (freeform recipient) communications
+Route::prefix('applications/{application}')->group(function () {
+    // Templates
+    Route::get('ad-hoc/email-templates', [AdHocCommunicationController::class, 'emailTemplates'])
+        ->name('ad-hoc.email.templates');
+    Route::get('ad-hoc/sms-templates',   [AdHocCommunicationController::class, 'smsTemplates'])
+        ->name('ad-hoc.sms.templates');
+ 
+    // Send
+    Route::post('ad-hoc/send-email', [AdHocCommunicationController::class, 'sendEmail'])
+        ->name('ad-hoc.email.send');
+    Route::post('ad-hoc/send-sms',   [AdHocCommunicationController::class, 'sendSms'])
+        ->name('ad-hoc.sms.send');
 });
 
 Route::post('applications/{application}/communications/mark-read',
