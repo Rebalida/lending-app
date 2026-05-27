@@ -5,7 +5,7 @@ namespace App\Services;
 /**
  * CreditSenseReportParser
  *
- * Parses the CreditSense v2 JSON report structure into normalised arrays
+ * Parses the CreditSense v2.3 JSON report structure into normalised arrays
  * suitable for the expense calculator modal.
  *
  * CreditSense report structure (stored in applications.credit_sense_report):
