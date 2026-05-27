@@ -23,14 +23,17 @@ class DirectorAssetsLiabilitiesController extends Controller
         try {
 
             $validated = $request->validate([
-                'asset_type'      => 'required|in:house,bank,super,vehicle,other',
-                'description'     => 'nullable|string|max:255',
-                'property_use'    => 'nullable|in:main_residence,rental,na',
-                'estimated_value' => 'required|numeric|min:0',
+                'asset_type'           => 'required|in:house,bank,super,vehicle,other',
+                'description'          => 'nullable|string|max:255',
+                'property_use'         => 'nullable|in:main_residence,rental,na',
+                'estimated_value'      => 'required|numeric|min:0',
+                'is_owned'             => 'required|boolean',
+                'ownership_percentage' => 'nullable|numeric|min:0|max:100',
             ]);
 
             $validated['application_id'] = $application->id;
             $validated['property_use']   = $validated['property_use'] ?? 'na';
+            $validated['ownership_percentage'] = $validated['ownership_percentage'] ?? 100;
 
             $asset = DirectorAsset::create($validated);
 
@@ -172,12 +175,14 @@ class DirectorAssetsLiabilitiesController extends Controller
     private function formatAsset(DirectorAsset $a): array
     {
         return [
-            'id'               => $a->id,
-            'asset_type'       => $a->asset_type,
-            'asset_type_label' => $a->asset_type_label,
-            'description'      => $a->description,
-            'property_use'     => $a->property_use,
-            'estimated_value'  => $a->estimated_value,
+            'id'                   => $a->id,
+            'asset_type'           => $a->asset_type,
+            'asset_type_label'     => $a->asset_type_label,
+            'description'          => $a->description,
+            'property_use'         => $a->property_use,
+            'estimated_value'      => $a->estimated_value,
+            'is_owned'             => $a->is_owned,
+            'ownership_percentage' => $a->ownership_percentage,
         ];
     }
 

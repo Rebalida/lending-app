@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\CreditControllers\CreditCheckController;
 use App\Http\Controllers\Admin\LivingExpenseVerificationController;
+use App\Http\Controllers\Admin\AssessorDirectorAssetsLiabilitiesController;
+use App\Http\Controllers\Admin\AssessorEmploymentController;
 use App\Http\Controllers\LivingExpenseController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\Question\QuestionController;
@@ -105,6 +107,71 @@ Route::prefix('applications/{application}')->group(function () {
     Route::post('ad-hoc/send-sms',   [AdHocCommunicationController::class, 'sendSms'])
         ->name('ad-hoc.sms.send');
 });
+
+// Assessor Director Assets & Liabilities
+Route::post('applications/{application}/assessor-dal/unlock',
+    [AssessorDirectorAssetsLiabilitiesController::class, 'unlock'])
+    ->name('assessor-dal.unlock');
+
+Route::post('applications/{application}/assessor-dal/stamp',
+    [AssessorDirectorAssetsLiabilitiesController::class, 'stamp'])
+    ->name('assessor-dal.stamp');
+
+Route::post('applications/{application}/assessor-dal/assets',
+    [AssessorDirectorAssetsLiabilitiesController::class, 'storeAsset'])
+    ->name('assessor-dal.assets.store');
+
+Route::patch('assessor-dal/assets/{asset}',
+    [AssessorDirectorAssetsLiabilitiesController::class, 'updateAsset'])
+    ->name('assessor-dal.assets.update');
+
+Route::delete('assessor-dal/assets/{asset}',
+    [AssessorDirectorAssetsLiabilitiesController::class, 'destroyAsset'])
+    ->name('assessor-dal.assets.destroy');
+
+Route::post('applications/{application}/assessor-dal/liabilities',
+    [AssessorDirectorAssetsLiabilitiesController::class, 'storeLiability'])
+    ->name('assessor-dal.liabilities.store');
+
+Route::patch('assessor-dal/liabilities/{liability}',
+    [AssessorDirectorAssetsLiabilitiesController::class, 'updateLiability'])
+    ->name('assessor-dal.liabilities.update');
+
+Route::delete('assessor-dal/liabilities/{liability}',
+    [AssessorDirectorAssetsLiabilitiesController::class, 'destroyLiability'])
+    ->name('assessor-dal.liabilities.destroy');
+
+Route::post('applications/{application}/assessor-employment/unlock',
+    [AssessorEmploymentController::class, 'unlock'])
+    ->name('assessor-employment.unlock');
+
+Route::post('applications/{application}/assessor-employment/stamp',
+    [AssessorEmploymentController::class, 'stamp'])
+    ->name('assessor-employment.stamp');
+
+Route::post('applications/{application}/assessor-employment',
+    [AssessorEmploymentController::class, 'store'])
+    ->name('assessor-employment.store');
+
+Route::patch('applications/{application}/assessor-employment/{employment}',
+    [AssessorEmploymentController::class, 'update'])
+    ->name('assessor-employment.update');
+
+Route::delete('applications/{application}/assessor-employment/{employment}',
+    [AssessorEmploymentController::class, 'destroy'])
+    ->name('assessor-employment.destroy');
+
+Route::post('applications/{application}/assessor-employment/{employment}/upload',
+    [AssessorEmploymentController::class, 'uploadDocument'])
+    ->name('assessor-employment.upload');
+
+Route::get('assessor-employment-documents/{document}/download',
+    [AssessorEmploymentController::class, 'downloadDocument'])
+    ->name('assessor-employment.documents.download');
+
+Route::delete('assessor-employment-documents/{document}',
+    [AssessorEmploymentController::class, 'destroyDocument'])
+    ->name('assessor-employment.documents.destroy');
 
 Route::post('applications/{application}/communications/mark-read',
     [CommunicationController::class, 'markChannelRead'])

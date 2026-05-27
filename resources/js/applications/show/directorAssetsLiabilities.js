@@ -107,10 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setSpinner('asset', true);
 
         const payload = {
-            asset_type:      assetTypeEl.value,
-            description:     document.getElementById('asset-description').value || null,
-            property_use:    document.getElementById('asset-property-use').value || 'na',
-            estimated_value: valueEl.value,
+            asset_type:           assetTypeEl.value,
+            description:          document.getElementById('asset-description').value || null,
+            property_use:         document.getElementById('asset-property-use').value || 'na',
+            estimated_value:      valueEl.value,
+            is_owned:             document.getElementById('asset-is-owned').value,
+            ownership_percentage: document.getElementById('asset-ownership-pct').value || null,
         };
 
         try {
@@ -251,6 +253,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </td>
             <td class="px-4 py-3 text-gray-600">${escHtml(a.description ?? '—')}</td>
             <td class="px-4 py-3 text-gray-600">${propertyUseLabel}</td>
+            <td class="px-4 py-3 text-gray-600">${a.is_owned ? 'Yes' : 'No'}</td>
+            <td class="px-4 py-3 text-right text-gray-600">${a.ownership_percentage != null ? a.ownership_percentage + '%' : '100%'}</td>
             <td class="px-4 py-3 text-right font-semibold text-gray-900">$${fmtMoney(a.estimated_value)}</td>
             <td class="px-4 py-3 text-right">
                 <button type="button" data-asset-id="${a.id}"
@@ -304,6 +308,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Property Use</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Owned</th>
+                            <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Ownership %</th>
                             <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Estimated Value</th>
                             <th scope="col" class="px-4 py-3"><span class="sr-only">Actions</span></th>
                         </tr>
@@ -311,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tbody id="assets-tbody" class="bg-white divide-y divide-gray-100"></tbody>
                     <tfoot class="bg-gray-50 border-t border-gray-200">
                         <tr>
-                            <td colspan="3" class="px-4 py-3 text-sm font-semibold text-gray-700">Total Assets</td>
+                            <td colspan="5" class="px-4 py-3 text-sm font-semibold text-gray-700">Total Assets</td>
                             <td id="assets-total" class="px-4 py-3 text-right font-bold text-emerald-700">$0.00</td>
                             <td></td>
                         </tr>
@@ -351,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let assetTotal = 0;
         document.querySelectorAll('#assets-tbody tr').forEach(tr => {
             assetTotal += parseFloat(
-                tr.querySelectorAll('td')[3]?.textContent.replace(/[$,]/g, '') || 0
+                tr.querySelectorAll('td')[5]?.textContent.replace(/[$,]/g, '') || 0
             );
         });
 
@@ -385,6 +391,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('asset-description').value    = '';
         document.getElementById('asset-value-display').value  = '';
         document.getElementById('asset-value').value          = '';
+        document.getElementById('asset-is-owned').value       = '1';
+        document.getElementById('asset-ownership-pct').value  = '';
         propertyUseField.classList.add('hidden');
         clearFormErrors('asset');
     }

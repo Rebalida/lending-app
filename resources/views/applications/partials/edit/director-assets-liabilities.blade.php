@@ -83,6 +83,8 @@
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Property Use</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Owned</th>
+                                        <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Ownership %</th>
                                         <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Estimated Value</th>
                                         <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             <span class="sr-only">Actions</span>
@@ -105,6 +107,10 @@
                                                     —
                                                 @endif
                                             </td>
+                                            <td class="px-4 py-3 text-gray-600">{{ $asset->is_owned ? 'Yes' : 'No' }}</td>
+                                            <td class="px-4 py-3 text-right text-gray-600">
+                                                {{ $asset->ownership_percentage !== null ? $asset->ownership_percentage . '%' : '100%' }}
+                                            </td>
                                             <td class="px-4 py-3 text-right font-semibold text-gray-900">
                                                 ${{ number_format($asset->estimated_value, 2) }}
                                             </td>
@@ -113,7 +119,7 @@
                                                         data-asset-id="{{ $asset->id }}"
                                                         aria-label="Remove asset {{ $asset->asset_type_label }}"
                                                         class="delete-asset-btn text-red-500 hover:text-red-700
-                                                               focus:outline-none focus:ring-2 focus:ring-red-500 rounded transition">
+                                                            focus:outline-none focus:ring-2 focus:ring-red-500 rounded transition">
                                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                                         <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
                                                     </svg>
@@ -124,7 +130,7 @@
                                 </tbody>
                                 <tfoot class="bg-gray-50 border-t border-gray-200">
                                     <tr>
-                                        <td colspan="3" class="px-4 py-3 text-sm font-semibold text-gray-700">Total Assets</td>
+                                        <td colspan="5" class="px-4 py-3 text-sm font-semibold text-gray-700">Total Assets</td>
                                         <td id="assets-total" class="px-4 py-3 text-right font-bold text-emerald-700">
                                             ${{ number_format($assets->sum('estimated_value'), 2) }}
                                         </td>
@@ -193,6 +199,42 @@
                                    placeholder="e.g. 12 Example St, Sydney or CBA Savings"
                                    class="block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm
                                           focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+
+                        {{-- Owned --}}
+                        <div>
+                            <label for="asset-is-owned" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Owned <span class="text-red-500" aria-hidden="true">*</span>
+                            </label>
+                            <select id="asset-is-owned"
+                                    aria-required="true"
+                                    aria-describedby="asset-is-owned-error"
+                                    class="block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm
+                                        focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
+                            <p id="asset-is-owned-error" class="mt-1 text-sm text-red-600 hidden" role="alert"></p>
+                        </div>
+
+                        {{-- Ownership % --}}
+                        <div>
+                            <label for="asset-ownership-pct" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Ownership %
+                                <span class="text-gray-400 normal-case font-normal">(optional)</span>
+                            </label>
+                            <div class="relative">
+                                <input type="number"
+                                    id="asset-ownership-pct"
+                                    min="0" max="100" step="0.01"
+                                    placeholder="e.g. 50"
+                                    aria-describedby="asset-ownership-pct-hint"
+                                    class="block w-full py-3 px-4 pr-10 border border-gray-300 bg-white rounded-xl shadow-sm
+                                            focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                                <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 pointer-events-none"
+                                    aria-hidden="true">%</span>
+                            </div>
+                            <p id="asset-ownership-pct-hint" class="mt-1 text-xs text-gray-400">Leave blank if 100% owned</p>
                         </div>
 
                         {{-- Estimated Value — display + hidden --}}

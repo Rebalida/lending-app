@@ -472,6 +472,16 @@ class ApplicationController extends Controller
             'declarations',
             'creditChecks',
             'activityLogs.user',
+            'assignedTo',
+            'directorAssets.history.changedBy',
+            'directorLiabilities.history.changedBy',
+            'assessorDalVerification.initiatedBy',
+            'assessorDalVerification.verifiedBy',
+            'employmentDetails.history.changedBy',
+            'employmentDetails.documents.uploadedBy',
+            'employmentDetails.addedBy',
+            'assessorEmploymentVerification.initiatedBy',
+            'assessorEmploymentVerification.verifiedBy',
         ]);
     }
 

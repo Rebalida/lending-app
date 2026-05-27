@@ -300,4 +300,14 @@ class Application extends Model
     {
         return $this->hasOne(\App\Models\AccountantDetail::class);
     }
+
+    public function assessorDalVerification(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\AssessorDalVerification::class);
+    }
+
+    public function assessorEmploymentVerification(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\AssessorEmploymentVerification::class);
+    }
 }
