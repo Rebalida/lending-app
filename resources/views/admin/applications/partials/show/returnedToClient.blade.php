@@ -1,5 +1,6 @@
 {{-- resources/views/admin/applications/partials/show/returnedToClient.blade.php --}}
-@if(in_array($application->status, ['submitted', 'wip']))
+@php use App\Models\Application; @endphp
+@if($application->isReturnable())
     <div x-data="{ showReturnModal: false }" class="contents">
 
         <button @click="showReturnModal = true"
@@ -79,8 +80,7 @@
                                     required
                                     class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm
                                         focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <option value="outstanding_document">Outstanding Document</option>
-                                <option value="waiting_for_signature">Waiting for Signature</option>
+                                <option value="{{ Application::STATUS_OUTDOC }}">Outstanding Document</option>
                             </select>
                         </div>
 

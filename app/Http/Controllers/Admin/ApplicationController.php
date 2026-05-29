@@ -45,6 +45,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use App\Actions\Application\GenerateGuarantorForm;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ApplicationController extends Controller
 {
@@ -56,25 +58,21 @@ class ApplicationController extends Controller
      *
      * @var string[]
      */
-    private const LOCKED_STATUSES = ['approved', 'declined'];
+    private const LOCKED_STATUSES = [ Application::STATUS_SETTLED, Application::STATUS_DECLINED, Application::STATUS_DEFERRED, ];
 
     /**
      * Statuses from which an application may be returned to the client.
      *
      * @var string[]
      */
-    private const RETURNABLE_STATUSES = ['submitted', 'wip', 'outstanding_document', 'waiting_for_signature'];
+    private const RETURNABLE_STATUSES = Application::RETURNABLE_STATUSES;
 
     /**
      * Valid application status values accepted by updateStatus().
      *
      * @var string[]
      */
-    private const VALID_STATUSES = [
-        'draft', 'submitted', 'wip',
-        'outstanding_document', 'waiting_for_signature',
-        'approved', 'declined', 'deferred', 'withdrawn',
-    ];
+    private const VALID_STATUSES = Application::VALID_STATUSES;
 
     // =========================================================================
     // Listing
@@ -363,6 +361,48 @@ class ApplicationController extends Controller
         return $pdf->download("loan-application-{$application->application_number}.pdf");
     }
 
+    public function generateGuarantorForm(Application $application): RedirectResponse
+    {
+        if ($application->status !== Application::STATUS_SETTLED) {
+            return back()->with('error', 'Guarantor forms can only be generated for settled applications.');
+        }
+
+        try {
+            (new GenerateGuarantorForm)->execute($application);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate guarantor form: ' . $e->getMessage(), [
+                'application_id' => $application->id,
+            ]);
+            return back()->with('error', 'Failed to generate guarantor form. Please try again.');
+        }
+
+        return back()->with('success', 'Guarantor form generated successfully.');
+    }
+
+    public function downloadGuarantorForm(Application $application): BinaryFileResponse|RedirectResponse
+    {
+        if (! $application->hasGuarantorForm()) {
+            return back()->with('error', 'Guarantor form has not been generated yet.');
+        }
+
+        $fullPath = public_path($application->guarantor_form_path);
+
+        if (! file_exists($fullPath)) {
+            return back()->with('error', 'Guarantor form file not found. Please regenerate.');
+        }
+
+        $filename = "{$application->application_number}-guarantor.pdf";
+
+        if (request()->boolean('download', true)) {
+            return response()->download($fullPath, $filename, ['Content-Type' => 'application/pdf']);
+        }
+
+        return response()->file($fullPath, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"{$filename}\"",
+        ]);
+    }
+
     // =========================================================================
     // Private Helpers — Index
     // =========================================================================
@@ -586,12 +626,6 @@ class ApplicationController extends Controller
      */
     private function maybePromoteStatusOnAssignment(Application $application): void
     {
-        if ($application->status !== 'submitted') {
-            return;
-        }
-
-        $application->update(['status' => 'wip']);
-
         ActivityLog::logActivity(
             'status_changed',
             'Status automatically changed to wip when application was assigned',

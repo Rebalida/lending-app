@@ -385,7 +385,7 @@ AHA Global Pty Ltd`,
                         'X-CSRF-TOKEN': CSRF,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ subject, message }),
+                    body: JSON.stringify({ subject, message, letter_type: currentType === 'approve' ? 'approval_letter' : 'decline_letter' }),
                 });
 
                 const json = await emailRes.json();

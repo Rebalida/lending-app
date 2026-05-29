@@ -1,4 +1,5 @@
 {{-- resources/views/admin/applications/index.blade.php --}}
+@php use App\Models\Application; @endphp
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
@@ -41,12 +42,11 @@
                                 <select name="status"
                                         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                     <option value="">All Statuses</option>
-                                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
-                                    <option value="submitted" {{ request('status') == 'submitted' ? 'selected' : '' }}>Submitted</option>
-                                    <option value="wip" {{ request('status') == 'wip' ? 'selected' : '' }}>Work in Progress</option>
-                                    <option value="outstanding_document" {{ request('status') == 'outstanding_document' ? 'selected' : '' }}>Outstanding Document</option>
-                                    <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
-                                    <option value="declined" {{ request('status') == 'declined' ? 'selected' : '' }}>Declined</option>
+                                    @foreach(Application::VALID_STATUSES as $status)
+                                        <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
+                                            {{ Application::getStatusLabel($status) }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
 

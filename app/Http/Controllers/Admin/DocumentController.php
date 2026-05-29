@@ -43,7 +43,10 @@ class DocumentController extends Controller
      *
      * @var string[]
      */
-    private const LOCKED_APPLICATION_STATUSES = ['approved', 'declined'];
+    private const LOCKED_APPLICATION_STATUSES = [
+        Application::STATUS_SETTLED,
+        Application::STATUS_DECLINED,
+    ];
 
     // =========================================================================
     // Status Update

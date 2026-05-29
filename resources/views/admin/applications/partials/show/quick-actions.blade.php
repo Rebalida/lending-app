@@ -1,7 +1,7 @@
 {{-- resources/views/admin/applications/partials/show/quick-actions.blade.php --}}
-
+@php use App\Models\Application; @endphp
 @php
-    $isLocked = in_array($application->status, ['approved', 'declined']);
+    $isLocked = $application->isLocked();
 
     $unreadEmail = $application->communications()->emails()->whereNull('read_at')->where('direction', 'inbound')->count();
     $unreadSms   = $application->communications()->sms()->whereNull('read_at')->where('direction', 'inbound')->count();
@@ -27,18 +27,13 @@
                         Change Status
                     </label>
                     <div class="flex items-center gap-2">
-                        <select id="status-select"
-                                name="status"
-                                required
-                                class="block py-1.5 px-2.5 border border-gray-300 bg-white rounded-md shadow-sm
-                                       focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
-                            <option value="submitted"             {{ $application->status === 'submitted'             ? 'selected' : '' }}>Submitted</option>
-                            <option value="wip"                   {{ $application->status === 'wip'                   ? 'selected' : '' }}>Work In Progress</option>
-                            <option value="outstanding_document"  {{ $application->status === 'outstanding_document'  ? 'selected' : '' }}>Outstanding Document</option>
-                            <option value="waiting_for_signature" {{ $application->status === 'waiting_for_signature' ? 'selected' : '' }}>Waiting for Signature</option>
-                            <option value="deferred"              {{ $application->status === 'deferred'              ? 'selected' : '' }}>Deferred</option>
-                            <option value="approved"              {{ $application->status === 'approved'              ? 'selected' : '' }}>Approved</option>
-                            <option value="declined"              {{ $application->status === 'declined'              ? 'selected' : '' }}>Declined</option>
+                        <select id="status-select" name="status" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            @foreach(Application::VALID_STATUSES as $status)
+                                <option value="{{ $status }}" 
+                                        {{ $application->status === $status ? 'selected' : '' }}>
+                                    {{ Application::statusLabel($status) }}
+                                </option>
+                            @endforeach
                         </select>
                         <button type="submit"
                                 class="loading-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600

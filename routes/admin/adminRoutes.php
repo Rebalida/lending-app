@@ -42,6 +42,14 @@ Route::get('/applications/{application}/export-pdf',        [ApplicationControll
 Route::post('/applications/{application}/return-to-client', [ApplicationController::class, 'returnToClient'])
 ->name('applications.returnToClient');
 
+Route::post('/applications/{application}/generate-guarantor-form',
+    [ApplicationController::class, 'generateGuarantorForm'])
+    ->name('applications.generateGuarantorForm');
+
+Route::get('/applications/{application}/download-guarantor-form',
+    [ApplicationController::class, 'downloadGuarantorForm'])
+    ->name('applications.downloadGuarantorForm');
+
 // Comments
 Route::post('applications/{application}/comments', [CommentController::class, 'store'])
     ->name('comments.store');

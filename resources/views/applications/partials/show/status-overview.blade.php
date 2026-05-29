@@ -1,12 +1,14 @@
 {{-- resources/views/applications/partials/show/status-overview.blade.php --}}
+@php use App\Models\Application; @endphp
 @php
     $statusConfig = [
-        'draft'                      => ['color' => 'gray',   'label' => 'Draft'],
-        'submitted'                  => ['color' => 'blue',   'label' => 'Submitted'],
-        'wip'               => ['color' => 'yellow', 'label' => 'Work in Progress'],
-        'outstanding_document'   => ['color' => 'orange', 'label' => 'Additional Info Required'],
-        'approved'                   => ['color' => 'green',  'label' => 'Approved'],
-        'declined'                   => ['color' => 'red',    'label' => 'Declined'],
+        Application::STATUS_APPLICATION => ['color' => 'blue',   'label' => 'Application'],
+        Application::STATUS_WIP         => ['color' => 'yellow', 'label' => 'Work in Progress'],
+        Application::STATUS_OUTDOC      => ['color' => 'orange', 'label' => 'Outstanding Document'],
+        Application::STATUS_APPROVED    => ['color' => 'purple', 'label' => 'Approved'],
+        Application::STATUS_SETTLED     => ['color' => 'green',  'label' => 'Settled'],
+        Application::STATUS_DECLINED    => ['color' => 'red',    'label' => 'Declined'],
+        Application::STATUS_DEFERRED    => ['color' => 'gray',   'label' => 'Deferred'],
     ];
     $sc    = $statusConfig[$application->status] ?? ['color' => 'gray', 'label' => ucwords(str_replace('_', ' ', $application->status))];
     $color = $sc['color'];

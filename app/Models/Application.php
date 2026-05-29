@@ -13,6 +13,72 @@ class Application extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // =========================================================================
+    // Status Constants
+    // =========================================================================
+    public const STATUS_APPLICATION = 'application';
+    public const STATUS_WIP = 'wip';
+    public const STATUS_OUTDOC = 'outdoc';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_DECLINED = 'declined';
+    public const STATUS_DEFERRED = 'deferred';
+    public const STATUS_SETTLED = 'settled';
+
+    // All valid statuses
+    public const VALID_STATUSES = [
+        self::STATUS_APPLICATION,
+        self::STATUS_WIP,
+        self::STATUS_OUTDOC,
+        self::STATUS_APPROVED,
+        self::STATUS_DECLINED,
+        self::STATUS_DEFERRED,
+        self::STATUS_SETTLED,
+    ];
+
+    // Workflow progression order
+    public const STATUS_WORKFLOW = [
+        self::STATUS_APPLICATION,
+        self::STATUS_WIP,
+        self::STATUS_OUTDOC,
+        self::STATUS_APPROVED,
+        self::STATUS_SETTLED,
+    ];
+
+    // Terminal statuses (no further transitions)
+    public const TERMINAL_STATUSES = [
+        self::STATUS_DECLINED,
+        self::STATUS_DEFERRED,
+        self::STATUS_SETTLED,
+    ];
+
+    // Returnable statuses (can be returned to client)
+    public const RETURNABLE_STATUSES = [
+        self::STATUS_WIP,
+        self::STATUS_OUTDOC,
+    ];
+
+    const ADMIN_TABS = [
+        'in_progress' => [
+            self::STATUS_APPLICATION,
+            self::STATUS_WIP,
+            self::STATUS_OUTDOC,
+        ],
+        'approve' => [self::STATUS_APPROVED],
+        'deferred' => [self::STATUS_DEFERRED],
+        'declined' => [self::STATUS_DECLINED],
+        'settled' => [self::STATUS_SETTLED],
+    ];
+
+    public function getTabForStatus(string $status): ?string
+    {
+        foreach (self::ADMIN_TABS as $tab => $statuses) {
+            if (in_array($status, $statuses)) {
+                return $tab;
+            }
+        }
+        return null;
+    }
+
     protected $fillable = [
         'user_id',
         'application_number',
@@ -41,6 +107,18 @@ class Application extends Model
         'credit_sense_completed_at',
         'credit_sense_report',
         'credit_sense_report_received_at',
+        'guarantor_form_generated_at',
+        'guarantor_form_path',
+        // NEW COLUMNS
+        'approval_letter_sent_at',
+        'guarantor_form_requested_at',
+        'guarantor_form_request_url',
+        'guarantor_form_completed_at',
+        'guarantor_form_signed_at',
+        'business_declaration_sent_at',
+        'business_declaration_signed_at',
+        'decline_letter_sent_at',
+        'decline_reason',
     ];
 
     protected $casts = [
@@ -53,6 +131,15 @@ class Application extends Model
         'credit_sense_report'              => 'array',
         'credit_sense_report_received_at'  => 'datetime',
         'verified_expenses'                => 'array',
+        'guarantor_form_generated_at'      => 'datetime',
+        // NEW COLUMNS
+        'approval_letter_sent_at'          => 'datetime',
+        'guarantor_form_requested_at'      => 'datetime',
+        'guarantor_form_completed_at'      => 'datetime',
+        'guarantor_form_signed_at'         => 'datetime',
+        'business_declaration_sent_at'     => 'datetime',
+        'business_declaration_signed_at'   => 'datetime',
+        'decline_letter_sent_at'           => 'datetime',
     ];
 
     protected static function boot()
@@ -71,7 +158,9 @@ class Application extends Model
         });
     }
 
+    // =========================================================================
     // Relationships
+    // =========================================================================
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -157,123 +246,9 @@ class Application extends Model
         return $this->hasMany(CreditCheck::class);
     }
 
-    // Scopes
-    public function scopeDraft($query)
-    {
-        return $query->where('status', 'draft');
-    }
-
-    public function scopeSubmitted($query)
-    {
-        return $query->where('status', 'submitted');
-    }
-
-    public function scopeUnderReview($query)
-    {
-        return $query->where('status', 'wip');
-    }
-
-    // Helper methods
-    public function isEditable(): bool
-    {
-        return in_array($this->status, ['draft', 'outstanding_document']);
-    }
-
-   public function canBeSubmitted(): bool
-    {
-        $isDraft = in_array($this->status, ['draft', 'outstanding_document']);
-
-        $hasPersonalDetails        = $this->personalDetails !== null;
-        $hasResidentialAddresses   = $this->residentialAddresses()->count() > 0;
-        $hasEmploymentDetails      = $this->employmentDetails()->count() > 0;
-        $hasLivingExpenses         = $this->livingExpenses()->count() > 0;
-        $hasFinalSignature         = $this->hasFinalSignature();
-        // $credit_sense_completed_at = $this->credit_sense_completed_at;
-
-        $checks = [
-            'status_is_editable'        => $isDraft,
-            'has_personal_details'      => $hasPersonalDetails,
-            'has_residential_addresses' => $hasResidentialAddresses,
-            'has_employment_details'    => $hasEmploymentDetails,
-            'has_living_expenses'       => $hasLivingExpenses,
-            'has_final_signature'       => $hasFinalSignature,
-            // 'credit_sense_completed_at' => $credit_sense_completed_at,
-        ];
-
-        $missing = array_keys(array_filter($checks, fn($v) => !$v));
-        if (!empty($missing)) {
-            \Log::warning('Application cannot be submitted', [
-                'application_id' => $this->id,
-                'missing'        => $missing,
-            ]);
-        }
-
-        return $isDraft
-            && $hasPersonalDetails
-            && $hasResidentialAddresses
-            && $hasEmploymentDetails
-            && $hasLivingExpenses
-            // && $credit_sense_completed_at
-            && $hasFinalSignature;
-    }
-
-    /**
-     * Check if application has required business info for auto-decline checks
-     */
-    public function hasBusinessInfo(): bool
-    {
-        return $this->employmentDetails()->count() > 0;
-    }
-
-    public function getTotalLivingExpensesMonthly(): float
-    {
-        return $this->livingExpenses->sum(function ($expense) {
-            return $expense->getMonthlyAmount();
-        });
-    }
-
-    public function getAnnualIncome(): float
-    {
-        return $this->employmentDetails->sum(function ($employment) {
-            return $employment->getAnnualIncome();
-        });
-    }
-
-    public function hasCompletePersonalDetails(): bool
-    {
-        if (! $this->personalDetails) {
-            return false;
-        }
-    
-        $pd = $this->personalDetails;
-
-        return ! empty($pd->mobile_phone)
-            && ! empty($pd->marital_status)
-            && ! is_null($pd->number_of_dependants)
-            && ! empty($pd->date_of_birth)
-            && ! empty($pd->citizenship_status);
-    }
-
-    /**
-     * Check if application has final submission signature
-     */
-    public function hasFinalSignature(): bool
-    {
-        return $this->declarations()
-            ->where('declaration_type', 'final_submission')
-            ->where('is_agreed', true)
-            ->whereNotNull('signature_data')
-            ->exists();
-    }
-
     public function returnedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'returned_by');
-    }
-
-    public function isReturned(): bool
-    {
-        return $this->status === 'outstanding_document';
     }
 
     public function directorAssets(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -309,5 +284,323 @@ class Application extends Model
     public function assessorEmploymentVerification(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(\App\Models\AssessorEmploymentVerification::class);
+    }
+
+    // =========================================================================
+    // Scopes
+    // =========================================================================
+    public function scopeApplication($query)
+    {
+        return $query->where('status', self::STATUS_APPLICATION);
+    }
+
+    public function scopeWip($query)
+    {
+        return $query->where('status', self::STATUS_WIP);
+    }
+
+    public function scopeSettled($query)
+    {
+        return $query->where('status', self::STATUS_SETTLED);
+    }
+
+    public function scopeDeclined($query)
+    {
+        return $query->where('status', self::STATUS_DECLINED);
+    }
+
+    public function scopeDeferred($query)
+    {
+        return $query->where('status', self::STATUS_DEFERRED);
+    }
+
+    public function scopeNotTerminal($query)
+    {
+        return $query->whereNotIn('status', self::TERMINAL_STATUSES);
+    }
+
+    // Legacy scopes (kept for backward compatibility)
+    public function scopeDraft($query)
+    {
+        return $query->where('status', self::STATUS_APPLICATION);
+    }
+
+    public function scopeSubmitted($query)
+    {
+        return $query->where('status', self::STATUS_WIP);
+    }
+
+    public function scopeUnderReview($query)
+    {
+        return $query->where('status', self::STATUS_WIP);
+    }
+
+    // =========================================================================
+    // Status & Workflow Helper Methods
+    // =========================================================================
+
+    /**
+     * Check if application is in an editable state
+     */
+    public function isEditable(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_APPLICATION,
+            self::STATUS_OUTDOC,
+        ]);
+    }
+
+    /**
+     * Check if application is locked (terminal status)
+     */
+    public function isLocked(): bool
+    {
+        return in_array($this->status, self::TERMINAL_STATUSES);
+    }
+
+    /**
+     * Check if application is in approval phase (Settled)
+     */
+    public function isInApprovalPhase(): bool
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    /**
+     * Check if application can generate guarantor form
+     */
+    public function canGenerateGuarantorForm(): bool
+    {
+        return $this->status === self::STATUS_APPROVED && !$this->guarantor_form_path;
+    }
+
+    /**
+     * Check if guarantor form has been generated
+     */
+    public function hasGuarantorForm(): bool
+    {
+        return !is_null($this->guarantor_form_path) && file_exists(public_path($this->guarantor_form_path));
+    }
+
+    /**
+     * Get status display label
+     */
+    public function getStatusLabel(): string
+    {
+        return self::statusLabel($this->status);
+    }
+
+    public static function statusLabel(string $status): string
+    {
+        $labels = [
+            self::STATUS_APPLICATION => 'Application',
+            self::STATUS_WIP         => 'Work in Progress',
+            self::STATUS_OUTDOC      => 'Outstanding Document',
+            self::STATUS_APPROVED    => 'Approved',
+            self::STATUS_DECLINED    => 'Declined',
+            self::STATUS_DEFERRED    => 'Deferred',
+            self::STATUS_SETTLED     => 'Settled',
+        ];
+
+        return $labels[$status] ?? ucwords(str_replace('_', ' ', $status));
+    }
+
+    /**
+     * Get status badge color class (Tailwind)
+     */
+    public function getStatusBadgeColor(): string
+    {
+        $colors = [
+            self::STATUS_APPLICATION => 'blue',
+            self::STATUS_WIP         => 'yellow',
+            self::STATUS_OUTDOC      => 'orange',
+            self::STATUS_APPROVED    => 'purple',
+            self::STATUS_DECLINED    => 'red',
+            self::STATUS_DEFERRED    => 'gray',
+            self::STATUS_SETTLED     => 'green',
+        ];
+        
+        return $colors[$this->status] ?? 'gray';
+    }
+
+    /**
+     * Get workflow step number (1-7)
+     */
+    public function getWorkflowStep(): ?int
+    {
+        $index = array_search($this->status, self::STATUS_WORKFLOW);
+        return $index !== false ? $index + 1 : null;
+    }
+
+    /**
+     * Check if status can transition to another status
+     */
+    public function canTransitionTo(string $newStatus): bool
+    {
+        // Cannot transition from terminal status
+        if ($this->isLocked()) {
+            return false;
+        }
+
+        // Valid target status
+        if (!in_array($newStatus, self::VALID_STATUSES)) {
+            return false;
+        }
+
+        // Cannot transition to same status
+        if ($newStatus === $this->status) {
+            return false;
+        }
+
+        // Can only transition to returnable or workflow-next statuses
+        $currentIndex = array_search($this->status, self::STATUS_WORKFLOW);
+        $newIndex = array_search($newStatus, self::STATUS_WORKFLOW);
+
+        // Allow forward progression in workflow
+        if ($newIndex !== false && $currentIndex !== false && $newIndex >= $currentIndex) {
+            return true;
+        }
+
+        // Allow transitions to terminal/exceptional statuses
+        if (in_array($newStatus, [self::STATUS_DECLINED, self::STATUS_DEFERRED])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if application is returnable to client
+     */
+    public function isReturnable(): bool
+    {
+        return in_array($this->status, self::RETURNABLE_STATUSES);
+    }
+
+    /**
+     * Legacy method - now checks if ready to move to Assessment
+     */
+    public function canBeSubmitted(): bool
+    {
+        return $this->canMoveToAssessment();
+    }
+
+    /**
+     * Check if ready to move to Assessment
+     */
+    public function canMoveToAssessment(): bool
+    {
+        if ($this->status !== self::STATUS_APPLICATION) {
+            return false;
+        }
+
+        $hasPersonalDetails = $this->personalDetails !== null;
+        $hasResidentialAddresses = $this->residentialAddresses()->count() > 0;
+        $hasEmploymentDetails = $this->employmentDetails()->count() > 0;
+        $hasLivingExpenses = $this->livingExpenses()->count() > 0;
+        $hasFinalSignature = $this->hasFinalSignature();
+
+        return $hasPersonalDetails
+            && $hasResidentialAddresses
+            && $hasEmploymentDetails
+            && $hasLivingExpenses
+            && $hasFinalSignature;
+    }
+
+    /**
+     * Check if application can proceed to Settled
+     */
+    public function canMoveToSettled(): bool
+    {
+        return $this->status === self::STATUS_APPROVED
+            && $this->isApprovedPhaseComplete();
+    }
+
+    /**
+     * Legacy method for backward compatibility
+     */
+    public function isReturned(): bool
+    {
+        return $this->status === self::STATUS_OUTDOC;
+    }
+
+    // =========================================================================
+    // Application Data Helper Methods
+    // =========================================================================
+
+    /**
+     * Check if application has required business info for auto-decline checks
+     */
+    public function hasBusinessInfo(): bool
+    {
+        return $this->employmentDetails()->count() > 0;
+    }
+
+    public function getTotalLivingExpensesMonthly(): float
+    {
+        return $this->livingExpenses->sum(function ($expense) {
+            return $expense->getMonthlyAmount();
+        });
+    }
+
+    public function getAnnualIncome(): float
+    {
+        return $this->employmentDetails->sum(function ($employment) {
+            return $employment->getAnnualIncome();
+        });
+    }
+
+    public function hasCompletePersonalDetails(): bool
+    {
+        if (!$this->personalDetails) {
+            return false;
+        }
+    
+        $pd = $this->personalDetails;
+
+        return !empty($pd->mobile_phone)
+            && !empty($pd->marital_status)
+            && !is_null($pd->number_of_dependants)
+            && !empty($pd->date_of_birth)
+            && !empty($pd->citizenship_status);
+    }
+
+    /**
+     * Check if application has final submission signature
+     */
+    public function hasFinalSignature(): bool
+    {
+        return $this->declarations()
+            ->where('declaration_type', 'final_submission')
+            ->where('is_agreed', true)
+            ->whereNotNull('signature_data')
+            ->exists();
+    }
+
+    /**
+     * Check if approvalApproved workflow is complete
+     */
+    public function isApprovedPhaseComplete(): bool
+    {
+        return $this->status === self::STATUS_APPROVED
+            && $this->approval_letter_sent_at
+            && $this->guarantor_form_signed_at
+            && $this->business_declaration_signed_at;
+    }
+
+    /**
+     * Check if guarantor form has been requested
+     */
+    public function hasGuarantorFormRequested(): bool
+    {
+        return !is_null($this->guarantor_form_requested_at);
+    }
+
+    /**
+     * Check if guarantor form has been completeds
+     */
+    public function hasGuarantorFormCompleted(): bool
+    {
+        return !is_null($this->guarantor_form_completed_at);
     }
 }

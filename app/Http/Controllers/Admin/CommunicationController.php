@@ -47,7 +47,7 @@ class CommunicationController extends Controller
      *
      * @var string[]
      */
-    private const RETURNABLE_STATUSES = ['submitted', 'wip'];
+    private const RETURNABLE_STATUSES = Application::RETURNABLE_STATUSES;
 
     /**
      * Inbound communication type identifiers mapped to each channel.

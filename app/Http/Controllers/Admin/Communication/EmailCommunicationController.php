@@ -87,6 +87,7 @@ class EmailCommunicationController extends Controller
         try {
             $this->dispatchEmailNotification($application, $validated);
             $this->logOutboundCommunication($request, $application, $validated);
+            $this->maybeStampLetterTimestamp($application, $validated['letter_type'] ?? null);
 
             ActivityLog::logActivity('email_sent', 'Email sent to client', $application);
 
@@ -334,8 +335,9 @@ class EmailCommunicationController extends Controller
     private function validateOutboundEmail(Request $request): array
     {
         return $request->validate([
-            'subject' => 'required|string|max:255',
-            'message' => 'required|string|max:5000',
+            'subject'     => 'required|string|max:255',
+            'message'     => 'required|string|max:5000',
+            'letter_type' => 'nullable|string|in:approval_letter,decline_letter',
         ]);
     }
 
@@ -675,6 +677,27 @@ class EmailCommunicationController extends Controller
                 'error'          => $e->getMessage(),
                 'application_id' => $application->id,
             ]);
+        }
+    }
+
+    /**
+     * Stamp the relevant letter timestamp on the application when a typed
+     * letter (approval or decline) is dispatched via the workflow modal.
+     *
+     * @param  Application  $application  The target application.
+     * @param  string|null  $letterType   'approval_letter' | 'decline_letter' | null
+     * @return void
+     */
+    private function maybeStampLetterTimestamp(Application $application, ?string $letterType): void
+    {
+        $column = match ($letterType) {
+            'approval_letter' => 'approval_letter_sent_at',
+            'decline_letter'  => 'decline_letter_sent_at',
+            default           => null,
+        };
+
+        if ($column && is_null($application->{$column})) {
+            $application->update([$column => now()]);
         }
     }
 }
