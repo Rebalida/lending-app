@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\ApplicationController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\TaskController;
+use App\Http\Controllers\Admin\GuarantorFormController;
+use App\Http\Controllers\Admin\BusinessDeclarationController;
 use App\Http\Controllers\Admin\CreditControllers\CreditCheckController;
 use App\Http\Controllers\Admin\LivingExpenseVerificationController;
 use App\Http\Controllers\Admin\AssessorDirectorAssetsLiabilitiesController;
@@ -49,6 +51,25 @@ Route::post('/applications/{application}/generate-guarantor-form',
 Route::get('/applications/{application}/download-guarantor-form',
     [ApplicationController::class, 'downloadGuarantorForm'])
     ->name('applications.downloadGuarantorForm');
+
+// Guarantor Form
+Route::get('/applications/{application}/guarantor-form',       [GuarantorFormController::class, 'show'])
+    ->name('applications.guarantor-form.show');
+Route::post('/applications/{application}/guarantor-form',      [GuarantorFormController::class, 'store'])
+    ->name('applications.guarantor-form.store');
+Route::post('/applications/{application}/guarantor-form/send', [GuarantorFormController::class, 'send'])
+    ->name('applications.guarantor-form.send');
+Route::get('/applications/{application}/guarantor-form/signed', [GuarantorFormController::class, 'viewSigned'])
+    ->name('applications.guarantor-form.signed');
+
+// Business Declaration
+Route::post('/applications/{application}/business-declaration/send',
+    [BusinessDeclarationController::class, 'send'])
+    ->name('applications.business-declaration.send');
+
+Route::get('/applications/{application}/business-declaration/signed',
+    [BusinessDeclarationController::class, 'view'])
+    ->name('applications.business-declaration.view');
 
 // Comments
 Route::post('applications/{application}/comments', [CommentController::class, 'store'])

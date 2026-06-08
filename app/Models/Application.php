@@ -119,6 +119,7 @@ class Application extends Model
         'business_declaration_signed_at',
         'decline_letter_sent_at',
         'decline_reason',
+        'guarantor_data',
     ];
 
     protected $casts = [
@@ -140,6 +141,7 @@ class Application extends Model
         'business_declaration_sent_at'     => 'datetime',
         'business_declaration_signed_at'   => 'datetime',
         'decline_letter_sent_at'           => 'datetime',
+        'guarantor_data'                   => 'array',
     ];
 
     protected static function boot()
@@ -602,5 +604,15 @@ class Application extends Model
     public function hasGuarantorFormCompleted(): bool
     {
         return !is_null($this->guarantor_form_completed_at);
+    }
+
+    public function hasGuarantorData(): bool
+    {
+        return !is_null($this->guarantor_data);
+    }
+
+    public function isGuarantorFormSigned(): bool
+    {
+        return !is_null($this->guarantor_form_signed_at);
     }
 }

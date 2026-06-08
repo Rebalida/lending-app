@@ -8,6 +8,8 @@ use App\Http\Controllers\EmploymentDetailsController;
 use App\Http\Controllers\LivingExpenseController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\GuarantorFormController;
+use App\Http\Controllers\BusinessDeclarationController;
 use App\Http\Controllers\DeclarationController;
 use App\Http\Controllers\CreditControllers\BasiqController;
 use App\Http\Controllers\CreditControllers\CreditSenseController;
@@ -91,6 +93,23 @@ Route::get('applications/{application}/declarations',  [DeclarationController::c
     ->name('applications.declarations.index');
 Route::post('applications/{application}/declarations', [DeclarationController::class, 'store'])
     ->name('applications.declarations.store');
+
+// Guarantor Form
+Route::get('/applications/{application}/guarantor-form',       [GuarantorFormController::class, 'show'])
+    ->name('applications.guarantor-form.client.show')
+    ->middleware('signed');
+
+Route::post('/applications/{application}/guarantor-form/sign', [GuarantorFormController::class, 'sign'])
+    ->name('applications.guarantor-form.sign');
+
+Route::get('/applications/{application}/business-declaration',
+    [BusinessDeclarationController::class, 'show'])
+    ->name('applications.business-declaration.show')
+    ->middleware('signed');
+
+Route::post('/applications/{application}/business-declaration/sign',
+    [BusinessDeclarationController::class, 'sign'])
+    ->name('applications.business-declaration.sign');
 
 // CreditSense Bank Statement Connection
 Route::prefix('applications/{application}/creditsense')->name('creditsense.')->group(function () {
