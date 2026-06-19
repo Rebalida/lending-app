@@ -41,8 +41,11 @@ Route::prefix('applications/{application}/basiq')->name('basiq.')->group(functio
     Route::post('user',         [BasiqController::class, 'createUser'])->name('user');
     Route::post('client-token', [BasiqController::class, 'createClientToken'])->name('client-token');
     Route::post('complete',     [BasiqController::class, 'complete'])->name('complete');
-    Route::post('auth-link', [BasiqController::class, 'createAuthLink'])
-    ->name('auth-link');
+    Route::post('auth-link',    [BasiqController::class, 'createAuthLink'])->name('auth-link');
+    Route::get('complete',      [BasiqController::class, 'completeRedirect'])->name('complete-redirect');
+    
+    // NEW: For polling in question context
+    Route::get('check-completion', [BasiqController::class, 'checkCompletion'])->name('check-completion');
 });
 
 // Personal Details

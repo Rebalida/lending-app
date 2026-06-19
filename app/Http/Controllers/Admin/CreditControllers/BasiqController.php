@@ -58,9 +58,9 @@ class BasiqController extends Controller
      * @var string[]
      */
     private const REPORT_EVENTS = [
-        'statements.retrieved',
-        'transactions.retrieved',
-        'report.ready',
+        'account.updated',
+        'transactions.updated',
+        'account.retrieved',
     ];
 
     /**
@@ -71,10 +71,10 @@ class BasiqController extends Controller
      *
      * @var string[]
      */
-    private const COMPLETION_EVENTS = [
-        'connections.created',
-        'connections.updated',
-        'auth_links.completed',
+     private const COMPLETION_EVENTS = [
+        'connection.created',
+        'connection.activated',
+        'consent.created',
     ];
 
     // =========================================================================
@@ -154,31 +154,43 @@ class BasiqController extends Controller
             return response()->json(['error' => 'Invalid signature.'], 401);
         }
 
-        $eventType = $request->input('eventType');
-        $userId    = $request->input('data.userId');
-        $payload   = $request->all();
+        $payload = $request->all();
+
+        // Extract eventTypeId (Basiq uses 'eventTypeId', not 'eventType' or 'type')
+        $eventTypeId = $payload['eventTypeId'] ?? null;
+
+        // Extract userId from the URL path in links.eventEntity
+        // Example: https://au-api.basiq.io/users/ff1d3f52-9170-412d-bb31-d4a1444e6a0a/consents/...
+        $userId = null;
+        if (! empty($payload['links']['eventEntity'])) {
+            if (preg_match('/\/users\/([a-f0-9\-]+)\//', $payload['links']['eventEntity'], $matches)) {
+                $userId = $matches[1];
+            }
+        }
 
         Log::info('[Basiq] Webhook received', [
-            'eventType' => $eventType,
-            'userId'    => $userId,
+            'eventTypeId' => $eventTypeId,
+            'userId'      => $userId,
+            'eventEntity' => $payload['links']['eventEntity'] ?? null,
         ]);
 
         if (! $userId) {
+            Log::warning('[Basiq] No userId found in webhook payload');
             return response()->json(['received' => true]);
         }
 
         $application = $this->resolveApplicationByUserId($userId);
 
         if (! $application) {
+            Log::warning('[Basiq] No application found for userId', ['userId' => $userId]);
             return response()->json(['received' => true]);
         }
 
-        $this->handleReportEvent($eventType, $payload, $application);
-        $this->handleCompletionEvent($eventType, $application);
+        $this->handleReportEvent($eventTypeId, $payload, $application);
+        $this->handleCompletionEvent($eventTypeId, $application);
 
         return response()->json(['received' => true]);
     }
-
     // =========================================================================
     // Private Helpers — Authentication
     // =========================================================================
@@ -278,19 +290,58 @@ class BasiqController extends Controller
      * @param  Application  $application  The resolved application to update.
      * @return void
      */
-    private function handleReportEvent(string $eventType, array $payload, Application $application): void
+    private function handleReportEvent(string $eventTypeId, array $payload, Application $application): void
     {
-        $isReportEvent = in_array($eventType, self::REPORT_EVENTS)
-                      || data_get($payload, 'data.report');
+        $isReportEvent = in_array($eventTypeId, self::REPORT_EVENTS);
 
         if (! $isReportEvent) {
             return;
         }
 
-        $verifiedExpenses = $this->deriveExpenses($payload);
+        $eventEntity = $payload['links']['eventEntity'] ?? null;
+        $enrichedReport = null;
+
+        if ($eventEntity && in_array($eventTypeId, ['transactions.updated', 'account.updated'])) {
+            try {
+                $apiKey = $this->apiKey();
+                $token = $this->getServerToken($apiKey);
+
+                $response = Http::withToken($token)
+                    ->withHeaders(['basiq-version' => '3.0'])
+                    ->get($eventEntity);
+
+                if ($response->successful()) {
+                    $enrichedReport = $response->json();
+                    
+                    // Aggregate transactions into monthly expenses by category
+                    if (!empty($enrichedReport['data']) && is_array($enrichedReport['data'])) {
+                        $enrichedReport = $this->aggregateTransactionsByCategory($enrichedReport);
+                    }
+                    
+                    Log::info('[Basiq] Fetched and aggregated transaction data', [
+                        'application_id' => $application->id,
+                        'event_type'     => $eventTypeId,
+                    ]);
+                } else {
+                    Log::warning('[Basiq] Failed to fetch transaction data', [
+                        'application_id' => $application->id,
+                        'status'         => $response->status(),
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('[Basiq] Error fetching transaction data', [
+                    'application_id' => $application->id,
+                    'error'          => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $reportData = $enrichedReport ?? $payload;
+
+        $verifiedExpenses = $this->deriveExpenses($reportData);
 
         $application->update([
-            'bank_api_report'             => $payload,
+            'bank_api_report'             => $reportData,
             'bank_api_report_received_at' => now(),
             'verified_expenses'           => $verifiedExpenses ?: null,
             'bank_api_provider_name'      => self::PROVIDER_NAME,
@@ -298,9 +349,53 @@ class BasiqController extends Controller
 
         ActivityLog::logActivity(
             'bank_api_report_received',
-            "Basiq report received via webhook: {$eventType}",
+            "Basiq report received via webhook: {$eventTypeId}",
             $application
         );
+    }
+
+    /**
+     * Aggregate individual transactions into monthly expense categories.
+     * Groups by subClass.title and calculates monthly average.
+     */
+    private function aggregateTransactionsByCategory(array $report): array
+    {
+        $categories = [];
+
+        foreach ($report['data'] as $transaction) {
+            $basiqTitle = $transaction['subClass']['title'] ?? 'Other';
+            $amount = (float) $transaction['amount'];
+
+            // Map Basiq merchant category to generic expense category
+            $expenseCategory = \App\Services\BasiqCategoryMapper::mapToExpenseCategory($basiqTitle);
+            
+            if (!$expenseCategory) {
+                // Use original Basiq title if no mapping exists
+                $expenseCategory = $basiqTitle;
+            }
+
+            if (!isset($categories[$expenseCategory])) {
+                $categories[$expenseCategory] = 0;
+            }
+            $categories[$expenseCategory] += abs($amount);
+        }
+
+        // Convert to monthly expense format
+        $monthlyExpenses = [];
+        foreach ($categories as $title => $totalAmount) {
+            $monthlyExpenses[] = [
+                'category' => $title,
+                'monthly_amount' => round($totalAmount, 2),
+            ];
+        }
+
+        return [
+            'data' => [
+                'expenses' => [
+                    'monthly' => $monthlyExpenses
+                ]
+            ]
+        ];
     }
 
     /**

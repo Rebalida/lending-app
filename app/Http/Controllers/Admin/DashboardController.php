@@ -118,15 +118,17 @@ class DashboardController extends Controller
     private function buildApplicationStats(Builder $baseQuery, mixed $user): array
     {
         $stats = [
-            'total_applications'       => (clone $baseQuery)->count(),
-            'draft'                    => (clone $baseQuery)->where('status', 'draft')->count(),
-            'submitted'                => (clone $baseQuery)->where('status', 'submitted')->count(),
-            'wip'             => (clone $baseQuery)->where('status', 'wip')->count(),
-            'outstanding_document' => (clone $baseQuery)->where('status', 'outstanding_document')->count(),
-            'approved'                 => (clone $baseQuery)->where('status', 'approved')->count(),
-            'declined'                 => (clone $baseQuery)->where('status', 'declined')->count(),
+            'total_applications' => (clone $baseQuery)->count(),
+            'application'        => (clone $baseQuery)->where('status', 'application')->count(),
+            'wip'                => (clone $baseQuery)->where('status', 'wip')->count(),
+            'outdoc'             => (clone $baseQuery)->where('status', 'outdoc')->count(),
+            'approved'           => (clone $baseQuery)->where('status', 'approved')->count(),
+            'settled'            => (clone $baseQuery)->where('status', 'settled')->count(),
+            'declined'           => (clone $baseQuery)->where('status', 'declined')->count(),
+            'deferred'           => (clone $baseQuery)->where('status', 'deferred')->count(),
         ];
 
+        // task stats unchanged...
         $stats['my_tasks'] = $user->isAssessor()
             ? Task::where('assigned_to', $user->id)->whereNull('completed_at')->count()
             : 0;
@@ -317,29 +319,29 @@ class DashboardController extends Controller
             ->get();
     }
 
-    public function getChartData()
+    public function getChartData(): array
     {
-        $days      = 30;
-        $startDate = now()->subDays($days);
-
-        // NEW — metric card aggregates
-        $total    = Application::where('created_at', '>=', $startDate)->count();
-        $approved = Application::where('created_at', '>=', $startDate)->where('status', 'approved')->count();
-        $avg      = (int) Application::where('created_at', '>=', $startDate)->avg('loan_amount');
-        $pending  = Application::where('created_at', '>=', $startDate)->whereIn('status', ['submitted', 'wip'])->count();
+        $total   = Application::count();
+        $settled = Application::where('status', 'settled')->count();
+        $avg     = (int) Application::avg('loan_amount');
+        $pending = Application::whereIn('status', ['application', 'wip'])->count();
 
         return [
-            'metrics' => compact('total', 'approved', 'avg', 'pending'),
+            'metrics' => compact('total', 'settled', 'avg', 'pending'),
 
-            'loanPurposeData' => Application::query()->where('created_at', '>=', $startDate)->groupBy('loan_purpose')->selectRaw('loan_purpose, COUNT(*) as count')->get(),
+            'loanPurposeData' => Application::query()
+                ->whereNotNull('loan_purpose')
+                ->groupBy('loan_purpose')
+                ->selectRaw('loan_purpose, COUNT(*) as count')
+                ->get(),
 
             'statusData' => Application::query()
-                ->where('created_at', '>=', $startDate)
                 ->groupBy('status')
                 ->selectRaw('status, COUNT(*) as count')
                 ->get(),
 
-            'loanAmountData' => Application::query()->where('created_at', '>=', $startDate)
+            'loanAmountData' => Application::query()
+                ->whereNotNull('loan_amount')
                 ->selectRaw("
                     CASE
                         WHEN loan_amount < 10000  THEN 'Under \$10k'
@@ -358,7 +360,11 @@ class DashboardController extends Controller
                     END")
                 ->get(),
 
-            'trendData' => Application::query()->where('created_at', '>=', $startDate)->selectRaw('DATE(created_at) as date, COUNT(*) as count')->groupByRaw('DATE(created_at)')->orderBy('date')->get(),
+            'trendData' => Application::query()
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                ->groupByRaw('DATE(created_at)')
+                ->orderBy('date')
+                ->get(),
         ];
     }
 }

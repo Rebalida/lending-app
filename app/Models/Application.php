@@ -142,6 +142,8 @@ class Application extends Model
         'business_declaration_signed_at'   => 'datetime',
         'decline_letter_sent_at'           => 'datetime',
         'guarantor_data'                   => 'array',
+        'bank_api_report_received_at' => 'datetime',
+        'credit_sense_report_received_at' => 'datetime',
     ];
 
     protected static function boot()

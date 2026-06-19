@@ -112,11 +112,6 @@ use App\Models\Application;
                 window.dashboardChartData = @json($chartData);
             </script>
 
-            {{-- Pass chart data to JavaScript --}}
-            <script>
-                window.dashboardChartData = @json($chartData);
-            </script>
-
             {{-- ── My Tasks (assessors only) ──────────────────────────────── --}}
             @if(auth()->user()->isAssessor() && count($myTasks) > 0)
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">

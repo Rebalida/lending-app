@@ -1,16 +1,13 @@
 import Chart from 'chart.js/auto';
 
 const STATUS_MAP = {
-    apply:           { label: 'Apply',           color: '#888780' },
-    assessment:      { label: 'Assessment',      color: '#378ADD' },
-    outstanding:     { label: 'Outstanding',     color: '#f59e0b' },
-    loan_doc_out:    { label: 'Loan Doc Out',    color: '#f97316' },
-    wait_sign:       { label: 'Wait Sign',       color: '#eab308' },
-    sign:            { label: 'Sign',            color: '#a855f7' },
-    settled:         { label: 'Settled',         color: '#1d9e75' },
-    declined:        { label: 'Declined',        color: '#dc2626' },
-    deferred:        { label: 'Deferred',        color: '#6b7280' },
-    withdrawn:       { label: 'Withdrawn',       color: '#64748b' },
+    application: { label: 'Application',  color: '#378ADD' },
+    wip:         { label: 'In Progress',  color: '#ba7517' },
+    outdoc:      { label: 'Outstanding',  color: '#D85A30' },
+    approved:    { label: 'Approved',     color: '#8b5cf6' },
+    settled:     { label: 'Settled',      color: '#1d9e75' },
+    declined:    { label: 'Declined',     color: '#E24B4A' },
+    deferred:    { label: 'Deferred',     color: '#6b7280' },
 };
 
 const PURPOSE_COLORS = ['#534AB7','#378ADD','#1d9e75','#ba7517','#888780','#D85A30','#E24B4A'];
@@ -59,7 +56,7 @@ function populateMetrics(data) {
     set('m-settled', settled);  // Changed from 'approved'
     set('m-settled-pct', total ? Math.round(settled / total * 100) + '% settlement rate' : '—');  // Updated
     set('m-avg',      fmtCurrency(avg));
-    set('m-pending',  pending);
+    set('m-pending', metrics.pending ?? 0);
 }
 
 function initPurposeChart(data) {

@@ -1,5 +1,6 @@
 // resources/js/applications/client-questions.js
 // Handles: answer submission + inline document upload per question card
+// Uses shared bank connection logic from basiq and creditsense modules
 
 document.addEventListener('DOMContentLoaded', () => {
     'use strict';
@@ -20,9 +21,130 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
+    // ── Get app ID from URL ───────────────────────────────────────────────────
+    const getAppId = () => {
+        const match = window.location.pathname.match(/applications\/(\d+)/);
+        return match?.[1];
+    };
+
+    // ── SHARED BANK CONNECTION API CALLS ──────────────────────────────────────
+
+    /**
+     * Shared: Create Basiq user (idempotent)
+     */
+    async function createBasiqUser(appId) {
+        const res = await fetch(`/applications/${appId}/basiq/user`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            },
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(
+                (data.errors && typeof data.errors === 'object')
+                    ? Object.values(data.errors).flat().join('\n')
+                    : data.error ?? 'Failed to create Basiq user'
+            );
+        }
+        return data.bank_api_user_ref;
+    }
+
+    /**
+     * Shared: Create Basiq auth link and return redirect URL
+     */
+    async function createBasiqAuthLink(appId) {
+        const res = await fetch(`/applications/${appId}/basiq/auth-link`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            },
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error ?? 'Failed to create auth link');
+        }
+        return data.url;
+    }
+
+    /**
+     * Shared: Fetch CreditSense configuration
+     */
+    async function fetchCreditSenseConfig(appId) {
+        const res = await fetch(`/applications/${appId}/creditsense/config`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            },
+        });
+
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data?.message ?? 'Failed to load CreditSense configuration');
+        }
+        return res.json();
+    }
+
+    /**
+     * Shared: Dynamically load CreditSense SDK script
+     */
+    function loadCsSdk(cdnUrl) {
+        return new Promise((resolve, reject) => {
+            // Already loaded
+            if (typeof jQuery !== 'undefined' && jQuery.CreditSense) {
+                resolve();
+                return;
+            }
+
+            // Script already injected
+            if (document.getElementById('cs-sdk-script')) {
+                // Wait for it
+                const existing = document.getElementById('cs-sdk-script');
+                const handler = () => {
+                    if (typeof jQuery !== 'undefined' && jQuery.CreditSense) {
+                        resolve();
+                    } else {
+                        reject(new Error('CreditSense SDK loaded but not attached to jQuery'));
+                    }
+                };
+                existing.addEventListener('load', handler);
+                existing.addEventListener('error', () => reject(new Error('Failed to load CreditSense SDK')));
+                return;
+            }
+
+            if (typeof jQuery === 'undefined') {
+                reject(new Error('jQuery is required by CreditSense SDK but not found'));
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.id = 'cs-sdk-script';
+            script.src = cdnUrl;
+            script.async = true;
+
+            script.addEventListener('load', () => {
+                if (typeof jQuery !== 'undefined' && jQuery.CreditSense) {
+                    resolve();
+                } else {
+                    reject(new Error('CreditSense SDK loaded but jQuery.CreditSense not available'));
+                }
+            });
+
+            script.addEventListener('error', () => {
+                reject(new Error(`Failed to load CreditSense SDK from ${cdnUrl}`));
+            });
+
+            document.head.appendChild(script);
+        });
+    }
+
+    // ── END SHARED BANK CONNECTION CALLS ──────────────────────────────────────
+
     // ── File input wiring (one per card) ─────────────────────────────────────
-    // Run on page load for server-rendered cards; called again after answer to
-    // handle any future dynamic renders if needed.
 
     function wireCard(card) {
         const fileInput = card.querySelector('.doc-file-input');
@@ -52,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Show inline file preview
             if (previewName) previewName.textContent = file.name;
             if (previewSize) previewSize.textContent = formatBytes(file.size);
             preview?.classList.remove('hidden');
@@ -64,30 +185,157 @@ document.addEventListener('DOMContentLoaded', () => {
             fileInput.value = '';
             preview?.classList.add('hidden');
             uploadError?.classList.add('hidden');
-            // Return focus to the upload trigger label
             card.querySelector('.doc-upload-trigger')?.focus();
         });
     }
 
-    // Wire all cards present on load
     section.querySelectorAll('.question-card').forEach(wireCard);
 
-    // ── CreditSense bank-connect wiring ───────────────────────────────────────
+    // ── Bank connect wiring & dispatcher ──────────────────────────────────────
 
     function wireBankConnectCard(card) {
         const connectBtn = card.querySelector('.cs-connect-btn');
         if (!connectBtn || connectBtn.dataset.wired) return;
         connectBtn.dataset.wired = '1';
 
-        connectBtn.addEventListener('click', () => launchCreditSense(card));
+        connectBtn.addEventListener('click', () => launchBankConnect(card));
     }
 
     section.querySelectorAll('.question-card[data-bank-connect="true"]').forEach(wireBankConnectCard);
 
-    async function launchCreditSense(card) {
+    // ── Dispatcher: route to correct provider handler ─────────────────────────
+
+    async function launchBankConnect(card) {
+        const provider = card.dataset.bankProvider ?? 'creditsense';
+        
+        if (provider === 'basiq') {
+            await launchBasiqFromQuestion(card);
+        } else {
+            await launchCreditSenseFromQuestion(card);
+        }
+    }
+
+    // ── BASIQ handler (uses shared functions) ────────────────────────────────
+
+    async function launchBasiqFromQuestion(card) {
+        const questionId = card.dataset.questionId;
+        const connectBtn = card.querySelector('.cs-connect-btn');
+        const connectIcon = card.querySelector('.cs-connect-icon');
+        const connectSpinner = card.querySelector('.cs-connect-spinner');
+        const connectLabel = card.querySelector('.cs-connect-label');
+        
+        if (!connectBtn) return;
+
+        const appId = getAppId();
+        if (!appId) {
+            showToast('Could not determine application ID', 'error');
+            return;
+        }
+
+        connectBtn.disabled = true;
+        connectIcon?.classList.add('hidden');
+        connectSpinner?.classList.remove('hidden');
+        if (connectLabel) connectLabel.textContent = 'Connecting…';
+
+        let pollInterval = null;
+        let pollTimeouts = 0;
+        const MAX_POLL_DURATION = 15 * 60 * 1000; // 15 minutes
+
+        try {
+            // Step 1: Create Basiq user
+            await createBasiqUser(appId);
+
+            // Step 2: Create auth link
+            const authUrl = await createBasiqAuthLink(appId);
+
+            // Step 3: Open in popup
+            const popup = window.open(authUrl, 'basiq_consent', 'width=800,height=600');
+            
+            if (!popup) {
+                throw new Error('Popup blocked. Please allow popups and try again.');
+            }
+
+            if (connectLabel) connectLabel.textContent = 'Complete the steps, then close the popup…';
+
+            pollInterval = setInterval(async () => {
+
+                // ── Primary signal: popup was closed by user ──────────────────────
+                if (popup.closed) {
+                    clearInterval(pollInterval);
+
+                    if (connectLabel) connectLabel.textContent = 'Verifying connection…';
+
+                    try {
+                        // Always call /complete — it's idempotent, safe to call even if
+                        // the server already knows (e.g. via webhook)
+                        await fetch(`/applications/${appId}/basiq/complete`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrf(),
+                            },
+                        });
+
+                        await autoAnswerBankConnectQuestion(questionId, appId, card);
+
+                    } catch (e) {
+                        console.error('[Basiq] Failed to mark complete after popup closed', e);
+                        connectBtn.disabled = false;
+                        connectIcon?.classList.remove('hidden');
+                        connectSpinner?.classList.add('hidden');
+                        if (connectLabel) connectLabel.textContent = 'Connect My Bank';
+                        showToast('Could not confirm bank connection. Please try again.', 'error');
+                    }
+                    return;
+                }
+
+                // ── Fallback: server already knows (webhook fired while popup open) ─
+                try {
+                    const checkRes = await fetch(`/applications/${appId}/basiq/check-completion`, {
+                        headers: { 'X-CSRF-TOKEN': csrf() },
+                    });
+                    const checkData = await checkRes.json();
+
+                    if (checkData.completed) {
+                        clearInterval(pollInterval);
+                        try { popup.close(); } catch (e) {}
+                        await autoAnswerBankConnectQuestion(questionId, appId, card);
+                        return;
+                    }
+                } catch (err) {
+                    console.error('[Basiq] Poll check failed:', err);
+                }
+
+                // ── Timeout guard ─────────────────────────────────────────────────
+                pollTimeouts += 2000;
+                if (pollTimeouts > MAX_POLL_DURATION) {
+                    clearInterval(pollInterval);
+                    try { popup.close(); } catch (e) {}
+                    showToast('Connection timed out. Please try again.', 'error');
+                    connectBtn.disabled = false;
+                    connectIcon?.classList.remove('hidden');
+                    connectSpinner?.classList.add('hidden');
+                    if (connectLabel) connectLabel.textContent = 'Connect My Bank';
+                }
+
+            }, 2000);
+
+        } catch (err) {
+            if (pollInterval) clearInterval(pollInterval);
+            
+            connectBtn.disabled = false;
+            connectIcon?.classList.remove('hidden');
+            connectSpinner?.classList.add('hidden');
+            if (connectLabel) connectLabel.textContent = 'Connect My Bank';
+            
+            showToast(err.message ?? 'Bank connection failed. Please try again.', 'error');
+        }
+    }
+
+    // ── CREDITSENSE handler (uses shared functions) ──────────────────────────
+
+    async function launchCreditSenseFromQuestion(card) {
         const questionId   = card.dataset.questionId;
-        const configRoute  = card.querySelector('.cs-bank-panel')?.dataset.configRoute;
-        const completeRoute = card.querySelector('.cs-bank-panel')?.dataset.completeRoute;
         const connectBtn   = card.querySelector('.cs-connect-btn');
         const connectIcon  = card.querySelector('.cs-connect-icon');
         const connectSpinner = card.querySelector('.cs-connect-spinner');
@@ -98,208 +346,168 @@ document.addEventListener('DOMContentLoaded', () => {
         const iframeError     = card.querySelector('.cs-iframe-error');
         const iframeErrorMsg  = card.querySelector('.cs-iframe-error-msg');
 
-        if (!configRoute) return;
+        const appId = getAppId();
+        if (!appId) {
+            showToast('Could not determine application ID', 'error');
+            return;
+        }
 
-        // Loading state on button
+        if (!connectBtn) return;
+
         connectBtn.disabled = true;
         connectIcon?.classList.add('hidden');
         connectSpinner?.classList.remove('hidden');
         if (connectLabel) connectLabel.textContent = 'Connecting…';
 
         try {
-            const res = await fetch(configRoute, {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() },
-            });
-
-            // Read the JSON body regardless of status so we can surface the server message
-            const config = await res.json().catch(() => null);
-
-            if (!res.ok) {
-                // 500 from iframeConfig means CreditSense is not configured in Settings
-                const serverMsg = config?.error ?? null;
-                const isNotConfigured = res.status === 500 || (serverMsg && serverMsg.toLowerCase().includes('not configured'));
-
-                throw new Error(
-                    isNotConfigured
-                        ? 'Bank connection is not available right now. Please contact support.'
-                        : (serverMsg ?? 'Failed to load bank connection config.')
-                );
-            }
+            const config = await fetchCreditSenseConfig(appId);
 
             if (config.already_completed) {
-                await autoAnswerBankConnect(questionId, completeRoute, card);
+                markCardAnswered(card, new Date().toIso8601String());
                 return;
             }
 
-            // Show iframe container
+            // RESET: Clear error states on new attempt
+            iframeError?.classList.add('hidden');
+            if (iframeErrorMsg) iframeErrorMsg.textContent = '';
+            
+            // RESET: Show loading and hide previous iframe content
+            iframeLoading?.classList.remove('hidden');
+            iframeEl?.classList.add('hidden');
+            
             iframeContainer?.classList.remove('hidden');
 
-            // Load SDK
             const cdnUrl = config.cdn_url
                 ?? 'https://6dadc58e31982fd9f0be-d4a1ccb0c1936ef2a5b7f304db75b8a4.ssl.cf4.rackcdn.com/CS-Integrated-Iframe-v1.min.js';
+            
             await loadCsSdk(cdnUrl);
 
-            // Init SDK pointing at this card's iframe
             if (typeof jQuery === 'undefined' || !jQuery.CreditSense?.Iframe) {
-                throw new Error('CreditSense SDK did not load correctly.');
+                throw new Error('CreditSense SDK failed to load');
+            }
+
+            // RESET: Clear previous iframe to force fresh initialization
+            const iframeSelector = `#creditSenseIFrame-${questionId}`;
+            const oldIframe = document.querySelector(iframeSelector);
+            if (oldIframe) {
+                oldIframe.src = 'about:blank';  // Clear iframe
             }
 
             jQuery.CreditSense.Iframe({
                 client:              config.client_code,
-                elementSelector:     `#creditSenseIFrame-${questionId}`,
+                elementSelector:     iframeSelector,
                 enableDynamicHeight: true,
                 params: { appRef: config.app_ref, centrelink: true },
-                // callback: (code) => handleCsCallback(code, questionId, completeRoute, card),
-
-                callback: (code, appId) => handleCsCallback(code, appId, questionId, completeRoute, card, config),
+                callback: (code) => handleCsCallbackFromQuestion(code, appId, questionId, card, config),
             });
 
-            // SDK initialised — hide the connect button row; the iframe loading
-            // spinner inside the container is now the only visible progress indicator
             connectBtn.closest('.flex.items-center')?.classList.add('hidden');
 
         } catch (err) {
-            // Restore the connect button
             connectBtn.disabled = false;
             connectIcon?.classList.remove('hidden');
             connectSpinner?.classList.add('hidden');
-            if (connectLabel) connectLabel.textContent = 'Try Again';
+            if (connectLabel) connectLabel.textContent = 'Connect My Bank';
 
-            // If the iframe container was never shown (config failed before we got there),
-            // show the error inline below the connect button row instead
             const containerVisible = iframeContainer && !iframeContainer.classList.contains('hidden');
 
             if (containerVisible) {
                 iframeLoading?.classList.add('hidden');
-                if (iframeErrorMsg) iframeErrorMsg.textContent = err.message;
+                iframeEl?.classList.add('hidden');
                 iframeError?.classList.remove('hidden');
+                if (iframeErrorMsg) iframeErrorMsg.textContent = err.message ?? 'Connection failed';
             } else {
-                // Show error inside the panel without opening the iframe container
-                let errEl = card.querySelector('.cs-config-error');
-                if (!errEl) {
-                    errEl = document.createElement('p');
-                    errEl.className = 'cs-config-error mt-2 text-xs text-red-600 flex items-center gap-1';
-                    errEl.setAttribute('role', 'alert');
-                    errEl.setAttribute('aria-live', 'polite');
-                    card.querySelector('.cs-bank-panel')?.appendChild(errEl);
-                }
-                errEl.innerHTML = `<svg class="w-3.5 h-3.5 flex-shrink-0 text-red-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9 9a1 1 0 000 2v3a1 1 0 102 0v-3a1 1 0 000-2H9zm0-4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/></svg> ${esc(err.message)}`;
-                errEl.classList.remove('hidden');
-                errEl.focus();
+                showToast(err.message ?? 'Unable to connect to bank. Please try again.', 'error');
             }
         }
-    } // end launchCreditSense
+    }
 
-    function handleCsCallback(code, appId, questionId, completeRoute, card, config) {
+    function handleCsCallbackFromQuestion(code, appId, questionId, card, config) {
         const iframeLoading = card.querySelector('.cs-iframe-loading');
         const iframeEl      = card.querySelector('.cs-iframe');
         const iframeError   = card.querySelector('.cs-iframe-error');
         const iframeErrorMsg = card.querySelector('.cs-iframe-error-msg');
+        const connectBtn    = card.querySelector('.cs-connect-btn');
 
         switch (String(code)) {
             case '0':
-                // Iframe ready — show it
                 iframeLoading?.classList.add('hidden');
-                if (iframeEl) {
-                    iframeEl.classList.remove('hidden');
-                    iframeEl.setAttribute('aria-busy', 'false');
-                }
+                iframeEl?.classList.remove('hidden');
                 break;
 
             case '3':
-            if (appId && config?.saveAppIdRoute) {
-                fetch(config.saveAppIdRoute, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrf(),
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ app_id: appId }),
-                }).catch(() => {});
-            }
-            break;
+                if (iframeLoading) iframeLoading.textContent = 'Verifying account…';
+                break;
 
             case '99':
             case '100':
-                // Success — mark complete on server, then auto-answer the question
-                autoAnswerBankConnect(questionId, completeRoute, card);
+                iframeLoading?.classList.add('hidden');
+                iframeEl?.classList.add('hidden');
+                autoAnswerBankConnectQuestion(questionId, appId, card);
                 break;
 
             case '-1':
-                // Cancelled — hide the iframe container and restore the connect button row
-                card.querySelector('.cs-iframe-container')?.classList.add('hidden');
-                const btnRow = card.querySelector('.cs-connect-btn')?.closest('.flex.items-center');
-                if (btnRow) btnRow.classList.remove('hidden');
-                const btn = card.querySelector('.cs-connect-btn');
-                if (btn) {
-                    btn.disabled = false;
-                    card.querySelector('.cs-connect-icon')?.classList.remove('hidden');
-                    card.querySelector('.cs-connect-spinner')?.classList.add('hidden');
-                    const lbl = card.querySelector('.cs-connect-label');
-                    if (lbl) lbl.textContent = 'Connect My Bank';
-                    btn.focus();
+                // Cancelled — allow user to retry
+                iframeError?.classList.remove('hidden');
+                if (iframeErrorMsg) iframeErrorMsg.textContent = 'Connection was cancelled. Click the button above to try again.';
+                
+                // Re-enable the connect button for retry
+                const connectBtn2 = card.querySelector('.cs-connect-btn');
+                if (connectBtn2) {
+                    connectBtn2.disabled = false;
+                    connectBtn2.classList.remove('hidden');
+                    connectBtn2.closest('.flex.items-center')?.classList.remove('hidden');
                 }
                 break;
 
             case '-2':
-                // Timed out
-                iframeLoading?.classList.add('hidden');
-                if (iframeErrorMsg) iframeErrorMsg.textContent = 'Connection timed out. Please refresh the page and try again.';
+                // Timeout
                 iframeError?.classList.remove('hidden');
+                if (iframeErrorMsg) iframeErrorMsg.textContent = 'Connection timed out. Please try again.';
+                
+                // Re-enable the connect button for retry
+                const connectBtn3 = card.querySelector('.cs-connect-btn');
+                if (connectBtn3) {
+                    connectBtn3.disabled = false;
+                    connectBtn3.classList.remove('hidden');
+                    connectBtn3.closest('.flex.items-center')?.classList.remove('hidden');
+                }
                 break;
         }
     }
 
-    async function autoAnswerBankConnect(questionId, completeRoute, card) {
+    async function autoAnswerBankConnectQuestion(questionId, appId, card) {
         try {
-            // Step 1: mark CreditSense complete on server
-            if (completeRoute) {
-                await fetch(completeRoute, {
-                    method: 'POST',
-                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() },
-                });
-            }
+            // Mark CreditSense complete on server
+            await fetch(`/applications/${appId}/creditsense/complete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf(),
+                },
+            });
 
-            // Step 2: submit a system answer — stored server-side, not shown to client
+            // Submit answer
             const answerRes = await fetch(card.dataset.answerRoute, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrf(),
-                    'Accept':       'application/json',
+                    'Accept': 'application/json',
                 },
-                body: JSON.stringify({ answer: 'Bank account connected via CreditSense.' }),
+                body: JSON.stringify({ answer: 'Bank account connected securely.' }),
             });
+
             const answerData = await answerRes.json();
 
             if (answerData.success) {
-                // No text to display — markCardAnswered detects bank_connect and shows the pill
-                markCardAnswered(card, answerData.answered_at);
-                updatePendingBanner();
-                showToast('Bank account connected successfully.', 'success');
-                announce('Bank account connected. Question marked as answered.');
+                markCardAnswered(card, new Date().toIso8601String());
+                showToast('Bank connection successful!', 'success');
+                announce('Bank account connected and question answered');
             }
-        } catch {
+        } catch (err) {
             showToast('Bank connected but failed to update question. Please refresh.', 'error');
         }
-    }
-
-    function loadCsSdk(cdnUrl) {
-        return new Promise((resolve, reject) => {
-            if (typeof jQuery !== 'undefined' && jQuery.CreditSense) { resolve(); return; }
-            if (document.getElementById('cs-sdk-script')) {
-                document.getElementById('cs-sdk-script').addEventListener('load', resolve);
-                return;
-            }
-            if (typeof jQuery === 'undefined') { reject(new Error('jQuery is required by the CreditSense SDK.')); return; }
-            const s = document.createElement('script');
-            s.id = 'cs-sdk-script';
-            s.src = cdnUrl;
-            s.onload = resolve;
-            s.onerror = () => reject(new Error('Failed to load CreditSense SDK.'));
-            document.head.appendChild(s);
-        });
     }
 
     // ── Delegated: submit answer button ──────────────────────────────────────
@@ -309,7 +517,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn) handleSubmit(btn);
     });
 
-    // Ctrl/Cmd+Enter inside textarea
     section.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             const ta = e.target.closest('.answer-input');
@@ -335,7 +542,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const answerText = textarea.value.trim();
 
-        // Validate text answer
         if (!answerText) {
             showUploadError(answerErr, 'Please enter an answer.');
             textarea.setAttribute('aria-invalid', 'true');
@@ -351,13 +557,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.querySelector('.btn-spinner').classList.remove('hidden');
 
         try {
-            // Step 1 — submit the text answer
             const answerRes = await fetch(`/questions/${questionId}/answer`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrf(),
-                    'Accept':       'application/json',
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify({ answer: answerText }),
             });
@@ -368,7 +573,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(answerData.message || 'Failed to submit answer.');
             }
 
-            // Step 2 — upload document if one was selected
             if (requiresDoc) {
                 const fileInput = card.querySelector('.doc-file-input');
                 const file = fileInput?.files[0];
@@ -376,10 +580,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (file) {
                     await uploadDocument(card, file, docCategory, questionId);
                 }
-                // If no file chosen, that's OK — upload was optional
             }
 
-            // Step 3 — update DOM to answered state
             card._pendingAnswerText = answerText;
             markCardAnswered(card, answerData.answered_at);
             updatePendingBanner();
@@ -410,7 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('document',          file);
             formData.append('document_category', docCategory);
             formData.append('description',       `Uploaded in response to question #${questionId}`);
-            // _token in FormData body as fallback; header below is the primary mechanism
             formData.append('_token', csrf());
 
             const xhr = new XMLHttpRequest();
@@ -428,15 +629,10 @@ document.addEventListener('DOMContentLoaded', () => {
             xhr.addEventListener('load', () => {
                 progressWrap?.classList.add('hidden');
 
-                // Try to parse as JSON first — Laravel returns JSON when
-                // Accept: application/json is set, even for error responses.
-                // If parsing fails the server returned an HTML error page
-                // (e.g. APP_DEBUG=false 500), which we surface as a readable message.
                 let data = null;
                 try {
                     data = JSON.parse(xhr.responseText);
                 } catch {
-                    // Non-JSON response — HTML error page from server
                     const friendlyMsg = xhr.status === 500
                         ? 'Server error during upload. Check storage permissions, php_fileinfo extension, and that APP_KEY is set in production.'
                         : `Upload failed with status ${xhr.status}.`;
@@ -452,13 +648,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     announce(`Document "${file.name}" uploaded successfully.`);
                     resolve(data);
                 } else {
-                    // Laravel validation errors come back as { message, errors: { field: [...] } }
                     const msg = data?.message
                         ?? data?.error
                         ?? 'Document upload failed.';
                     showUploadError(uploadError, msg);
                     console.error('[DocumentUpload] Server rejected upload:', xhr.status, data);
-                    resolve(null); // non-blocking — text answer was already saved
+                    resolve(null);
                 }
             });
 
@@ -469,9 +664,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             xhr.open('POST', uploadRoute);
-            // Do NOT set Content-Type — the browser sets it automatically with the
-            // correct multipart boundary when sending FormData. Setting it manually
-            // breaks multipart parsing in production (missing boundary parameter).
             xhr.setRequestHeader('X-CSRF-TOKEN', csrf());
             xhr.setRequestHeader('Accept', 'application/json');
             xhr.send(formData);
@@ -483,12 +675,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function markCardAnswered(card, answeredAt) {
         const isBankConnect = card.dataset.bankConnect === 'true';
 
-        // Swap background
         card.classList.replace('bg-amber-50', 'bg-gray-50');
         card.classList.replace('border-amber-200', 'border-gray-200');
         card.dataset.status = 'answered';
 
-        // Status badge
         const badge = card.querySelector('.question-status');
         if (badge) {
             badge.className = badge.className
@@ -497,14 +687,12 @@ document.addEventListener('DOMContentLoaded', () => {
             badge.setAttribute('aria-label', 'Status: Answered');
         }
 
-        // Icon
         const iconWrap = card.querySelector('[aria-hidden="true"].rounded-full');
         if (iconWrap) {
             iconWrap.classList.replace('bg-amber-100', 'bg-gray-200');
             iconWrap.querySelector('svg')?.classList.replace('text-amber-600', 'text-gray-500');
         }
 
-        // Meta line — append answered date
         if (answeredAt) {
             const meta = card.querySelector('.text-xs.text-gray-500');
             if (meta) {
@@ -513,7 +701,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Replace form with appropriate answered display
         const form = card.querySelector('.answer-form');
         if (form) {
             const div = document.createElement('div');
@@ -599,7 +786,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ── Global: scroll to questions (called from pending banner) ─────────────
     window.scrollToQuestions = function () {
         if (!section) return;
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });

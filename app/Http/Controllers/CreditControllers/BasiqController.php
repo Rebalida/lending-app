@@ -84,10 +84,22 @@ class BasiqController extends Controller
      */
     public function createUser(Application $application): JsonResponse
     {
-        $this->authorize('update', $application);
+        $this->authorize('connectBank', $application);
 
         if ($application->bank_api_user_ref) {
-            return response()->json(['bank_api_user_ref' => $application->bank_api_user_ref]);
+            $currentPhone = $application->personalDetails?->mobile_phone;
+            $storedPhone = $application->bank_api_phone_used;
+            
+            // If phone is the same, return cached user
+            if ($currentPhone === $storedPhone) {
+                return response()->json(['bank_api_user_ref' => $application->bank_api_user_ref]);
+            }
+            
+            // Phone changed — clear the old Basiq user and recreate
+            $application->update([
+                'bank_api_user_ref'  => null,
+                'bank_api_phone_used' => null,
+            ]);
         }
 
         $apiKey = $this->apiKey();
@@ -153,7 +165,7 @@ class BasiqController extends Controller
      */
     public function createClientToken(Application $application): JsonResponse
     {
-        $this->authorize('update', $application);
+        $this->authorize('connectBank', $application);
 
         $application->refresh();
 
@@ -227,7 +239,7 @@ class BasiqController extends Controller
      */
     public function createAuthLink(Application $application): JsonResponse
     {
-        $this->authorize('update', $application);
+        $this->authorize('connectBank', $application);
 
         $application->refresh();
 
@@ -306,7 +318,7 @@ class BasiqController extends Controller
      */
     public function complete(Application $application): JsonResponse
     {
-        $this->authorize('update', $application);
+        $this->authorize('connectBank', $application);
 
         if (! $application->bank_api_completed_at) {
             $application->update([
@@ -465,6 +477,58 @@ class BasiqController extends Controller
         $application->update([
             'bank_api_user_ref'      => $userRef,
             'bank_api_provider_name' => self::PROVIDER_NAME,
+        ]);
+    }
+
+    public function completeRedirect(Application $application): \Illuminate\Http\Response
+    {
+        $this->authorize('connectBank', $application);
+
+        if (! $application->bank_api_completed_at) {
+            $application->update([
+                'bank_api_completed_at'  => now(),
+                'bank_api_provider_name' => self::PROVIDER_NAME,
+            ]);
+
+            ActivityLog::logActivity(
+                'bank_statements_connected',
+                'Client completed Basiq bank statement connection via redirect',
+                $application
+            );
+        }
+
+        // Self-closing page — the parent polls for completion independently
+        return response(<<<HTML
+            <!DOCTYPE html>
+            <html>
+            <head><title>Connected</title></head>
+            <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f0fdf4;">
+                <div style="text-align:center;">
+                    <svg style="width:48px;height:48px;color:#16a34a;margin-bottom:12px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <p style="font-size:1.1rem;color:#166534;font-weight:600">Bank connected!</p>
+                    <p style="color:#4b5563;font-size:.9rem">This window will close automatically…</p>
+                </div>
+                <script>
+                    // Give the user a moment to see the success message
+                    setTimeout(() => window.close(), 1500);
+                </script>
+            </body>
+            </html>
+        HTML, 200, ['Content-Type' => 'text/html']);
+    }
+
+    /**
+     * Check if Basiq connection is complete for this application.
+     * Used by polling mechanism in question context.
+     */
+    public function checkCompletion(Application $application): JsonResponse
+    {
+        $this->authorize('view', $application);
+
+        return response()->json([
+            'completed' => (bool) $application->bank_api_completed_at,
         ]);
     }
 }

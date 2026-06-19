@@ -33,6 +33,9 @@
                 $hint           = $question->doc_category_hint ?? '';
                 $isBankConnect  = $hint === 'bank_connect';
                 $requiresDoc    = filled($hint) && !$isBankConnect;
+                
+                // Get active bank provider (defaults to creditsense if not set)
+                $activeProvider = \App\Models\Setting::get('active_bank_provider', 'creditsense');
 
                 $docCategoryLabels = [
                     'id'          => 'Identification',
@@ -47,14 +50,15 @@
             @endphp
 
             <li class="question-card rounded-xl border p-4 transition-colors
-                        {{ $isPending ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200' }}"
-                id="client-question-card-{{ $question->id }}"
-                data-question-id="{{ $question->id }}"
-                data-status="{{ $question->status }}"
-                data-doc-category="{{ $hint }}"
-                data-bank-connect="{{ $isBankConnect ? 'true' : 'false' }}"
-                data-upload-route="{{ route('applications.documents.store', $application) }}"
-                data-answer-route="/questions/{{ $question->id }}/answer">
+                    {{ $isPending ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200' }}"
+            id="client-question-card-{{ $question->id }}"
+            data-question-id="{{ $question->id }}"
+            data-status="{{ $question->status }}"
+            data-doc-category="{{ $hint }}"
+            data-bank-connect="{{ $isBankConnect ? 'true' : 'false' }}"
+            data-bank-provider="{{ $isBankConnect ? $activeProvider : '' }}"
+            data-upload-route="{{ route('applications.documents.store', $application) }}"
+            data-answer-route="/questions/{{ $question->id }}/answer">
 
                 {{-- Question header --}}
                 <div class="flex items-start justify-between gap-3 mb-3">

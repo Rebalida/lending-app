@@ -83,15 +83,9 @@
                         @endphp
 
                         <optgroup label="⚡ Bank Connection">
-                            @if($csConfigured)
-                                <option value="bank_connect|To assess your application we need to verify your bank statements. Please connect your bank account securely using our CreditSense integration — it takes less than 2 minutes and only provides read-only access.|true|true">
-                                    Request bank connection via CreditSense
-                                </option>
-                            @else
-                                <option value="" disabled>
-                                    ⚠ CreditSense not configured — go to Settings → CreditSense
-                                </option>
-                            @endif
+                            <option value="bank_connect|To assess your application we need to verify your bank statements. Please connect your bank account securely — it takes less than 2 minutes and only provides read-only access.|true|true">
+                                Request secure bank connection
+                            </option>
                         </optgroup>
 
                         <optgroup label="Bank Statement Documents">
@@ -167,7 +161,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                     </svg>
                     <div class="flex-1">
-                        <p class="text-xs font-semibold text-blue-800">CreditSense bank connection will be requested</p>
+                        <p class="text-xs font-semibold text-blue-800">Secure bank connection will be requested</p>
                         <p class="text-xs text-blue-600">Client will see a "Connect My Bank" button inline in the question card.</p>
                     </div>
                     <button type="button"

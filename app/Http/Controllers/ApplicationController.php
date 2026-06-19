@@ -416,8 +416,8 @@ class ApplicationController extends Controller
     {
         $this->authorize('delete', $application);
 
-        if ($application->status !== 'draft') {
-            return back()->with('error', 'Only draft applications can be deleted.');
+        if ($application->status !== Application::STATUS_APPLICATION) {
+            return back()->with('error', 'Only new applications can be deleted.');
         }
 
         $application->delete();

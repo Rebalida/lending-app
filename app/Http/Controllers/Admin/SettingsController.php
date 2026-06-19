@@ -184,6 +184,13 @@ class SettingsController extends Controller
             'is_secret' => false,
             'hint'      => 'Default: https://au-api.basiq.io — only change if Basiq instructs you to use a different endpoint.',
         ],
+        'basiq_webhook_secret' => [
+            'group'     => 'basiq',
+            'label'     => 'Webhook Secret',
+            'type'      => 'password',
+            'is_secret' => true,
+            'hint'      => 'HMAC secret for verifying incoming webhook signatures. Found in your Basiq webhook configuration.',
+        ],
 
         // ── CreditSense ───────────────────────────────────────────────────────
         //

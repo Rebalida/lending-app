@@ -626,12 +626,18 @@ class ApplicationController extends Controller
      */
     private function maybePromoteStatusOnAssignment(Application $application): void
     {
+        if ($application->status !== Application::STATUS_APPLICATION) {
+            return;
+        }
+
+        $application->update(['status' => Application::STATUS_WIP]);
+
         ActivityLog::logActivity(
             'status_changed',
             'Status automatically changed to wip when application was assigned',
             $application,
-            ['old_status' => 'submitted'],
-            ['new_status' => 'wip']
+            ['old_status' => Application::STATUS_APPLICATION],
+            ['new_status' => Application::STATUS_WIP]
         );
     }
 
@@ -676,7 +682,7 @@ class ApplicationController extends Controller
     {
         return $request->validate([
             'return_reason'  => ['required', 'string', 'min:10', 'max:1000'],
-            'return_status'  => ['required', 'string', 'in:outstanding_document,waiting_for_signature'],
+            'return_status'  => ['required', 'string', 'in:' . implode(',', Application::RETURNABLE_STATUSES)],
             'notify_sms'     => ['nullable', 'boolean'],
         ]);
     }

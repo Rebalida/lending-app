@@ -44,7 +44,7 @@
                                     <option value="">All Statuses</option>
                                     @foreach(Application::VALID_STATUSES as $status)
                                         <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
-                                            {{ Application::getStatusLabel($status) }}
+                                            {{ Application::statusLabel($status) }}
                                         </option>
                                     @endforeach
                                 </select>

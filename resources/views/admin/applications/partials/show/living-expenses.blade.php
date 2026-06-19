@@ -1,4 +1,5 @@
 {{-- resources/views/admin/applications/partials/show/living-expenses.blade.php --}}
+
 @php
     $activeProvider    = \App\Models\Setting::where('key', 'active_bank_provider')->value('value') ?? 'basiq';
     $providerLabel     = match($activeProvider) {
@@ -179,6 +180,10 @@
                                     }
                                 }
                             }
+                        }
+
+                        if ($basiqAmount === null && $expense->provider_amount !== null) {
+                            $basiqAmount = (float) $expense->provider_amount;
                         }
 
                         $clientAmount   = $expense->amount ?? $expense->client_declared_amount ?? 0;

@@ -49,7 +49,7 @@ class SubmitApplication
             }
 
             $application->update([
-                'status'        => 'submitted',
+                'status'        => 'application',
                 'submitted_at'  => now(),
                 'submission_ip' => request()->ip(),
                 'return_reason' => null,
