@@ -408,7 +408,7 @@
                     @auth
                         Complete the form below to begin your commercial loan application.
                     @else
-                        Create your account and begin your application. The process takes about 10–15 minutes.
+                        Create your account and begin your application. The process takes about 10-15 minutes.
                     @endauth
                 </p>
             </div>
@@ -694,13 +694,13 @@
                                             {{ old('privacy_consent') ? 'checked' : '' }}
                                             class="custom-checkbox @error('privacy_consent') error @enderror">
                                         <div>
-                                            <span class="text-sm font-semibold text-gray-800">I consent to the collection and use of my personal information</span>
+                                            <span class="text-sm font-semibold text-gray-800">Please click the link to read and agree to the Privacy Policy</span>
                                             <p class="text-xs text-gray-500 mt-1">
                                                 I have read and agree to the
                                                 <a id="privacy_link" href="{{ route('privacy-policy') }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-medium underline decoration-dotted cursor-pointer">Privacy Policy</a>
                                                 @if(!old('privacy_consent'))
                                                     <span id="privacy_hint" class="text-indigo-500 ml-1 font-medium text-xs animate-pulse">(Required review)</span>
-                                                @endif
+                                                @endif 
                                             </p>
                                         </div>
                                     </label>
@@ -717,7 +717,7 @@
                                             {{ old('terms_consent') ? 'checked' : '' }}
                                             class="custom-checkbox @error('terms_consent') error @enderror">
                                         <div>
-                                            <span class="text-sm font-semibold text-gray-800">I agree to the Terms and Conditions</span>
+                                            <span class="text-sm font-semibold text-gray-800">Please click the link to read and agree to the Terms and Conditions</span>
                                             <p class="text-xs text-gray-500 mt-1">
                                                 I have read and agree to the
                                                 <a id="terms_link" href="{{ route('terms-and-conditions') }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-medium underline decoration-dotted cursor-pointer">Terms and Conditions</a>

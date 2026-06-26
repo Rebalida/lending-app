@@ -50,10 +50,13 @@ class EmploymentDetailsController extends Controller
                     new LegalWorkingAge($application->personalDetails->date_of_birth),
                 ],
                 'base_income' => 'required|numeric|min:0',
+                'after_tax_income' => 'nullable|numeric|min:0', 
                 'additional_income' => 'nullable|numeric|min:0',
                 'income_frequency' => 'required|in:weekly,fortnightly,monthly,annual',
                 'employer_phone' => 'nullable|string|max:20',
                 'employer_address' => 'nullable|string',
+                'is_current' => 'nullable|boolean',
+                'employment_end_date' => 'nullable|required_if:is_current,false|date|after_or_equal:employment_start_date',
             ]);
 
             $employment = $application->employmentDetails()->create($validated);
@@ -120,10 +123,13 @@ class EmploymentDetailsController extends Controller
             'position' => 'nullable|string|max:255',
             'employment_start_date' => 'nullable|date|before_or_equal:today',
             'base_income' => 'required|numeric|min:0',
+            'after_tax_income' => 'nullable|numeric|min:0', 
             'additional_income' => 'nullable|numeric|min:0',
             'income_frequency' => 'required|in:weekly,fortnightly,monthly,annual',
             'employer_phone' => 'nullable|string|max:20',
             'employer_address' => 'nullable|string',
+            'is_current' => 'nullable|boolean',
+            'employment_end_date' => 'nullable|required_if:is_current,false|date|after_or_equal:employment_start_date',
         ]);
 
         $oldValues = $employmentDetail->toArray();

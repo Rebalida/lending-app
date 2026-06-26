@@ -114,12 +114,21 @@
                                             <td class="px-4 py-3 text-right font-semibold text-gray-900">
                                                 ${{ number_format($asset->estimated_value, 2) }}
                                             </td>
-                                            <td class="px-4 py-3 text-right">
+                                            <td class="px-4 py-3 text-right flex items-center justify-end gap-2">
+                                                <button type="button"
+                                                        data-asset-id="{{ $asset->id }}"
+                                                        aria-label="Edit asset {{ $asset->asset_type_label }}"
+                                                        class="edit-asset-btn text-blue-500 hover:text-blue-700
+                                                               focus:outline-none focus:ring-2 focus:ring-blue-500 rounded transition">
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                                                    </svg>
+                                                </button>
                                                 <button type="button"
                                                         data-asset-id="{{ $asset->id }}"
                                                         aria-label="Remove asset {{ $asset->asset_type_label }}"
                                                         class="delete-asset-btn text-red-500 hover:text-red-700
-                                                            focus:outline-none focus:ring-2 focus:ring-red-500 rounded transition">
+                                                               focus:outline-none focus:ring-2 focus:ring-red-500 rounded transition">
                                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                                         <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
                                                     </svg>
@@ -258,6 +267,18 @@
                             <p id="asset-value-error" class="mt-1 text-sm text-red-600 hidden" role="alert"></p>
                         </div>
 
+                        {{-- Comment --}}
+                        <div class="md:col-span-2">
+                            <label for="asset-comment" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Comment
+                            </label>
+                            <textarea id="asset-comment"
+                                      placeholder="e.g. Recently valued, mortgage details, etc."
+                                      rows="3"
+                                      class="block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm
+                                             focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+                        </div>
+
                     </div>
 
                     <div class="flex items-center justify-end gap-3 mt-5">
@@ -335,6 +356,7 @@
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Lender</th>
                                         <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Limit</th>
                                         <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Balance</th>
+                                        <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Monthly Repayment</th>
                                         <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             <span class="sr-only">Actions</span>
                                         </th>
@@ -355,11 +377,23 @@
                                             <td class="px-4 py-3 text-right font-semibold text-gray-900">
                                                 ${{ number_format($liability->outstanding_balance, 2) }}
                                             </td>
-                                            <td class="px-4 py-3 text-right">
+                                            <td class="px-4 py-3 text-right text-gray-600">
+                                                {{ $liability->monthly_repayment !== null ? '$' . number_format($liability->monthly_repayment, 2) : '—' }}
+                                            </td>
+                                            <td class="px-4 py-3 text-right flex items-center justify-end gap-2">
                                                 <button type="button"
-                                                        data-liability-id="{{ $liability->id }}"
-                                                        aria-label="Remove liability {{ $liability->liability_type_label }}"
-                                                        class="delete-liability-btn text-red-500 hover:text-red-700
+                                                        data-asset-id="{{ $asset->id }}"
+                                                        aria-label="Edit asset {{ $asset->asset_type_label }}"
+                                                        class="edit-asset-btn text-blue-500 hover:text-blue-700
+                                                               focus:outline-none focus:ring-2 focus:ring-blue-500 rounded transition">
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                                                    </svg>
+                                                </button>
+                                                <button type="button"
+                                                        data-asset-id="{{ $asset->id }}"
+                                                        aria-label="Remove asset {{ $asset->asset_type_label }}"
+                                                        class="delete-asset-btn text-red-500 hover:text-red-700
                                                                focus:outline-none focus:ring-2 focus:ring-red-500 rounded transition">
                                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                                         <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -374,6 +408,9 @@
                                         <td colspan="3" class="px-4 py-3 text-sm font-semibold text-gray-700">Total Liabilities</td>
                                         <td id="liabilities-total" class="px-4 py-3 text-right font-bold text-red-600">
                                             ${{ number_format($liabilities->sum('outstanding_balance'), 2) }}
+                                        </td>
+                                        <td id="liabilities-total-repayment" class="px-4 py-3 text-right font-bold text-red-600">
+                                            ${{ number_format($liabilities->sum('monthly_repayment'), 2) }}
                                         </td>
                                         <td></td>
                                     </tr>
@@ -466,6 +503,38 @@
                             <p id="liability-balance-error" class="mt-1 text-sm text-red-600 hidden" role="alert"></p>
                         </div>
 
+                        {{-- Monthly Repayment — display + hidden --}}
+                        <div>
+                            <label for="liability-repayment-display" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Monthly Repayment
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 pointer-events-none" aria-hidden="true">$</span>
+                                <input type="text"
+                                       id="liability-repayment-display"
+                                       inputmode="decimal"
+                                       placeholder="0.00"
+                                       autocomplete="off"
+                                       aria-describedby="liability-repayment-error"
+                                       class="block w-full py-3 pl-8 pr-4 border border-gray-300 bg-white rounded-xl shadow-sm
+                                              focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400">
+                                <input type="hidden" id="liability-repayment">
+                            </div>
+                            <p id="liability-repayment-error" class="mt-1 text-sm text-red-600 hidden" role="alert"></p>
+                        </div>
+
+                        {{-- Comment --}}
+                        <div class="md:col-span-2">
+                            <label for="liability-comment" class="block text-sm font-semibold text-gray-700 mb-1">
+                                Comment
+                            </label>
+                            <textarea id="liability-comment"
+                                      placeholder="e.g. Current interest rate, payment terms, etc."
+                                      rows="3"
+                                      class="block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm
+                                             focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400"></textarea>
+                        </div>
+                        
                     </div>
 
                     <div class="flex items-center justify-end gap-3 mt-5">
@@ -519,8 +588,10 @@
 Object.assign(window.DAL_CONFIG, {
     routes: {
         assetStore:       @js(route('applications.assets.store', $application)),
+        assetUpdate:      @js(route('applications.assets.update', [$application, ':id'])),
         assetDestroy:     @js(route('applications.assets.destroy', [$application, ':id'])),
         liabilityStore:   @js(route('applications.liabilities.store', $application)),
+        liabilityUpdate:  @js(route('applications.liabilities.update', [$application, ':id'])),
         liabilityDestroy: @js(route('applications.liabilities.destroy', [$application, ':id'])),
     }
 });

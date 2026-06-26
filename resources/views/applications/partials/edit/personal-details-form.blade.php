@@ -65,48 +65,53 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                    {{-- ── Name fields (read-only) ──────────────────────── --}}
+                    {{-- ── Name fields (now editable, from User table) ──────────────────────── --}}
                     <div class="md:col-span-2">
                         <div class="flex flex-col gap-6 lg:flex-row">
                             @foreach([
-                                ['first_name',      'First Name'],
-                                ['middle_name',     'Middle Name'],
-                                ['last_name',       'Last Name'],
-                                ['name_extension',  'Name Extension'],
-                            ] as [$field, $label])
+                                ['first_name',      'First Name',       true],
+                                ['middle_name',     'Middle Name',      false],
+                                ['last_name',       'Last Name',        true],
+                                ['name_extension',  'Name Extension',   false],
+                            ] as [$field, $label, $required])
                                 <div class="{{ $field === 'name_extension' ? 'w-full lg:w-32 shrink-0' : 'flex-1 min-w-0' }}">
                                     <label for="{{ $field }}"
-                                           class="block text-sm font-semibold text-gray-700 mb-2">
+                                        class="block text-sm font-semibold text-gray-700 mb-2">
                                         {{ $label }}
+                                        @if($required)
+                                            <span class="text-red-500" aria-hidden="true">*</span>
+                                        @endif
                                     </label>
                                     <input type="text"
-                                           id="{{ $field }}"
-                                           name="{{ $field }}"
-                                           value="{{ $application->user->{$field} }}"
-                                           readonly
-                                           aria-readonly="true"
-                                           title="{{ $label }} is linked to your account and cannot be changed here."
-                                           class="block w-full py-3 px-4 border-gray-300 bg-gray-100 text-gray-500
-                                                  cursor-not-allowed rounded-xl shadow-sm focus:ring-0 focus:border-gray-300">
+                                        id="{{ $field }}"
+                                        name="{{ $field }}"
+                                        value="{{ old($field, $application->user->{$field}) }}"
+                                        {{ $required ? 'required' : '' }}
+                                        {{ $required ? 'aria-required="true"' : '' }}
+                                        aria-describedby="{{ $field }}-error"
+                                        class="mt-1 block w-full py-3 px-4 border border-gray-300 rounded-xl shadow-sm
+                                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <p id="{{ $field }}-error" class="mt-2 text-sm text-red-600 hidden" role="alert"></p>
                                 </div>
                             @endforeach
                         </div>
                     </div>
 
-                    {{-- Email (read-only) --}}
+                    {{-- Email (now editable, from User table) --}}
                     <div>
                         <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Email Address
+                            Email Address <span class="text-red-500" aria-hidden="true">*</span>
                         </label>
                         <input type="email"
-                               id="email"
-                               name="email"
-                               value="{{ $application->user?->email }}"
-                               readonly
-                               aria-readonly="true"
-                               title="Email is linked to your account and cannot be changed here."
-                               class="block w-full py-3 px-4 border-gray-300 bg-gray-100 text-gray-500
-                                      cursor-not-allowed rounded-xl shadow-sm focus:ring-0 focus:border-gray-300">
+                            id="email"
+                            name="email"
+                            value="{{ old('email', $application->user?->email) }}"
+                            required
+                            aria-required="true"
+                            aria-describedby="email-error"
+                            class="mt-1 block w-full py-3 px-4 border border-gray-300 rounded-xl shadow-sm
+                                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <p id="email-error" class="mt-2 text-sm text-red-600 hidden" role="alert"></p>
                     </div>
 
                     {{-- Mobile --}}
@@ -296,6 +301,22 @@
                         </div>
 
                     </fieldset>
+
+                    {{-- Agree as Guarantor --}}
+                    <div class="md:col-span-2">
+                        <label for="agree_as_guarantor" class="flex items-center cursor-pointer">
+                            <input type="checkbox"
+                                id="agree_as_guarantor"
+                                name="agree_as_guarantor"
+                                value="1"
+                                {{ old('agree_as_guarantor', $pd?->agree_as_guarantor) ? 'checked' : '' }}
+                                class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500">
+                            <span class="ml-3 text-sm font-medium text-gray-700">
+                                I agree to act as guarantor for this loan application
+                            </span>
+                        </label>
+                        <p id="agree_as_guarantor-error" class="mt-2 text-sm text-red-600 hidden" role="alert"></p>
+                    </div>
 
                 </div>{{-- /grid --}}
 

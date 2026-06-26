@@ -51,7 +51,7 @@
                         {{-- Subject --}}
                         @if($comm->subject)
                             <p class="font-semibold text-xs mb-1.5 {{ $isOutbound ? 'text-indigo-200' : 'text-gray-500' }}">
-                                Re: {{ $comm->subject }}
+                                {{ $comm->subject }}
                             </p>
                         @endif
 

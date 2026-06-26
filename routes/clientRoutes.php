@@ -138,10 +138,12 @@ Route::prefix('applications/{application}')->name('applications.')->group(functi
 
     // Assets
     Route::post('director-assets',          [DirectorAssetsLiabilitiesController::class, 'storeAsset'])->name('assets.store');
+    Route::patch('director-assets/{asset}', [DirectorAssetsLiabilitiesController::class, 'updateAsset'])->name('assets.update'); 
     Route::delete('director-assets/{asset}',[DirectorAssetsLiabilitiesController::class, 'destroyAsset'])->name('assets.destroy');
 
     // Liabilities
     Route::post('director-liabilities',                  [DirectorAssetsLiabilitiesController::class, 'storeLiability'])->name('liabilities.store');
+    Route::patch('director-liabilities/{liability}',     [DirectorAssetsLiabilitiesController::class, 'updateLiability'])->name('liabilities.update'); 
     Route::delete('director-liabilities/{liability}',    [DirectorAssetsLiabilitiesController::class, 'destroyLiability'])->name('liabilities.destroy');
 });
 

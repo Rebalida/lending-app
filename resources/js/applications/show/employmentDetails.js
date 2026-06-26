@@ -22,7 +22,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialise currency fields — formatting handled by global initCurrencyInput in script.js
     window.initCurrencyInput('base-income-display', 'base-income', { min: 1, max: 9_000_000_000, errorId: 'base_income-error' });
+    window.initCurrencyInput('after-tax-income-display', 'after-tax-income', { min: 0, max: 9_000_000_000, errorId: 'after_tax_income-error' });
     window.initCurrencyInput('additional-income-display', 'additional-income', { min: 0, max: 9_000_000_000, errorId: 'additional_income-error' });
+
+    // ── Current Position Toggle ───────────────────────────────────────
+
+    const isCurrentYes = document.getElementById('is_current_yes');
+    const isCurrentNo = document.getElementById('is_current_no');
+    const endDateContainer = document.getElementById('employment-end-date-container');
+    const endDateInput = document.getElementById('employment-end-date');
+
+    function toggleEndDateField() {
+        const isCurrentValue = document.querySelector('input[name="is_current"]:checked')?.value;
+        
+        if (isCurrentValue === '0') {
+            // Past employment - show end date field
+            endDateContainer.classList.remove('hidden');
+            endDateInput.setAttribute('required', 'required');
+        } else {
+            // Current employment - hide end date field
+            endDateContainer.classList.add('hidden');
+            endDateInput.removeAttribute('required');
+            endDateInput.value = '';
+        }
+    }
+
+    if (isCurrentYes) {
+        isCurrentYes.addEventListener('change', toggleEndDateField);
+    }
+    if (isCurrentNo) {
+        isCurrentNo.addEventListener('change', toggleEndDateField);
+    }
+
+    // Initialize on page load
+    toggleEndDateField();
+
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -149,9 +183,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     form.reset();
                     document.getElementById('base-income-display').value    = '';
+                    document.getElementById('after-tax-income-display').value = '';
                     document.getElementById('additional-income-display').value = '';
                     document.getElementById('base-income').value            = '';
+                    document.getElementById('after-tax-income').value       = '';
                     document.getElementById('additional-income').value      = '0';
+                    document.getElementById('employment-end-date').value = '';
+                    document.getElementById('is_current_yes').checked = true;
+                    endDateContainer.classList.add('hidden');
 
                     if (data.employment) {
                         addEmploymentToList(data.employment);

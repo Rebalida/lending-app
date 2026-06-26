@@ -140,7 +140,7 @@ class EmailCommunicationController extends Controller
      */
     public function incoming(Request $request): JsonResponse
     {
-        Log::debug('Mailgun webhook payload:', $request->all());  // ← put back
+        Log::debug('SendGrid webhook payload:', $request->all());
 
         $messageId = $request->input('Message-Id') ?? $request->input('message-id') ?? null;
         if ($messageId && Communication::where('external_id', $messageId)->exists()) {
@@ -149,7 +149,7 @@ class EmailCommunicationController extends Controller
         }
 
         $from    = $request->input('from');
-        $to      = $request->input('recipient');
+        $to      = $request->input('to') ?? $request->input('recipient');
         $subject = $request->input('subject');
 
         $body = $this->extractEmailBody($request);

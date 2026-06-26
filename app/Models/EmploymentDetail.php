@@ -22,18 +22,24 @@ class EmploymentDetail extends Model
         'employment_start_date',
         'length_of_employment_months',
         'base_income',
+        'after_tax_income',
         'additional_income',
         'income_frequency',
         'employer_phone',
         'employer_address',
         'comment',
+        'is_current',
+        'employment_end_date',
     ];
 
     protected $casts = [
         'employment_start_date'       => 'date',
         'length_of_employment_months' => 'integer',
         'base_income'                 => 'decimal:2',
+        'after_tax_income'            => 'decimal:2',
         'additional_income'           => 'decimal:2',
+        'is_current'                  => 'boolean',
+        'employment_end_date'         => 'date',
     ];
 
     // ── Relationships ─────────────────────────────────────────────────────────

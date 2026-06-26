@@ -17,11 +17,14 @@ class DirectorLiability extends Model
         'lender_name',
         'credit_limit',
         'outstanding_balance',
+        'monthly_repayment',
+        'comment',
     ];
 
     protected $casts = [
         'credit_limit'        => 'decimal:2',
         'outstanding_balance' => 'decimal:2',
+        'monthly_repayment'   => 'decimal:2',
     ];
 
     public function application(): BelongsTo

@@ -149,6 +149,15 @@
         const EMAIL_URL  = `/admin/applications/${APP_ID}/send-email`;
         const STATUS_URL = `/admin/applications/${APP_ID}/status`;
 
+        // ── Date formatter ────────────────────────────────────────────────────────
+        function getTodayDate() {
+            const today = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return today.toLocaleDateString('en-AU', options);
+        }
+
+        const TODAY = getTodayDate();
+
         // ── Letter templates ──────────────────────────────────────────────────────
         const TEMPLATES = {
             approve: {
@@ -164,37 +173,62 @@
                         </svg>`,
                 subject: `Loan Application ${APP_NO} — Conditional Approval`,
                 body:
-`Dear ${CLIENT},
-We refer to your application for finance with AHA Global Pty Ltd ("AHA Global", "we", "us").
-Following our preliminary assessment, we advise that your application has been conditionally approved for a loan facility in the amount of $[Insert Loan Amount] ("Facility"), subject strictly to the conditions set out below and any additional requirements notified prior to settlement.
-Conditions Precedent to Funding
+`ZYA Capital Pty Ltd
+ABN: 55 695 692 052
+E: hello@zyacapital.com.au
+Date: ${TODAY}
 
-1. Security Perfection
-2. Successful registration and perfection of AHA Global Pty Ltd's security interest over the nominated collateral, including (as applicable) registration on the Personal Property Securities Register (PPSR), lodgement of caveat, mortgage registration, or any other security deemed necessary by us.
-3. Execution of Documentation
-4. Full execution of the Loan Agreement, Security Documents, Guarantees (if applicable), and any ancillary documents, in a form and substance satisfactory to AHA Global.
-5. Verification of Information
-6. Completion of all outstanding due diligence requirements, including verification of identity (KYC), financial position, income, liabilities, and supporting documentation. AHA Global reserves the right to request further information at its discretion.
-7. No Material Adverse Change
-8. There must be no material adverse change in your financial position, creditworthiness, or the value/condition of the security prior to settlement.
-9. Fees and Costs
-10. Payment of all applicable fees and charges, including but not limited to establishment fees, legal costs, registration costs, and any third-party disbursements.
-11. Insurance Requirement
-12. Where applicable, evidence of adequate insurance over the secured asset must be provided, noting AHA Global's interest as an interested party.
-13. Valuation / Asset Confirmation
-14. Where required, satisfactory valuation or confirmation of the security asset(s) must be obtained.
-Important Notice
-This conditional approval:
+Subject: Conditional Loan Approval
 
-* Is not a binding offer of finance and does not create any legal obligation on AHA Global to provide the Facility;
-* Is subject to final credit approval, completion of documentation, and satisfaction of all conditions precedent;
-* May be withdrawn, varied, or amended at any time prior to settlement, at AHA Global's absolute discretion.
-No reliance should be placed on this conditional approval for any financial commitments until formal documentation has been executed and funding has been confirmed in writing.
-Please contact us to proceed with the next steps, including documentation and settlement arrangements.
+Dear ${CLIENT},
 
-Should you have any queries, please do not hesitate to contact our office.
+Re: Conditional Approval of Commercial Loan Application
+
+We refer to your loan application submitted to ZYA Capital Pty Ltd ("Lender").
+
+We are pleased to advise that, subject to the terms and conditions outlined in this letter, your application has received conditional approval.
+
+This approval is granted based on the information currently available to the Lender and remains subject to the satisfactory completion of all pre-settlement requirements, including but not limited to the following:
+
+1. Execution of Loan Documentation
+   * The Borrower and any guarantor(s) must execute all loan, security and ancillary documentation required by the Lender.
+
+2. Insurance Requirements
+   * The Borrower must provide evidence of adequate insurance cover, including any property, asset, business, public liability or other insurance required by the Lender, noting the Lender's interest where applicable.
+
+3. Title and Security Verification
+   * Satisfactory title searches, PPSR searches, ASIC searches, valuation reports and any other investigations required by the Lender must be completed and approved.
+
+4. Verification of Information
+   * All information, documents, financial statements, declarations and representations provided by the Borrower must be true, complete, accurate and not misleading in any material respect.
+
+5. Compliance Requirements
+   * The Borrower must satisfy all applicable compliance, identification, anti-money laundering and verification requirements of the Lender.
+
+6. No Material Adverse Change
+   * There must be no material adverse change in the Borrower's financial position, business operations, credit profile or security position prior to settlement.
+
+Reservation of Rights
+
+This approval is conditional only and does not constitute a binding commitment by the Lender to advance funds until all conditions have been satisfied to the sole satisfaction of the Lender.
+
+The Lender reserves the absolute right, at any time prior to settlement, to amend, suspend, withdraw or cancel this approval without further notice if:
+
+* Any condition contained in this letter is not satisfied;
+* Any information provided by the Borrower is found to be inaccurate, incomplete or misleading;
+* The results of any search, valuation, compliance review or due diligence process are unsatisfactory to the Lender;
+* The Borrower fails to execute the required documentation; or
+* Any circumstance arises which, in the Lender's opinion, increases the risk associated with the proposed lending arrangement.
+
+Nothing in this letter shall be construed as creating a legally binding obligation on the Lender to provide finance until all loan documentation has been executed and settlement has occurred.
+
+We look forward to working with you towards settlement of this facility.
+
 Yours faithfully,
-AHA Global Pty Ltd`,
+
+______________________________
+Authorised Officer
+ZYA Capital Pty Ltd`,
             },
 
             decline: {
@@ -208,33 +242,56 @@ AHA Global Pty Ltd`,
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>`,
-                subject: `Loan Application ${APP_NO} — Outcome`,
+                subject: `Loan Application ${APP_NO} — Application Outcome`,
                 body:
-`Dear ${CLIENT},
-We refer to your recent application for finance with AHA Global Pty Ltd ("AHA Global", "we", "us").
-Following our assessment, we regret to advise that we are unable to approve your loan application at this time.
-Assessment Outcome
-This decision has been made based on AHA Global's internal credit assessment framework, which includes (but is not limited to):
+`ZYA Capital Pty Ltd
+ABN: 55 695 692 052
+Date: ${TODAY}
+Private & Confidential
 
-* Review of your financial position, income, liabilities, and serviceability;
-* Assessment of the proposed security and its suitability;
-* Verification of supporting documentation and information provided; and
-* Consideration of overall lending risk in accordance with our commercial lending policies.
-Based on the above, your application does not meet our current lending and/or security requirements.
-Credit Assessment & Enquiries
-As part of our assessment process, and in accordance with the consent provided by you, AHA Global may have conducted credit enquiries and/or obtained information from credit reporting bodies and other relevant sources.
-These enquiries may be recorded on your credit file. You are entitled to request access to your credit information directly from the relevant credit reporting bodies.
-Important Information
+Borrower: ${CLIENT}
+Application Reference: ${APP_NO}
 
-* This decision is based solely on AHA Global's internal lending criteria and risk appetite and does not constitute a statement about your overall creditworthiness.
-* AHA Global does not provide detailed reasons for credit decisions beyond the information outlined above.
-* This outcome does not create any obligation on AHA Global to provide finance.
-Future Applications
-You are welcome to reapply in the future should your circumstances change or if additional supporting information becomes available that may materially impact our assessment.
-We appreciate the opportunity to have considered your application.
+Loan Application Outcome
 
-Yours sincerely,
-AHA Global Pty Ltd`,
+Dear ${CLIENT},
+
+Thank you for your application for finance with ZYA Capital Pty Ltd ("ZYA Capital").
+
+Following our assessment of your application and the information provided, we regret to advise that ZYA Capital is unable to approve your application for credit at this time.
+
+This decision has been made after consideration of the information available to us, including information provided by you and information obtained during our assessment process, and having regard to our lending policies, risk assessment framework, compliance obligations, and commercial lending criteria.
+
+The decision may have been influenced by one or more factors, including but not limited to:
+
+1. Information provided in the application and supporting documentation;
+2. Verification and due diligence outcomes;
+3. Financial position and repayment capacity;
+4. Credit history and credit-related information;
+5. Security and collateral considerations;
+6. Risk assessment outcomes; and
+7. ZYA Capital's lending policies and commercial requirements.
+
+This decision relates solely to the current application and circumstances known to us at the time of assessment. Any future application will be assessed on its own merits based on the information available at that time.
+
+Please note that the provision of finance is subject to ZYA Capital's discretion and lending criteria. The submission of an application does not create any obligation on ZYA Capital to provide credit or enter into any lending arrangement.
+
+If you would like further information regarding this decision, you may contact us using the details below.
+
+Complaints and Dispute Resolution
+
+If you are dissatisfied with this decision or any aspect of our service, you may lodge a complaint with our Internal Dispute Resolution (IDR) team:
+
+ZYA Capital Pty Ltd
+Email: hello@zyacapital.com.au
+
+We will acknowledge and respond to your complaint in accordance with our Internal Dispute Resolution procedures and applicable regulatory requirements.
+
+Yours faithfully,
+
+______________________________
+Authorised Representative
+ZYA Capital Pty Ltd`,
             },
         };
 

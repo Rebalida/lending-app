@@ -27,12 +27,14 @@ class PersonalDetail extends Model
         'gender',
         'citizenship_status',
         'contact_role',
+        'agree_as_guarantor',
     ];
 
     protected $casts = [
         'date_of_birth' => 'date',
         'number_of_dependants' => 'integer',
         'spouse_income'        => 'decimal:2',
+        'agree_as_guarantor'   => 'boolean',
     ];
 
     public function user(): BelongsTo

@@ -128,9 +128,32 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Employment Start Date</label>
-                            <input type="date" name="employment_start_date" id="employment-start-date" class="mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full py-3 px-4 shadow-sm border-gray-300 rounded-xl">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Employment Start Date *</label>
+                            <input type="date" name="employment_start_date" id="employment-start-date" required class="mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full py-3 px-4 shadow-sm border-gray-300 rounded-xl">
                             <p id="employment_start_date-error" class="mt-2 text-sm text-red-600 hidden"></p>
+                        </div>
+
+                        {{-- Current Position Toggle --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Is this your current position? *</label>
+                            <div class="mt-1 flex items-center space-x-4">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="is_current" id="is_current_yes" value="1" checked class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm text-gray-700">Yes (Current)</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="is_current" id="is_current_no" value="0" class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm text-gray-700">No (Past)</span>
+                                </label>
+                            </div>
+                            <p id="is_current-error" class="mt-2 text-sm text-red-600 hidden"></p>
+                        </div>
+
+                        {{-- Employment End Date (conditional) --}}
+                        <div id="employment-end-date-container" class="hidden">
+                            <label for="employment-end-date" class="block text-sm font-semibold text-gray-700 mb-2">Employment End Date <span class="text-red-500" aria-hidden="true">*</span></label>
+                            <input type="date" name="employment_end_date" id="employment-end-date" class="mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full py-3 px-4 shadow-sm border-gray-300 rounded-xl">
+                            <p id="employment_end_date-error" class="mt-2 text-sm text-red-600 hidden"></p>
                         </div>
 
                         <div>
@@ -155,6 +178,24 @@
                                 <input type="hidden" name="base_income" id="base-income">
                             </div>
                             <p id="base_income-error" class="mt-2 text-sm text-red-600 hidden"></p>
+                        </div>
+
+                        {{-- After Tax Income — display input (text + commas) + hidden raw value for submission --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">After Tax Income</label>
+                            <div class="mt-1 relative rounded-xl shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 text-lg font-semibold">$</span>
+                                </div>
+                                <input type="text"
+                                       id="after-tax-income-display"
+                                       inputmode="decimal"
+                                       placeholder="0.00"
+                                       autocomplete="off"
+                                       class="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 py-3 px-4 border-gray-300 rounded-xl">
+                                <input type="hidden" name="after_tax_income" id="after-tax-income">
+                            </div>
+                            <p id="after_tax_income-error" class="mt-2 text-sm text-red-600 hidden" role="alert"></p>
                         </div>
 
                         {{-- Additional Income — same pattern --}}
