@@ -191,8 +191,14 @@ class TwilioService
      */
     protected function findApplicationByPhone(string $phone): ?Application
     {
-        return Application::whereHas('personalDetails', function ($query) use ($phone) {
-            $query->where('mobile_phone', $phone);
+        // Twilio sends E.164, strip the + for comparison
+        $normalized = ltrim($phone, '+');
+
+        return Application::whereHas('personalDetails', function ($query) use ($normalized) {
+            $query->whereRaw(
+                "REPLACE(mobile_phone, '+', '') = ?",
+                [$normalized]
+            );
         })->latest()->first();
     }
 }

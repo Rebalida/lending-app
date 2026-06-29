@@ -114,21 +114,48 @@
                         <p id="email-error" class="mt-2 text-sm text-red-600 hidden" role="alert"></p>
                     </div>
 
-                    {{-- Mobile --}}
+                    {{-- Phone Country + Number --}}
                     <div>
-                        <label for="mobile_phone" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Mobile Phone <span class="text-red-500" aria-hidden="true">*</span>
                         </label>
-                        <input type="tel"
-                               id="mobile_phone"
-                               name="mobile_phone"
-                               value="{{ old('mobile_phone', $pd?->mobile_phone) }}"
-                               required
-                               aria-required="true"
-                               aria-describedby="mobile_phone-error"
-                               class="mt-1 block w-full py-3 px-4 border border-gray-300 rounded-xl shadow-sm
-                                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        
+                        {{-- Unified Input Container --}}
+                        <div class="flex items-center w-full border border-gray-300 rounded-xl shadow-sm bg-white focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 overflow-hidden h-12">
+                            
+                            {{-- Country Selector (Flags Only) --}}
+                            <div class="relative flex items-center h-full pl-3 bg-gray-50 border-r border-gray-200">
+                                <select id="phone_country"
+                                        name="phone_country"
+                                        aria-describedby="phone_country-error"
+                                        {{-- Removed appearance-none so the native arrow shows up safely --}}
+                                        class="bg-transparent text-lg focus:outline-none pr-8 cursor-pointer z-10 border-none">
+                                    <option value="AU" {{ old('phone_country', $pd?->phone_country ?? 'AU') === 'AU' ? 'selected' : '' }}>🇦🇺</option>
+                                    <option value="NZ" {{ old('phone_country', $pd?->phone_country ?? 'AU') === 'NZ' ? 'selected' : '' }}>🇳🇿</option>
+                                    <option value="US" {{ old('phone_country', $pd?->phone_country ?? 'AU') === 'US' ? 'selected' : '' }}>🇺🇸</option>
+                                    <option value="GB" {{ old('phone_country', $pd?->phone_country ?? 'AU') === 'GB' ? 'selected' : '' }}>🇬🇧</option>
+                                    <option value="CA" {{ old('phone_country', $pd?->phone_country ?? 'AU') === 'CA' ? 'selected' : '' }}>🇨🇦</option>
+                                </select>
+                                {{-- Custom span arrow completely removed from here --}}
+                            </div>
+
+                            {{-- Prefix & Number Input Area --}}
+                            <div class="flex flex-1 items-center h-full relative pl-3">
+                                <span class="text-gray-400 text-sm select-none mr-1.5" id="phone-prefix">+61</span>
+                                <input type="tel"
+                                    id="mobile_phone"
+                                    name="mobile_phone"
+                                    value="{{ old('mobile_phone', $pd?->mobile_phone ? preg_replace('/^\+?61/', '', $pd?->mobile_phone) : '') }}"
+                                    placeholder="410829900"
+                                    required
+                                    aria-required="true"
+                                    aria-describedby="mobile_phone-error"
+                                    class="w-full h-full border-0 p-0 focus:ring-0 focus:outline-none text-gray-900 placeholder-gray-400 text-sm">
+                            </div>
+                        </div>
+                        
                         <p id="mobile_phone-error" class="mt-2 text-sm text-red-600 hidden" role="alert"></p>
+                        <p class="mt-1 text-xs text-gray-400">Enter number without country code</p>
                     </div>
 
                     {{-- Date of Birth --}}
