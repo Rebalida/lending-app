@@ -58,7 +58,7 @@ class ApplicationController extends Controller
      *
      * @var string[]
      */
-    private const LOCKED_STATUSES = [ Application::STATUS_SETTLED, Application::STATUS_DECLINED, Application::STATUS_DEFERRED, ];
+    private const LOCKED_STATUSES = [ Application::STATUS_SETTLED, Application::STATUS_DECLINED, ];
 
     /**
      * Statuses from which an application may be returned to the client.

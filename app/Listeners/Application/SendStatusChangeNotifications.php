@@ -18,11 +18,12 @@ class SendStatusChangeNotifications
 
         try {
             match ($event->newStatus) {
-                'wip'             => $this->underReview($application, $phone, $number),
-                'approved'                 => $this->approved($application, $phone, $number),
-                'declined'                 => $this->declined($application, $phone, $number),
+                'wip'                  => $this->underReview($application, $phone, $number),
+                'approved'             => $this->approved($application, $phone, $number),
+                'declined'             => $this->declined($application, $phone, $number),
+                'deferred'             => $this->deferred($application, $phone, $number), // ADD THIS
                 'outstanding_document' => $this->additionalInfo($application, $phone, $number),
-                default                    => null,
+                default                => null,
             };
         } catch (\Exception $e) {
             // Log but don't bubble — a notification failure should never break the status update
@@ -88,6 +89,21 @@ class SendStatusChangeNotifications
             $this->messaging->send(
                 $phone,
                 "We need additional information for your application #{$number}. Please log in. - Loan Team",
+                $application
+            );
+        }
+    }
+
+    private function deferred($application, $phone, $number): void
+    {
+        $application->user->notify(
+            new \App\Notifications\Application\ApplicationDeferred($application)
+        );
+
+        if ($phone) {
+            $this->messaging->send(
+                $phone,
+                "Regarding your loan application #{$number} — we need some time to review further. Check email for details. - Loan Team",
                 $application
             );
         }

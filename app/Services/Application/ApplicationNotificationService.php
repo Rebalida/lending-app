@@ -74,6 +74,23 @@ class ApplicationNotificationService
         }
     }
 
+    public function handleDeferred(Application $application, string $reason): void
+    {
+        try {
+            $application->user->notify(
+                new \App\Notifications\Application\ApplicationDeferred($application, $reason)
+            );
+
+            $this->sendSMS(
+                $application,
+                "Your application #{$application->application_number} has been deferred. Reason: {$reason}. Our team will be in touch if further information is required."
+            );
+
+        } catch (\Exception $e) {
+            Log::error('Deferral notification failed: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Send SMS immediately (synchronous, no queue)
      */

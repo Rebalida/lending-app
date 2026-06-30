@@ -47,7 +47,6 @@ class Application extends Model
     // Terminal statuses (no further transitions)
     public const TERMINAL_STATUSES = [
         self::STATUS_DECLINED,
-        self::STATUS_DEFERRED,
         self::STATUS_SETTLED,
     ];
 

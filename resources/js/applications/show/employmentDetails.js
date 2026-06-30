@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Seed the shared income total from server-rendered config
     window.EMPLOYMENT_ANNUAL_INCOME = window.EMPLOYMENT_CONFIG?.initialAnnualIncome ?? 0;
+    let editingEmploymentId = null;
     document.dispatchEvent(new CustomEvent('employmentIncomeUpdated', {
         detail: { annualIncome: window.EMPLOYMENT_ANNUAL_INCOME }
     }));
@@ -107,6 +108,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function updateFormTitle() {
+        const titleEl = document.getElementById('employment-form-title');
+        if (titleEl) {
+            titleEl.textContent = editingEmploymentId ? 'Edit Employment Details' : 'Add Employment Details';
+        }
+    }
+
+    function updateSubmitButton() {
+        if (editingEmploymentId) {
+            submitButtonText.textContent = 'Update Employment';
+            submitPlusIcon.classList.add('hidden');
+        } else {
+            submitButtonText.textContent = 'Add Employment';
+            submitPlusIcon.classList.remove('hidden');
+        }
+    }
+
     function displaySuccess(message) {
         messagesContainer.innerHTML = `
             <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 rounded-lg">
@@ -167,7 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const formData = new FormData(form);
 
-                const response = await fetch(form.action, {
+                const url = editingEmploymentId
+                    ? EMPLOYMENT_CONFIG.updateRoute.replace(':id', editingEmploymentId)
+                    : form.action;
+
+                if (editingEmploymentId) {
+                    formData.append('_method', 'PATCH');
+                }
+
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || formData.get('_token'),
@@ -179,18 +205,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    displaySuccess(data.message || 'Employment details added successfully.');
+                    const successMsg = editingEmploymentId 
+                        ? 'Employment details updated successfully.'
+                        : 'Employment details added successfully.';
+                    displaySuccess(data.message || successMsg);
 
-                    form.reset();
-                    document.getElementById('base-income-display').value    = '';
-                    document.getElementById('after-tax-income-display').value = '';
-                    document.getElementById('additional-income-display').value = '';
-                    document.getElementById('base-income').value            = '';
-                    document.getElementById('after-tax-income').value       = '';
-                    document.getElementById('additional-income').value      = '0';
-                    document.getElementById('employment-end-date').value = '';
-                    document.getElementById('is_current_yes').checked = true;
-                    endDateContainer.classList.add('hidden');
+                    if (editingEmploymentId) {
+                        document.querySelector(`[data-employment-id="${editingEmploymentId}"]`)?.remove();
+                    }
+
+                    resetForm();
 
                     if (data.employment) {
                         addEmploymentToList(data.employment);
@@ -221,7 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitButton.removeAttribute('aria-disabled');
                 submitSpinner.classList.add('hidden');
                 submitPlusIcon.classList.remove('hidden');
-                submitButtonText.textContent = 'Add Employment';
+                updateSubmitButton();
+                editingEmploymentId = null;
             }
         });
     }
@@ -263,9 +288,19 @@ document.addEventListener('DOMContentLoaded', () => {
             <div data-employment-card
                 class="employment-item p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:shadow-md transition"
                 data-employment-id="${employment.id}"
+                data-employment-type="${employment.employment_type}"
+                data-employer-name="${employment.employer_business_name}"
+                data-abn="${employment.abn || ''}"
+                data-employment-role="${employment.employment_role || ''}"
+                data-position="${employment.position || ''}"
+                data-start-date="${employment.employment_start_date || ''}"
                 data-base-income="${employment.base_income}"
+                data-after-tax-income="${employment.after_tax_income || ''}"
                 data-additional-income="${employment.additional_income || 0}"
-                data-income-frequency="${employment.income_frequency}">
+                data-income-frequency="${employment.income_frequency}"
+                data-employer-phone="${employment.employer_phone || ''}"
+                data-is-current="${employment.is_current ? '1' : '0'}"
+                data-end-date="${employment.employment_end_date || ''}">
                 <div class="flex justify-between items-start">
                     <div class="flex items-start space-x-4">
                         <div class="flex-shrink-0">
@@ -288,15 +323,26 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </div>
-                    <button type="button"
-                            data-employment-id="${employment.id}"
-                            aria-label="Delete employment record ${employment.employment_type.replace(/_/g, ' ')}"
-                            class="inline-flex items-center px-3 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition delete-employment-btn">
-                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                        </svg>
-                        Delete
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button"
+                                data-employment-id="${employment.id}"
+                                aria-label="Edit employment record ${employment.employment_type.replace(/_/g, ' ')}"
+                                class="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition edit-employment-btn">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                            </svg>
+                            Edit
+                        </button>
+                        <button type="button"
+                                data-employment-id="${employment.id}"
+                                aria-label="Delete employment record ${employment.employment_type.replace(/_/g, ' ')}"
+                                class="inline-flex items-center px-3 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition delete-employment-btn">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -320,6 +366,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (badge) {
             badge.textContent = `${count} Employment(s)`;
         }
+    }
+
+    function resetForm() {
+        form.reset();
+        document.getElementById('base-income-display').value    = '';
+        document.getElementById('after-tax-income-display').value = '';
+        document.getElementById('additional-income-display').value = '';
+        document.getElementById('base-income').value            = '';
+        document.getElementById('after-tax-income').value       = '';
+        document.getElementById('additional-income').value      = '0';
+        document.getElementById('employment-end-date').value = '';
+        document.getElementById('employment-role').value = '';
+        document.getElementById('is_current_yes').checked = true;
+        endDateContainer.classList.add('hidden');
+        editingEmploymentId = null;
+        updateFormTitle();
+        updateSubmitButton();
+        clearErrors();
     }
 
     // ── Delete ────────────────────────────────────────────────────────────
@@ -362,6 +426,45 @@ document.addEventListener('DOMContentLoaded', () => {
             displayError(error.message);
         }
     }
+
+    // ── Edit employment (delegated) ──────────────────────────────────────
+
+    document.addEventListener('click', e => {
+        const editBtn = e.target.closest('.edit-employment-btn');
+        if (!editBtn) return;
+
+        const employmentId = editBtn.dataset.employmentId;
+        const card = document.querySelector(`[data-employment-id="${employmentId}"]`);
+        
+        if (!card) return;
+
+        editingEmploymentId = employmentId;
+
+        document.getElementById('employment-type').value = card.dataset.employmentType || '';
+        document.getElementById('employer-business-name').value = card.dataset.employerName || '';
+        document.getElementById('abn').value = card.dataset.abn || '';
+        document.getElementById('employment-role').value = card.dataset.employmentRole || '';
+        document.getElementById('position').value = card.dataset.position || '';
+        document.getElementById('employment-start-date').value = card.dataset.startDate || '';
+        document.getElementById('employer-phone').value = card.dataset.employerPhone || '';
+        document.getElementById('base-income-display').value = card.dataset.baseIncome || '';
+        document.getElementById('base-income').value = card.dataset.baseIncome || '';
+        document.getElementById('after-tax-income-display').value = card.dataset.afterTaxIncome || '';
+        document.getElementById('after-tax-income').value = card.dataset.afterTaxIncome || '';
+        document.getElementById('additional-income-display').value = card.dataset.additionalIncome || '';
+        document.getElementById('additional-income').value = card.dataset.additionalIncome || '0';
+        document.getElementById('income-frequency').value = card.dataset.incomeFrequency || '';
+        
+        document.getElementById('is_current_yes').checked = card.dataset.isCurrent === '1';
+        document.getElementById('is_current_no').checked = card.dataset.isCurrent !== '1';
+        document.getElementById('employment-end-date').value = card.dataset.endDate || '';
+        toggleEndDateField();
+
+        updateFormTitle();
+        updateSubmitButton();
+        
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
     document.addEventListener('click', e => {
         const btn = e.target.closest('.delete-employment-btn');
