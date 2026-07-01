@@ -1,127 +1,156 @@
 // resources/js/applications/show/employmentDetails.js
-document.addEventListener('DOMContentLoaded', () => {
-    const form                          = document.getElementById('employment-form');
-    const messagesContainer             = document.getElementById('employment-messages');
-    const submitButton                  = document.getElementById('submit-employment-button');
-    const submitButtonText              = document.getElementById('submit-employment-text');
-    const employmentDetailsAccordionBtn = document.getElementById('employment-details-btn');
-    const submitSpinner                 = document.getElementById('submit-employment-spinner');
-    const submitPlusIcon                = document.getElementById('submit-employment-plus-icon');
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("employment-form");
+    const messagesContainer = document.getElementById("employment-messages");
+    const submitButton = document.getElementById("submit-employment-button");
+    const submitButtonText = document.getElementById("submit-employment-text");
+    const employmentDetailsAccordionBtn = document.getElementById(
+        "employment-details-btn"
+    );
+    const submitSpinner = document.getElementById("submit-employment-spinner");
+    const submitPlusIcon = document.getElementById(
+        "submit-employment-plus-icon"
+    );
 
     // Seed the shared income total from server-rendered config
-    window.EMPLOYMENT_ANNUAL_INCOME = window.EMPLOYMENT_CONFIG?.initialAnnualIncome ?? 0;
+    window.EMPLOYMENT_ANNUAL_INCOME =
+        window.EMPLOYMENT_CONFIG?.initialAnnualIncome ?? 0;
     let editingEmploymentId = null;
-    document.dispatchEvent(new CustomEvent('employmentIncomeUpdated', {
-        detail: { annualIncome: window.EMPLOYMENT_ANNUAL_INCOME }
-    }));
+    document.dispatchEvent(
+        new CustomEvent("employmentIncomeUpdated", {
+            detail: { annualIncome: window.EMPLOYMENT_ANNUAL_INCOME },
+        })
+    );
 
     if (employmentDetailsAccordionBtn) {
-        employmentDetailsAccordionBtn.addEventListener('click', () => {
-            window.toggleAccordion('employment-details');
+        employmentDetailsAccordionBtn.addEventListener("click", () => {
+            window.toggleAccordion("employment-details");
         });
     }
 
     // Initialise currency fields — formatting handled by global initCurrencyInput in script.js
-    window.initCurrencyInput('base-income-display', 'base-income', { min: 1, max: 9_000_000_000, errorId: 'base_income-error' });
-    window.initCurrencyInput('after-tax-income-display', 'after-tax-income', { min: 0, max: 9_000_000_000, errorId: 'after_tax_income-error' });
-    window.initCurrencyInput('additional-income-display', 'additional-income', { min: 0, max: 9_000_000_000, errorId: 'additional_income-error' });
+    window.initCurrencyInput("base-income-display", "base-income", {
+        min: 1,
+        max: 9_000_000_000,
+        errorId: "base_income-error",
+    });
+    window.initCurrencyInput("after-tax-income-display", "after-tax-income", {
+        min: 0,
+        max: 9_000_000_000,
+        errorId: "after_tax_income-error",
+    });
+    window.initCurrencyInput("additional-income-display", "additional-income", {
+        min: 0,
+        max: 9_000_000_000,
+        errorId: "additional_income-error",
+    });
 
     // ── Current Position Toggle ───────────────────────────────────────
 
-    const isCurrentYes = document.getElementById('is_current_yes');
-    const isCurrentNo = document.getElementById('is_current_no');
-    const endDateContainer = document.getElementById('employment-end-date-container');
-    const endDateInput = document.getElementById('employment-end-date');
+    const isCurrentYes = document.getElementById("is_current_yes");
+    const isCurrentNo = document.getElementById("is_current_no");
+    const endDateContainer = document.getElementById(
+        "employment-end-date-container"
+    );
+    const endDateInput = document.getElementById("employment-end-date");
 
     function toggleEndDateField() {
-        const isCurrentValue = document.querySelector('input[name="is_current"]:checked')?.value;
-        
-        if (isCurrentValue === '0') {
+        const isCurrentValue = document.querySelector(
+            'input[name="is_current"]:checked'
+        )?.value;
+
+        if (isCurrentValue === "0") {
             // Past employment - show end date field
-            endDateContainer.classList.remove('hidden');
-            endDateInput.setAttribute('required', 'required');
+            endDateContainer.classList.remove("hidden");
+            endDateInput.setAttribute("required", "required");
         } else {
             // Current employment - hide end date field
-            endDateContainer.classList.add('hidden');
-            endDateInput.removeAttribute('required');
-            endDateInput.value = '';
+            endDateContainer.classList.add("hidden");
+            endDateInput.removeAttribute("required");
+            endDateInput.value = "";
         }
     }
 
     if (isCurrentYes) {
-        isCurrentYes.addEventListener('change', toggleEndDateField);
+        isCurrentYes.addEventListener("change", toggleEndDateField);
     }
     if (isCurrentNo) {
-        isCurrentNo.addEventListener('change', toggleEndDateField);
+        isCurrentNo.addEventListener("change", toggleEndDateField);
     }
 
     // Initialize on page load
     toggleEndDateField();
 
-
     // ── Helpers ───────────────────────────────────────────────────────────
 
     function broadcastTotalIncome() {
         let total = 0;
-        document.querySelectorAll('.employment-item').forEach(card => {
-            // Read data attributes set by createEmploymentElement
-            const base       = parseFloat(card.dataset.baseIncome       || 0);
-            const additional = parseFloat(card.dataset.additionalIncome  || 0);
-            const freq       = card.dataset.incomeFrequency              || 'annual';
-            total += calculateAnnualIncome(base, additional, freq);
+        document.querySelectorAll(".employment-item").forEach((card) => {
+            // Read data attributes — use after_tax_income if it exists, otherwise base_income
+            const afterTax = parseFloat(card.dataset.afterTaxIncome || 0);
+            const base = parseFloat(card.dataset.baseIncome || 0);
+            const income = afterTax > 0 ? afterTax : base; // Use after-tax if available
+            const additional = parseFloat(card.dataset.additionalIncome || 0);
+            const freq = card.dataset.incomeFrequency || "annual";
+            total += calculateAnnualIncome(income, additional, freq);
         });
         window.EMPLOYMENT_ANNUAL_INCOME = total;
-        document.dispatchEvent(new CustomEvent('employmentIncomeUpdated', {
-            detail: { annualIncome: total }
-        }));
+        document.dispatchEvent(
+            new CustomEvent("employmentIncomeUpdated", {
+                detail: { annualIncome: total },
+            })
+        );
     }
 
     function clearErrors() {
         const errorElements = form.querySelectorAll('[id$="-error"]');
-        errorElements.forEach(element => {
-            element.classList.add('hidden');
-            element.textContent = '';
+        errorElements.forEach((element) => {
+            element.classList.add("hidden");
+            element.textContent = "";
         });
 
-        const inputs = form.querySelectorAll('input, select');
-        inputs.forEach(input => {
-            input.classList.remove('border-red-500');
-            input.removeAttribute('aria-invalid');
+        const inputs = form.querySelectorAll("input, select");
+        inputs.forEach((input) => {
+            input.classList.remove("border-red-500");
+            input.removeAttribute("aria-invalid");
         });
 
-        messagesContainer.innerHTML = '';
+        messagesContainer.innerHTML = "";
     }
 
     function displayFieldError(fieldName, message) {
         const errorElement = document.getElementById(`${fieldName}-error`);
-        const inputElement = document.getElementById(fieldName) ||
-                            document.getElementById(fieldName.replace(/_/g, '-'));
+        const inputElement =
+            document.getElementById(fieldName) ||
+            document.getElementById(fieldName.replace(/_/g, "-"));
 
         if (errorElement) {
             errorElement.textContent = message;
-            errorElement.classList.remove('hidden');
+            errorElement.classList.remove("hidden");
         }
 
         if (inputElement) {
-            inputElement.classList.add('border-red-500');
-            inputElement.setAttribute('aria-invalid', 'true');
+            inputElement.classList.add("border-red-500");
+            inputElement.setAttribute("aria-invalid", "true");
         }
     }
 
     function updateFormTitle() {
-        const titleEl = document.getElementById('employment-form-title');
+        const titleEl = document.getElementById("employment-form-title");
         if (titleEl) {
-            titleEl.textContent = editingEmploymentId ? 'Edit Employment Details' : 'Add Employment Details';
+            titleEl.textContent = editingEmploymentId
+                ? "Edit Employment Details"
+                : "Add Employment Details";
         }
     }
 
     function updateSubmitButton() {
         if (editingEmploymentId) {
-            submitButtonText.textContent = 'Update Employment';
-            submitPlusIcon.classList.add('hidden');
+            submitButtonText.textContent = "Update Employment";
+            submitPlusIcon.classList.add("hidden");
         } else {
-            submitButtonText.textContent = 'Add Employment';
-            submitPlusIcon.classList.remove('hidden');
+            submitButtonText.textContent = "Add Employment";
+            submitPlusIcon.classList.remove("hidden");
         }
     }
 
@@ -140,7 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
-        messagesContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        messagesContainer.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+        });
     }
 
     function displayError(message) {
@@ -158,46 +190,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
-        messagesContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        messagesContainer.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+        });
     }
 
     // ── Form submission ───────────────────────────────────────────────────
 
     if (form) {
-        form.addEventListener('submit', async function (event) {
+        form.addEventListener("submit", async function (event) {
             event.preventDefault();
             clearErrors();
 
-            const baseIncomeHidden = document.getElementById('base-income');
-            if (!baseIncomeHidden.value || parseFloat(baseIncomeHidden.value) <= 0) {
-                displayFieldError('base_income', 'Please enter a base income amount.');
-                document.getElementById('base-income-display').focus();
+            const baseIncomeHidden = document.getElementById("base-income");
+            if (
+                !baseIncomeHidden.value ||
+                parseFloat(baseIncomeHidden.value) <= 0
+            ) {
+                displayFieldError(
+                    "base_income",
+                    "Please enter a base income amount."
+                );
+                document.getElementById("base-income-display").focus();
                 return;
             }
 
             // ── Loading state ─────────────────────────────────────────────────
             submitButton.disabled = true;
-            submitButton.setAttribute('aria-disabled', 'true');
-            submitSpinner.classList.remove('hidden');
-            submitPlusIcon.classList.add('hidden');
-            submitButtonText.textContent = 'Adding…';
+            submitButton.setAttribute("aria-disabled", "true");
+            submitSpinner.classList.remove("hidden");
+            submitPlusIcon.classList.add("hidden");
+            submitButtonText.textContent = "Adding…";
 
             try {
                 const formData = new FormData(form);
 
                 const url = editingEmploymentId
-                    ? EMPLOYMENT_CONFIG.updateRoute.replace(':id', editingEmploymentId)
+                    ? EMPLOYMENT_CONFIG.updateRoute.replace(
+                          ":id",
+                          editingEmploymentId
+                      )
                     : form.action;
 
                 if (editingEmploymentId) {
-                    formData.append('_method', 'PATCH');
+                    formData.append("_method", "PATCH");
                 }
 
                 const response = await fetch(url, {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || formData.get('_token'),
-                        'Accept': 'application/json',
+                        "X-CSRF-TOKEN":
+                            document.querySelector('meta[name="csrf-token"]')
+                                ?.content || formData.get("_token"),
+                        Accept: "application/json",
                     },
                     body: formData,
                 });
@@ -205,13 +251,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    const successMsg = editingEmploymentId 
-                        ? 'Employment details updated successfully.'
-                        : 'Employment details added successfully.';
+                    const successMsg = editingEmploymentId
+                        ? "Employment details updated successfully."
+                        : "Employment details added successfully.";
                     displaySuccess(data.message || successMsg);
 
                     if (editingEmploymentId) {
-                        document.querySelector(`[data-employment-id="${editingEmploymentId}"]`)?.remove();
+                        document
+                            .querySelector(
+                                `[data-employment-id="${editingEmploymentId}"]`
+                            )
+                            ?.remove();
                     }
 
                     resetForm();
@@ -219,32 +269,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.employment) {
                         addEmploymentToList(data.employment);
                         updateEmploymentCount();
-                        document.dispatchEvent(new CustomEvent('ajaxSuccess', {
-                            detail: { type: 'employment' },
-                        }));
+                        document.dispatchEvent(
+                            new CustomEvent("ajaxSuccess", {
+                                detail: { type: "employment" },
+                            })
+                        );
                     }
                 } else {
                     if (data.errors) {
-                        Object.keys(data.errors).forEach(fieldName => {
+                        Object.keys(data.errors).forEach((fieldName) => {
                             const messages = data.errors[fieldName];
-                            if (Array.isArray(messages) && messages.length > 0) {
+                            if (
+                                Array.isArray(messages) &&
+                                messages.length > 0
+                            ) {
                                 displayFieldError(fieldName, messages[0]);
                             }
                         });
-                        displayError('Please correct the errors below.');
+                        displayError("Please correct the errors below.");
                     } else {
-                        displayError(data.message || 'An error occurred. Please try again.');
+                        displayError(
+                            data.message ||
+                                "An error occurred. Please try again."
+                        );
                     }
                 }
             } catch (error) {
-                console.error('Error:', error);
-                displayError('A network error occurred. Please check your connection and try again.');
+                console.error("Error:", error);
+                displayError(
+                    "A network error occurred. Please check your connection and try again."
+                );
             } finally {
                 // ── Reset state ───────────────────────────────────────────────
                 submitButton.disabled = false;
-                submitButton.removeAttribute('aria-disabled');
-                submitSpinner.classList.add('hidden');
-                submitPlusIcon.classList.remove('hidden');
+                submitButton.removeAttribute("aria-disabled");
+                submitSpinner.classList.add("hidden");
+                submitPlusIcon.classList.remove("hidden");
                 updateSubmitButton();
                 editingEmploymentId = null;
             }
@@ -254,8 +314,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Employment list helpers ───────────────────────────────────────────
 
     function addEmploymentToList(employment) {
-        const employmentList = document.getElementById('employment-list');
-        const listContainer = document.getElementById('employment-list-container');
+        const employmentList = document.getElementById("employment-list");
+        const listContainer = document.getElementById(
+            "employment-list-container"
+        );
 
         if (!employmentList) {
             listContainer.innerHTML = `
@@ -272,14 +334,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const employmentItem = createEmploymentElement(employment);
-        document.getElementById('employment-list').insertAdjacentHTML('beforeend', employmentItem);
+        document
+            .getElementById("employment-list")
+            .insertAdjacentHTML("beforeend", employmentItem);
 
         broadcastTotalIncome();
     }
 
     function createEmploymentElement(employment) {
         const annualIncome = calculateAnnualIncome(
-            employment.base_income,
+            employment.after_tax_income || employment.base_income,
             employment.additional_income || 0,
             employment.income_frequency
         );
@@ -290,17 +354,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 data-employment-id="${employment.id}"
                 data-employment-type="${employment.employment_type}"
                 data-employer-name="${employment.employer_business_name}"
-                data-abn="${employment.abn || ''}"
-                data-employment-role="${employment.employment_role || ''}"
-                data-position="${employment.position || ''}"
-                data-start-date="${employment.employment_start_date || ''}"
+                data-abn="${employment.abn || ""}"
+                data-employment-role="${employment.employment_role || ""}"
+                data-position="${employment.position || ""}"
+                data-start-date="${employment.employment_start_date || ""}"
                 data-base-income="${employment.base_income}"
-                data-after-tax-income="${employment.after_tax_income || ''}"
+                data-after-tax-income="${employment.after_tax_income || ""}"
                 data-additional-income="${employment.additional_income || 0}"
                 data-income-frequency="${employment.income_frequency}"
-                data-employer-phone="${employment.employer_phone || ''}"
-                data-is-current="${employment.is_current ? '1' : '0'}"
-                data-end-date="${employment.employment_end_date || ''}">
+                data-employer-phone="${employment.employer_phone || ""}"
+                data-is-current="${employment.is_current ? "1" : "0"}"
+                data-end-date="${employment.employment_end_date || ""}">
                 <div class="flex justify-between items-start">
                     <div class="flex items-start space-x-4">
                         <div class="flex-shrink-0">
@@ -313,20 +377,36 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div>
                             <div class="flex items-center space-x-2 mb-2">
                                 <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold uppercase">
-                                    ${employment.employment_type.replace(/_/g, ' ')}
+                                    ${employment.employment_type.replace(
+                                        /_/g,
+                                        " "
+                                    )}
                                 </span>
                             </div>
-                            <div class="font-semibold text-gray-900">${employment.employer_business_name || 'N/A'}</div>
-                            <div class="text-sm text-gray-600 mt-1">${employment.position || 'N/A'}</div>
+                            <div class="font-semibold text-gray-900">${
+                                employment.employer_business_name || "N/A"
+                            }</div>
+                            <div class="text-sm text-gray-600 mt-1">${
+                                employment.position || "N/A"
+                            }</div>
                             <div class="text-sm font-bold text-green-600 mt-2">
-                                Annual Income: $${annualIncome.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                Annual Income: $${annualIncome.toLocaleString(
+                                    "en-AU",
+                                    {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    }
+                                )}
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="button"
                                 data-employment-id="${employment.id}"
-                                aria-label="Edit employment record ${employment.employment_type.replace(/_/g, ' ')}"
+                                aria-label="Edit employment record ${employment.employment_type.replace(
+                                    /_/g,
+                                    " "
+                                )}"
                                 class="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition edit-employment-btn">
                             <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
@@ -335,7 +415,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                         <button type="button"
                                 data-employment-id="${employment.id}"
-                                aria-label="Delete employment record ${employment.employment_type.replace(/_/g, ' ')}"
+                                aria-label="Delete employment record ${employment.employment_type.replace(
+                                    /_/g,
+                                    " "
+                                )}"
                                 class="inline-flex items-center px-3 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition delete-employment-btn">
                             <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -349,20 +432,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateAnnualIncome(baseIncome, additionalIncome, frequency) {
-        const totalIncome = parseFloat(baseIncome) + parseFloat(additionalIncome);
+        const totalIncome =
+            parseFloat(baseIncome) + parseFloat(additionalIncome);
 
         switch (frequency) {
-            case 'weekly':      return totalIncome * 52;
-            case 'fortnightly': return totalIncome * 26;
-            case 'monthly':     return totalIncome * 12;
-            case 'annual':      return totalIncome;
-            default:            return totalIncome;
+            case "weekly":
+                return totalIncome * 52;
+            case "fortnightly":
+                return totalIncome * 26;
+            case "monthly":
+                return totalIncome * 12;
+            case "annual":
+                return totalIncome;
+            default:
+                return totalIncome;
         }
     }
 
     function updateEmploymentCount() {
-        const badge = document.getElementById('employment-count-badge');
-        const count = document.querySelectorAll('.employment-item').length;
+        const badge = document.getElementById("employment-count-badge");
+        const count = document.querySelectorAll(".employment-item").length;
         if (badge) {
             badge.textContent = `${count} Employment(s)`;
         }
@@ -370,16 +459,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetForm() {
         form.reset();
-        document.getElementById('base-income-display').value    = '';
-        document.getElementById('after-tax-income-display').value = '';
-        document.getElementById('additional-income-display').value = '';
-        document.getElementById('base-income').value            = '';
-        document.getElementById('after-tax-income').value       = '';
-        document.getElementById('additional-income').value      = '0';
-        document.getElementById('employment-end-date').value = '';
-        document.getElementById('employment-role').value = '';
-        document.getElementById('is_current_yes').checked = true;
-        endDateContainer.classList.add('hidden');
+        document.getElementById("base-income-display").value = "";
+        document.getElementById("after-tax-income-display").value = "";
+        document.getElementById("additional-income-display").value = "";
+        document.getElementById("base-income").value = "";
+        document.getElementById("after-tax-income").value = "";
+        document.getElementById("additional-income").value = "0";
+        document.getElementById("employment-end-date").value = "";
+        document.getElementById("employment-role").value = "";
+        document.getElementById("is_current_yes").checked = true;
+        endDateContainer.classList.add("hidden");
         editingEmploymentId = null;
         updateFormTitle();
         updateSubmitButton();
@@ -389,86 +478,121 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Delete ────────────────────────────────────────────────────────────
 
     async function deleteEmployment(applicationId, employmentId) {
-        if (!confirm('Are you sure you want to delete this employment record?')) {
+        if (
+            !confirm("Are you sure you want to delete this employment record?")
+        ) {
             return;
         }
 
-        const deleteUrl = EMPLOYMENT_CONFIG.deleteRoute.replace(':id', employmentId);
+        const deleteUrl = EMPLOYMENT_CONFIG.deleteRoute.replace(
+            ":id",
+            employmentId
+        );
 
         try {
             const response = await fetch(deleteUrl, {
-                method: 'DELETE',
+                method: "DELETE",
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                }
+                    "X-CSRF-TOKEN": document.querySelector(
+                        'meta[name="csrf-token"]'
+                    )?.content,
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                document.querySelector(`[data-employment-id="${employmentId}"]`)?.remove();
+                document
+                    .querySelector(`[data-employment-id="${employmentId}"]`)
+                    ?.remove();
 
                 updateEmploymentCount();
                 broadcastTotalIncome();
 
-                document.dispatchEvent(new CustomEvent('ajaxSuccess', {
-                    detail: { type: 'employment' }
-                }));
+                document.dispatchEvent(
+                    new CustomEvent("ajaxSuccess", {
+                        detail: { type: "employment" },
+                    })
+                );
 
-                displaySuccess(data.message || 'Employment details deleted successfully.');
+                displaySuccess(
+                    data.message || "Employment details deleted successfully."
+                );
             } else {
-                throw new Error(data.message || 'Failed to delete employment record');
+                throw new Error(
+                    data.message || "Failed to delete employment record"
+                );
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error("Error:", error);
             displayError(error.message);
         }
     }
 
     // ── Edit employment (delegated) ──────────────────────────────────────
 
-    document.addEventListener('click', e => {
-        const editBtn = e.target.closest('.edit-employment-btn');
+    document.addEventListener("click", (e) => {
+        const editBtn = e.target.closest(".edit-employment-btn");
         if (!editBtn) return;
 
         const employmentId = editBtn.dataset.employmentId;
-        const card = document.querySelector(`[data-employment-id="${employmentId}"]`);
-        
+        const card = document.querySelector(
+            `[data-employment-id="${employmentId}"]`
+        );
+
         if (!card) return;
 
         editingEmploymentId = employmentId;
 
-        document.getElementById('employment-type').value = card.dataset.employmentType || '';
-        document.getElementById('employer-business-name').value = card.dataset.employerName || '';
-        document.getElementById('abn').value = card.dataset.abn || '';
-        document.getElementById('employment-role').value = card.dataset.employmentRole || '';
-        document.getElementById('position').value = card.dataset.position || '';
-        document.getElementById('employment-start-date').value = card.dataset.startDate || '';
-        document.getElementById('employer-phone').value = card.dataset.employerPhone || '';
-        document.getElementById('base-income-display').value = card.dataset.baseIncome || '';
-        document.getElementById('base-income').value = card.dataset.baseIncome || '';
-        document.getElementById('after-tax-income-display').value = card.dataset.afterTaxIncome || '';
-        document.getElementById('after-tax-income').value = card.dataset.afterTaxIncome || '';
-        document.getElementById('additional-income-display').value = card.dataset.additionalIncome || '';
-        document.getElementById('additional-income').value = card.dataset.additionalIncome || '0';
-        document.getElementById('income-frequency').value = card.dataset.incomeFrequency || '';
-        
-        document.getElementById('is_current_yes').checked = card.dataset.isCurrent === '1';
-        document.getElementById('is_current_no').checked = card.dataset.isCurrent !== '1';
-        document.getElementById('employment-end-date').value = card.dataset.endDate || '';
+        document.getElementById("employment-type").value =
+            card.dataset.employmentType || "";
+        document.getElementById("employer-business-name").value =
+            card.dataset.employerName || "";
+        document.getElementById("abn").value = card.dataset.abn || "";
+        document.getElementById("employment-role").value =
+            card.dataset.employmentRole || "";
+        document.getElementById("position").value = card.dataset.position || "";
+        document.getElementById("employment-start-date").value =
+            card.dataset.startDate || "";
+        document.getElementById("employer-phone").value =
+            card.dataset.employerPhone || "";
+        document.getElementById("base-income-display").value =
+            card.dataset.baseIncome || "";
+        document.getElementById("base-income").value =
+            card.dataset.baseIncome || "";
+        document.getElementById("after-tax-income-display").value =
+            card.dataset.afterTaxIncome || "";
+        document.getElementById("after-tax-income").value =
+            card.dataset.afterTaxIncome || "";
+        document.getElementById("additional-income-display").value =
+            card.dataset.additionalIncome || "";
+        document.getElementById("additional-income").value =
+            card.dataset.additionalIncome || "0";
+        document.getElementById("income-frequency").value =
+            card.dataset.incomeFrequency || "";
+
+        document.getElementById("is_current_yes").checked =
+            card.dataset.isCurrent === "1";
+        document.getElementById("is_current_no").checked =
+            card.dataset.isCurrent !== "1";
+        document.getElementById("employment-end-date").value =
+            card.dataset.endDate || "";
         toggleEndDateField();
 
         updateFormTitle();
         updateSubmitButton();
-        
-        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('.delete-employment-btn');
+    document.addEventListener("click", (e) => {
+        const btn = e.target.closest(".delete-employment-btn");
         if (!btn) return;
-        deleteEmployment(EMPLOYMENT_CONFIG.applicationId, btn.dataset.employmentId);
+        deleteEmployment(
+            EMPLOYMENT_CONFIG.applicationId,
+            btn.dataset.employmentId
+        );
     });
 });

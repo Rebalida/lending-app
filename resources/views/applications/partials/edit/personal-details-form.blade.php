@@ -238,6 +238,19 @@
                         <p id="citizenship_status-error" class="mt-2 text-sm text-red-600 hidden" role="alert"></p>
                     </div>
 
+                    {{-- Visa Type --}}
+                    <div>
+                        <label for="visa_type" class="block text-sm font-semibold text-gray-700 mb-2">Visa Type</label>
+                        <select name="visa_type" id="visa_type" class="mt-1 block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Select visa type (if applicable)...</option>
+                            <option value="student_visa" {{ old('visa_type', $application->personalDetails?->visa_type) === 'student_visa' ? 'selected' : '' }}>Student Visa</option>
+                            <option value="work_visa" {{ old('visa_type', $application->personalDetails?->visa_type) === 'work_visa' ? 'selected' : '' }}>Work Visa</option>
+                            <option value="refugee_visa" {{ old('visa_type', $application->personalDetails?->visa_type) === 'refugee_visa' ? 'selected' : '' }}>Refugee Visa</option>
+                            <option value="working_holiday_visa" {{ old('visa_type', $application->personalDetails?->visa_type) === 'working_holiday_visa' ? 'selected' : '' }}>Working Holiday Visa</option>
+                        </select>
+                        <p id="visa_type-error" class="mt-2 text-sm text-red-600 hidden"></p>
+                    </div>
+
                     {{-- Marital Status --}}
                     <div>
                         <label for="marital_status" class="block text-sm font-semibold text-gray-700 mb-2">

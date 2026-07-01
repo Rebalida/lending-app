@@ -27,23 +27,11 @@ class ApplicationSubmitted extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Application Submitted Successfully - ' . $this->application->application_number)
+            ->subject('Application Submitted - ' . $this->application->application_number)
             ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Thank you for submitting your loan application!')
-            ->line('**Application Details:**')
-            ->line('Application Number: **' . $this->application->application_number . '**')
-            ->line('Loan Amount: **$' . number_format($this->application->loan_amount, 2) . '**')
-            ->line('Term: **' . $this->application->term_months . ' months**')
-            ->line('Submitted: **' . $this->application->submitted_at->format('d M Y, g:i A') . '**')
-            ->line('')
-            ->line('**What happens next?**')
-            ->line('• Our team will review your application within 24-48 hours')
-            ->line('• You will receive an email confirmation shortly')
-            ->line('• We may contact you if additional information is needed')
-            ->line('• You can track your application status in your dashboard')
-            ->action('View Application Status', route('applications.show', $this->application))
-            ->line('If you have any questions, please contact our support team.')
-            ->line('Thank you for choosing us!');
+            ->line('Application ' . $this->application->application_number . ' has been received. Our assessor will contact you for further information and verification.')
+            ->action('View Your Application', route('applications.show', $this->application))
+            ->line('If you have any questions, please contact our support team.');
     }
 
     public function toDatabase($notifiable)

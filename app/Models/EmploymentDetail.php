@@ -128,4 +128,18 @@ class EmploymentDetail extends Model
             }
         });
     }
+
+    public function getDisplayAnnualIncome(): float
+    {
+        $baseAmount = (float) ($this->after_tax_income ?? $this->base_income);
+        $total = $baseAmount + (float) $this->additional_income;
+
+        return match($this->income_frequency) {
+            'weekly'      => $total * 52,
+            'fortnightly' => $total * 26,
+            'monthly'     => $total * 12,
+            'annual'      => $total,
+            default       => 0,
+        };
+    }
 }

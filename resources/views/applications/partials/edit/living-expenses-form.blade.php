@@ -269,6 +269,6 @@
     Object.assign(window.EXPENSES_CONFIG ?? (window.EXPENSES_CONFIG = {}), {
         applicationId: @js($application->id),
         storeRoute: @js(route('applications.living-expenses.store', $application)),
-        initialAnnualIncome: @js($application->employmentDetails->sum(fn($e) => $e->getAnnualIncome())),
+        initialAnnualIncome: @js($application->employmentDetails->sum(fn($e) => $e->getDisplayAnnualIncome())),
     });
 </script>

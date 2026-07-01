@@ -42,6 +42,7 @@ class PersonalDetailsController extends Controller
                 'marital_status'       => 'required|in:single,married,divorced,widowed,defacto',
                 'number_of_dependants' => 'required|integer|min:0',
                 'citizenship_status'   => 'required|in:australian_citizen,permanent_resident,temporary_resident,nz_citizen',
+                'visa_type'            => 'nullable|in:student_visa,work_visa,refugee_visa,working_holiday_visa',
                 'contact_role'         => 'nullable|in:director,sole_trader,partner,other',
                 'agree_as_guarantor'   => 'nullable|boolean',
 
@@ -77,6 +78,7 @@ class PersonalDetailsController extends Controller
                 'marital_status'      => $validated['marital_status'],
                 'number_of_dependants' => $validated['number_of_dependants'],
                 'citizenship_status'  => $validated['citizenship_status'],
+                'visa_type'           => $validated['visa_type'],
                 'contact_role'        => $validated['contact_role'],
                 'spouse_name'         => $validated['spouse_name'],
                 'spouse_income'       => $validated['spouse_income'],
