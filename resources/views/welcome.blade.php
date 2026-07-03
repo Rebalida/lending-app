@@ -466,7 +466,7 @@
             <div class="mt-16 pt-8 border-t border-gray-200 text-center">
                 <div class="flex flex-col md:flex-row justify-between items-center text-gray-600">
                     <p class="mb-4 md:mb-0">Simple Loan V1 - Powered by WisTec</p>
-                    <p class="text-sm">Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})</p>
+                    {{-- <p class="text-sm">Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})</p> --}}
                 </div>
             </div>
         </div>

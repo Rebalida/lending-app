@@ -132,11 +132,16 @@
                     </div>
                     <div>
                         <span class="text-xs font-medium text-gray-500">Annual Income</span>
-                        <p class="mt-1 text-sm font-semibold text-indigo-600">${{ number_format($employment->getAnnualIncome(), 2) }}</p>
+                        <p class="mt-1 text-sm font-semibold text-indigo-600">${{ number_format($employment->getDisplayAnnualIncome(), 2) }}</p>
                     </div>
                     <div>
-                        <span class="text-xs font-medium text-gray-500">Monthly Income</span>
+                        <span class="text-xs font-medium text-gray-500">Monthly Income (Base)</span>
                         <p class="mt-1 text-sm font-semibold text-indigo-600">${{ number_format($employment->getMonthlyIncome(), 2) }}</p>
+                    </div>
+
+                    <div>
+                        <span class="text-xs font-medium text-gray-500">Monthly Income / After Tax</span>
+                        <p class="mt-1 text-sm font-semibold text-green-600">${{ number_format($employment->getMonthlyAfterTaxIncome(), 2) }}</p>
                     </div>
                     @if($employment->employment_start_date)
                     <div>

@@ -29,7 +29,7 @@ class ApplicationSubmitted extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('Application Submitted - ' . $this->application->application_number)
             ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Application ' . $this->application->application_number . ' has been received. Our assessor will contact you for further information and verification.')
+            ->line('Thank you for your enquiry. Your assessment has been passed to our system and one of our assessors will contact you within 48 hours.')
             ->action('View Your Application', route('applications.show', $this->application))
             ->line('If you have any questions, please contact our support team.');
     }

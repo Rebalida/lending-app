@@ -192,6 +192,18 @@
                             <input type="tel" name="employer_phone" id="employer-phone" class="mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full py-3 px-4 shadow-sm border-gray-300 rounded-xl">
                             <p id="employer_phone-error" class="mt-2 text-sm text-red-600 hidden"></p>
                         </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Income Frequency *</label>
+                            <select name="income_frequency" id="income-frequency" required class="mt-1 block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Select frequency...</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="fortnightly">Fortnightly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="annual">Annual</option>
+                            </select>
+                            <p id="income_frequency-error" class="mt-2 text-sm text-red-600 hidden"></p>
+                        </div>
 
                         {{-- Base Income — display input (text + commas) + hidden raw value for submission --}}
                         <div>
@@ -247,17 +259,6 @@
                             <p id="additional_income-error" class="mt-2 text-sm text-red-600 hidden"></p>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Income Frequency *</label>
-                            <select name="income_frequency" id="income-frequency" required class="mt-1 block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select frequency...</option>
-                                <option value="weekly">Weekly</option>
-                                <option value="fortnightly">Fortnightly</option>
-                                <option value="monthly">Monthly</option>
-                                <option value="annual">Annual</option>
-                            </select>
-                            <p id="income_frequency-error" class="mt-2 text-sm text-red-600 hidden"></p>
-                        </div>
                     </div>
                 </div>
 

@@ -142,4 +142,54 @@ class EmploymentDetail extends Model
             default       => 0,
         };
     }
+
+    public static function calculateAfterTaxIncome(float $grossIncome): array
+    {
+        // Calculate Income Tax
+        if ($grossIncome <= 18200) {
+            $incomeTax = 0;
+        }
+        elseif ($grossIncome <= 45000) {
+            $incomeTax = ($grossIncome - 18200) * 0.16;
+        }
+        elseif ($grossIncome <= 135000) {
+            $incomeTax = 4288 + (($grossIncome - 45000) * 0.30);
+        }
+        elseif ($grossIncome <= 190000) {
+            $incomeTax = 31288 + (($grossIncome - 135000) * 0.37);
+        }
+        else {
+            $incomeTax = 51638 + (($grossIncome - 190000) * 0.45);
+        }
+
+        // Medicare Levy (2%)
+        $medicareLevy = $grossIncome * 0.02;
+
+        // Total Tax
+        $totalTax = $incomeTax + $medicareLevy;
+
+        // After Tax Income
+        $afterTaxIncome = $grossIncome - $totalTax;
+
+        return [
+            'gross_income'      => round($grossIncome, 2),
+            'income_tax'        => round($incomeTax, 2),
+            'medicare_levy'     => round($medicareLevy, 2),
+            'total_tax'         => round($totalTax, 2),
+            'after_tax_income'  => round($afterTaxIncome, 2),
+        ];
+    }
+
+    public function getMonthlyAfterTaxIncome(): float
+    {
+        $income = $this->after_tax_income ?? $this->base_income;
+        
+        return match($this->income_frequency) {
+            'weekly'      => round(($income * 52) / 12, 2),
+            'fortnightly' => round(($income * 26) / 12, 2),
+            'monthly'     => round($income, 2),
+            'annual'      => round($income / 12, 2),
+            default       => 0,
+        };
+    }
 }

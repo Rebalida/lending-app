@@ -37,7 +37,7 @@ class ApplicationNotificationService
         try {
             $this->sendSMS(
                 $application,
-                "Your application #{$application->application_number} has been submitted successfully. We'll review it within 24-48 hours."
+                "Application {$application->application_number} has been received, our assessor will contact you for further information and verification."
             );
             Log::info('SMS notification sent successfully');
         } catch (\Exception $e) {

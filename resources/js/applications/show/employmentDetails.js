@@ -39,6 +39,24 @@ document.addEventListener("DOMContentLoaded", () => {
         max: 9_000_000_000,
         errorId: "after_tax_income-error",
     });
+
+    const baseIncomeHidden = document.getElementById("base-income");
+    const afterTaxDisplay = document.getElementById("after-tax-income-display");
+    const afterTaxHidden = document.getElementById("after-tax-income");
+    const baseIncomeDisplay = document.getElementById("base-income-display");
+    
+    baseIncomeDisplay?.addEventListener("input", () => {
+        const baseValue = baseIncomeHidden.value; // Get the raw value from hidden input
+        if (baseValue) {
+            const afterTax = calculateAfterTaxIncome(baseValue);
+            afterTaxHidden.value = afterTax;
+            afterTaxDisplay.value = afterTax.toLocaleString("en-AU", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }
+    });
+
     window.initCurrencyInput("additional-income-display", "additional-income", {
         min: 0,
         max: 9_000_000_000,
@@ -55,6 +73,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const endDateInput = document.getElementById("employment-end-date");
 
     function toggleEndDateField() {
+        if (!endDateContainer || !endDateInput) return;  // ← ADD THIS LINE
+        
         const isCurrentValue = document.querySelector(
             'input[name="is_current"]:checked'
         )?.value;
@@ -449,6 +469,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function calculateAfterTaxIncome(baseIncome) {
+        const gross = parseFloat(baseIncome) || 0;
+        
+        let incomeTax = 0;
+        if (gross <= 18200) {
+            incomeTax = 0;
+        } else if (gross <= 45000) {
+            incomeTax = (gross - 18200) * 0.16;
+        } else if (gross <= 135000) {
+            incomeTax = 4288 + ((gross - 45000) * 0.30);
+        } else if (gross <= 190000) {
+            incomeTax = 31288 + ((gross - 135000) * 0.37);
+        } else {
+            incomeTax = 51638 + ((gross - 190000) * 0.45);
+        }
+
+        const medicareLevy = gross * 0.02;
+        const totalTax = incomeTax + medicareLevy;
+        const afterTax = gross - totalTax;
+
+        return Math.round(afterTax * 100) / 100;
+    }
+
     function updateEmploymentCount() {
         const badge = document.getElementById("employment-count-badge");
         const count = document.querySelectorAll(".employment-item").length;
@@ -468,7 +511,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("employment-end-date").value = "";
         document.getElementById("employment-role").value = "";
         document.getElementById("is_current_yes").checked = true;
-        endDateContainer.classList.add("hidden");
+        if (endDateContainer) endDateContainer.classList.add("hidden");
         editingEmploymentId = null;
         updateFormTitle();
         updateSubmitButton();
