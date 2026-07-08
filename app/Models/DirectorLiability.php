@@ -19,6 +19,7 @@ class DirectorLiability extends Model
         'outstanding_balance',
         'monthly_repayment',
         'comment',
+        'name', 
     ];
 
     protected $casts = [

@@ -131,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             is_owned:             document.getElementById('asset-is-owned').value,
             ownership_percentage: document.getElementById('asset-ownership-pct').value || null,
             comment:              document.getElementById('asset-comment').value || null,
+            name:                 document.getElementById('asset-name').value || null,
         };
 
         try {
@@ -203,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
             outstanding_balance: balanceEl.value,
             monthly_repayment:   document.getElementById('liability-repayment').value || null,
             comment:             document.getElementById('liability-comment').value || null,
+            name:                document.getElementById('liability-name').value || null,
         };
 
         try {
@@ -278,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('asset-property-use').value = propertyUseText === 'Main Residence' ? 'main_residence' : (propertyUseText === 'Rental' ? 'rental' : '');
         document.getElementById('asset-description').value = description === '—' ? '' : description;
+        document.getElementById('asset-name').value = tr.dataset.assetName || '';
         document.getElementById('asset-is-owned').value = isOwned ? '1' : '0';
         document.getElementById('asset-ownership-pct').value = ownershipPct === '100%' ? '' : ownershipPct;
         document.getElementById('asset-value-display').value = estimatedValue;
@@ -320,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         liabTypeEl.dispatchEvent(new Event('change'));
 
         document.getElementById('liability-lender').value = lenderName === '—' ? '' : lenderName;
+        document.getElementById('liability-name').value = tr.dataset.liabilityName || '';
         document.getElementById('liability-limit-display').value = creditLimit === '—' ? '' : creditLimit;
         document.getElementById('liability-limit').value = creditLimit === '—' ? '' : creditLimit;
         document.getElementById('liability-balance-display').value = balance;
@@ -404,6 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : '—';
         const tr = document.createElement('tr');
         tr.dataset.assetId = a.id;
+        tr.dataset.assetName = a.name || '';
         tr.innerHTML = `
             <td class="px-4 py-3">
                 <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
@@ -440,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ensureLiabilityTable();
         const tr = document.createElement('tr');
         tr.dataset.liabilityId = l.id;
+        tr.dataset.liabilityName = l.name || '';
         tr.innerHTML = `
             <td class="px-4 py-3">
                 <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">
@@ -581,6 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('asset-is-owned').value       = '1';
         document.getElementById('asset-ownership-pct').value  = '';
         document.getElementById('asset-comment').value        = '';
+        document.getElementById('asset-name').value           = '';
         propertyUseField.classList.add('hidden');
         clearFormErrors('asset');
     }
@@ -595,6 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('liability-repayment-display').value = '';
         document.getElementById('liability-repayment').value       = '';
         document.getElementById('liability-comment').value         = '';
+        document.getElementById('liability-name').value            = '';
         creditLimitField.classList.add('hidden');
         clearFormErrors('liability');
     }

@@ -21,6 +21,7 @@ class DirectorAsset extends Model
         'is_owned',
         'ownership_percentage',
         'comment',
+        'name',
     ];
 
     protected $casts = [
