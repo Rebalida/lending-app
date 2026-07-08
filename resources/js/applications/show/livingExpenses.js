@@ -115,6 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
             summaryAnnualIncome.textContent = fmt(annualIncome);
             summaryAnnualIncome.setAttribute('aria-label', `Total annual income: ${fmt(annualIncome)}`);
         }
+        if (summaryAnnualIncome) {
+            summaryAnnualIncome.textContent = fmt(monthlyIncome);
+            summaryAnnualIncome.setAttribute('aria-label', `Total monthly income: ${fmt(monthlyIncome)}`);
+        }
         if (summaryMonthlyExpenses) {
             summaryMonthlyExpenses.textContent = fmt(totalMonthly);
             summaryMonthlyExpenses.setAttribute('aria-label', `Total monthly expenses: ${fmt(totalMonthly)}`);

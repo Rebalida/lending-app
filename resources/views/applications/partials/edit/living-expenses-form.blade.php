@@ -78,11 +78,11 @@
                     aria-label="Income and expenses summary">
 
                     <div class="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl px-4 py-3 text-center">
-                        <p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-1">Total Annual Income</p>
+                        <p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-1">Total Monthly Income</p>
                         <p id="expense-summary-annual-income"
                         class="text-lg font-bold text-indigo-700 tabular-nums"
                         aria-live="polite"
-                        aria-label="Total annual income">$0.00</p>
+                        aria-label="Total monthly income">$0.00</p>
                     </div>
 
                     <div class="bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-xl px-4 py-3 text-center">
