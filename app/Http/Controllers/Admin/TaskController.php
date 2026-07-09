@@ -43,6 +43,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Str;
+use App\Notifications\Admin\TaskEmailNotification;
 
 class TaskController extends Controller
 {
@@ -244,6 +246,45 @@ class TaskController extends Controller
         );
 
         return back()->with('success', 'Task deleted successfully.');
+    }
+
+    public function sendToClient(Request $request, Task $task): RedirectResponse
+    {
+        // Generate a unique response token
+        $token = $task->generateResponseToken();
+
+        // Build the response URL
+        $responseUrl = route('tasks.respond.show', $task) . '?token=' . $token;
+
+        // Send email to client
+        $task->application->user->notify(
+            new TaskEmailNotification($task, $responseUrl)
+        );
+
+        // Log the communication
+        \App\Models\Communication::create([
+            'application_id' => $task->application_id,
+            'user_id'        => auth()->id(),
+            'type'           => 'email_out',
+            'direction'      => 'outbound',
+            'from_address'   => config('mail.from.address'),
+            'to_address'     => $task->application->user->email,
+            'subject'        => 'Task: ' . $task->title,
+            'body'           => "You have a task: {$task->title}\n\n{$task->description}\n\nRespond here: {$responseUrl}",
+            'status'         => 'sent',
+            'sent_at'        => now(),
+            'sender_ip'      => $request->ip(),
+        ]);
+
+        $task->markSentToClient();
+
+        ActivityLog::logActivity(
+            'task_sent',
+            "Task sent to client: {$task->title}",
+            $task
+        );
+
+        return back()->with('success', 'Task sent to client successfully.');
     }
 
     // =========================================================================

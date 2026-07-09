@@ -93,6 +93,7 @@ Route::post('tasks/{task}/complete',            [TaskController::class, 'complet
     ->name('tasks.complete');
 Route::delete('tasks/{task}',                   [TaskController::class, 'destroy'])
     ->name('tasks.destroy');
+Route::post('tasks/{task}/send-to-client',      [TaskController::class, 'sendToClient'])->name('tasks.sendToClient');
 
 // Questions (Admin Asks)
 Route::post('applications/{application}/questions', [QuestionController::class, 'store'])

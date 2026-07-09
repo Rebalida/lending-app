@@ -18,6 +18,7 @@ use App\Http\Controllers\BorrowerDirectorController;
 use App\Http\Controllers\DirectorAssetsLiabilitiesController;
 use App\Http\Controllers\CompanyAssetsLiabilitiesController;
 use App\Http\Controllers\AccountantDetailController;
+use App\Http\Controllers\TaskResponseController;
 
 // Dashboard - Redirect based on role
 Route::get('/dashboard', function () {
@@ -167,3 +168,8 @@ Route::post(
     'applications/{application}/accountant-details',
     [AccountantDetailController::class, 'store']
 )->name('applications.accountant-details.store');
+
+Route::get('tasks/{task}/respond',  [TaskResponseController::class, 'show'])
+    ->name('tasks.respond.show');
+Route::post('tasks/{task}/respond', [TaskResponseController::class, 'store'])
+    ->name('tasks.respond.store');

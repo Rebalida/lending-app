@@ -187,7 +187,7 @@
                             <label for="asset-name" class="block text-sm font-semibold text-gray-700 mb-1">Name</label>
                             <input type="text" 
                                    id="asset-name"
-                                   placeholder="e.g. John's House, Sarah's Car"
+                                   placeholder="e.g. John Doe"
                                    class="block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                         </div>
 
@@ -464,7 +464,7 @@
                             <label for="liability-name" class="block text-sm font-semibold text-gray-700 mb-1">Name</label>
                             <input type="text" 
                                    id="liability-name"
-                                   placeholder="e.g. John's Credit Card, Sarah's Home Loan"
+                                   placeholder="e.g. John Doe"
                                    class="block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400">
                         </div>
 

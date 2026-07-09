@@ -10,8 +10,52 @@
 
 <div class="flex flex-col h-full min-h-0">
 
-    {{-- ── Thread ──────────────────────────────────────────────────────────── --}}
-    <div id="email-thread-scroll" class="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-gray-50" aria-label="Email conversation thread" aria-live="polite">
+    {{-- ── Email Sub-tabs ──────────────────────────────────────────────── --}}
+    <div class="border-b border-gray-200 bg-white flex-shrink-0">
+        <nav class="-mb-px flex" role="tablist" aria-label="Email sections">
+            <button type="button"
+                    role="tab"
+                    id="email-subtab-thread"
+                    data-email-subtab="thread"
+                    aria-selected="true"
+                    aria-controls="email-subpanel-thread"
+                    class="email-subtab flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium
+                           border-b-2 border-indigo-600 text-indigo-600
+                           focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Email
+            </button>
+
+            <button type="button"
+                    role="tab"
+                    id="email-subtab-tasks"
+                    data-email-subtab="tasks"
+                    aria-selected="false"
+                    aria-controls="email-subpanel-tasks"
+                    class="email-subtab flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium
+                           border-b-2 border-transparent text-gray-500
+                           hover:text-gray-700 hover:border-gray-300
+                           focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                Tasks
+            </button>
+        </nav>
+    </div>
+
+    {{-- ── Sub-panel: Email Thread ──────────────────────────────────────── --}}
+    <div id="email-subpanel-thread"
+         role="tabpanel"
+         aria-labelledby="email-subtab-thread"
+         class="email-subpanel flex flex-col flex-1 min-h-0">
+
+        {{-- Thread --}}
+        <div id="email-thread-scroll" class="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-gray-50" aria-label="Email conversation thread" aria-live="polite">
 
         @forelse($emailComms as $comm)
             @php
@@ -89,84 +133,250 @@
                 <p class="text-xs text-gray-400 mt-1">Send the first email to start the conversation.</p>
             </div>
         @endforelse
-    </div>
+        </div>
 
-    {{-- ── Compose area ────────────────────────────────────────────────────── --}}
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white">
+        {{-- ── Compose area ────────────────────────────────────────────────────── --}}
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white">
 
-        {{-- Expand/collapse compose --}}
-        <button type="button" id="email-compose-toggle" aria-expanded="false" aria-controls="email-compose-area" class="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition">
-            <span class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 4v16m8-8H4"/>
+            <button type="button" id="email-compose-toggle" aria-expanded="false" aria-controls="email-compose-area" class="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Compose Email
+                </span>
+                <svg id="email-compose-chevron" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                 </svg>
-                Compose Email
-            </span>
-            <svg id="email-compose-chevron" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-            </svg>
-        </button>
+            </button>
 
-        <div id="email-compose-area"
-             class="hidden px-5 pb-5 pt-2 space-y-3 border-t border-gray-100"
-             aria-label="Compose email form">
+            <div id="email-compose-area"
+                 class="hidden px-5 pb-5 pt-2 space-y-3 border-t border-gray-100"
+                 aria-label="Compose email form">
 
-            {{-- Toast --}}
-            <div id="email-toast" class="hidden p-2.5 rounded-lg text-xs" role="status" aria-live="polite" aria-atomic="true"></div>
+                {{-- Toast --}}
+                <div id="email-toast" class="hidden p-2.5 rounded-lg text-xs" role="status" aria-live="polite" aria-atomic="true"></div>
 
-            {{-- Template --}}
-            <div>
-                <label for="email-template-select" class="block text-xs font-medium text-gray-600 mb-1">
-                    Template
-                </label>
-                <select id="email-template-select"
-                        class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="">— Select a template —</option>
-                </select>
-            </div>
-
-            {{-- Subject --}}
-            <div>
-                <label for="email-subject" class="block text-xs font-medium text-gray-600 mb-1">
-                    Subject <span class="text-red-500" aria-hidden="true">*</span>
-                </label>
-                <input type="text" id="email-subject" autocomplete="off" placeholder="Email subject…" aria-required="true" class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-
-            {{-- Message --}}
-            <div>
-                <div class="flex items-center justify-between mb-1">
-                    <label for="email-message" class="block text-xs font-medium text-gray-600">
-                        Message <span class="text-red-500" aria-hidden="true">*</span>
-                    </label>
-                    <span id="email-char-count" class="text-xs text-gray-400" aria-live="polite">0 / 5000</span>
+                {{-- Template --}}
+                <div>
+                    <label for="email-template-select" class="block text-xs font-medium text-gray-600 mb-1">Template</label>
+                    <select id="email-template-select"
+                            class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">— Select a template —</option>
+                    </select>
                 </div>
-                <textarea id="email-message" rows="6" maxlength="5000" placeholder="Type your message…" aria-required="true" class="w-full text-sm border-gray-300 rounded-md shadow-sm resize-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-            </div>
 
-            {{-- Recipient + send --}}
-            <div class="flex items-center justify-between gap-3">
-                <p class="text-xs text-gray-400 flex-1 truncate">
-                    To: <span class="font-medium text-gray-600">{{ $application->user->email }}</span>
-                </p>
-                <button type="button"
-                        id="email-send-btn"
-                        disabled
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition flex-shrink-0">
-                    <svg id="email-send-spinner" class="hidden animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                    </svg>
-                    <svg id="email-send-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                    </svg>
-                    <span id="email-send-label">Send</span>
-                </button>
+                {{-- Subject --}}
+                <div>
+                    <label for="email-subject" class="block text-xs font-medium text-gray-600 mb-1">
+                        Subject <span class="text-red-500" aria-hidden="true">*</span>
+                    </label>
+                    <input type="text" id="email-subject" autocomplete="off" placeholder="Email subject…" aria-required="true" class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                {{-- Message --}}
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="email-message" class="block text-xs font-medium text-gray-600">
+                            Message <span class="text-red-500" aria-hidden="true">*</span>
+                        </label>
+                        <span id="email-char-count" class="text-xs text-gray-400" aria-live="polite">0 / 5000</span>
+                    </div>
+                    <textarea id="email-message" rows="6" maxlength="5000" placeholder="Type your message…" aria-required="true" class="w-full text-sm border-gray-300 rounded-md shadow-sm resize-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                </div>
+
+                {{-- Recipient + send --}}
+                <div class="flex items-center justify-between gap-3">
+                    <p class="text-xs text-gray-400 flex-1 truncate">
+                        To: <span class="font-medium text-gray-600">{{ $application->user->email }}</span>
+                    </p>
+                    <button type="button"
+                            id="email-send-btn"
+                            disabled
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition flex-shrink-0">
+                        <svg id="email-send-spinner" class="hidden animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
+                        <svg id="email-send-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                        <span id="email-send-label">Send</span>
+                    </button>
+                </div>
             </div>
         </div>
+
     </div>
+
+    {{-- ── Sub-panel: Tasks ───────────────────────────────────────────── --}}
+    <div id="email-subpanel-tasks"
+         role="tabpanel"
+         aria-labelledby="email-subtab-tasks"
+         class="email-subpanel hidden flex flex-col flex-1 min-h-0 overflow-y-auto">
+
+        @php
+            $appTasks = $application->tasks()->with(['assignedTo', 'createdBy'])->latest()->get();
+            $assessors = \App\Models\User::role(['admin', 'assessor'])->get();
+        @endphp
+
+        {{-- Existing Tasks List --}}
+        <div class="p-4 space-y-3 flex-shrink-0">
+            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Existing Tasks</h4>
+
+            @forelse($appTasks as $task)
+                <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 truncate">{{ $task->title }}</p>
+                            @if($task->description)
+                                <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ $task->description }}</p>
+                            @endif
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <span class="px-2 py-0.5 text-xs rounded-full font-medium
+                                    {{ $task->status === 'completed' ? 'bg-green-100 text-green-700'
+                                        : ($task->status === 'in_progress' ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-yellow-100 text-yellow-700') }}">
+                                    {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                </span>
+                                <span class="text-xs text-gray-400">{{ $task->priority }} priority</span>
+                                @if($task->sent_to_client)
+                                    <span class="text-xs text-indigo-500">✓ Sent to client</span>
+                                @endif
+                            </div>
+                            @if($task->client_response)
+                                <div class="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
+                                    <p class="text-xs font-semibold text-blue-700 mb-0.5">Client Response:</p>
+                                    <p class="text-xs text-blue-800">{{ $task->client_response }}</p>
+                                    <p class="text-xs text-blue-400 mt-0.5">{{ $task->client_responded_at?->format('d M Y, g:ia') }}</p>
+                                </div>
+                            @endif
+                        </div>
+                        @if(!$task->client_response)
+                            <form method="POST" action="{{ route('admin.tasks.sendToClient', $task) }}">
+                                @csrf
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 text-white
+                                               text-xs font-semibold rounded-lg hover:bg-indigo-700 transition flex-shrink-0">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                    </svg>
+                                    Send
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-6">
+                    <p class="text-sm text-gray-400">No tasks yet for this application.</p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- Divider --}}
+        <div class="border-t border-gray-200 mx-4"></div>
+
+        {{-- Create New Task Form --}}
+        <div class="p-4 space-y-3">
+            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Create & Send New Task</h4>
+
+            {{-- Toast --}}
+            <div id="task-toast" class="hidden p-2.5 rounded-lg text-xs" role="status" aria-live="polite" aria-atomic="true"></div>
+
+            <form id="task-email-form" method="POST" action="{{ route('admin.tasks.store', $application) }}">
+                @csrf
+
+                {{-- Task Type --}}
+                <div class="mb-3">
+                    <label for="task-email-type" class="block text-xs font-medium text-gray-600 mb-1">
+                        Task Type <span class="text-red-500">*</span>
+                    </label>
+                    <select id="task-email-type" name="task_type" required
+                            class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Select type…</option>
+                        <option value="id_check">ID Check</option>
+                        <option value="living_expense_check">Living Expense Check</option>
+                        <option value="declaration_verification">Declaration Verification</option>
+                        <option value="credit_check">Credit Check</option>
+                        <option value="document_review">Document Review</option>
+                        <option value="employment_verification">Employment Verification</option>
+                        {{-- ── Add more task types here ── --}}
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                {{-- Title --}}
+                <div class="mb-3">
+                    <label for="task-email-title" class="block text-xs font-medium text-gray-600 mb-1">
+                        Title <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="task-email-title" name="title" required maxlength="255"
+                           placeholder="e.g. Please verify your ID"
+                           class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                {{-- Description --}}
+                <div class="mb-3">
+                    <label for="task-email-description" class="block text-xs font-medium text-gray-600 mb-1">
+                        Description
+                    </label>
+                    <textarea id="task-email-description" name="description" rows="3"
+                              placeholder="Describe what the client needs to do…"
+                              class="w-full text-sm border-gray-300 rounded-lg shadow-sm resize-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                </div>
+
+                {{-- Priority + Due Date --}}
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label for="task-email-priority" class="block text-xs font-medium text-gray-600 mb-1">
+                            Priority <span class="text-red-500">*</span>
+                        </label>
+                        <select id="task-email-priority" name="priority" required
+                                class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="task-email-due-date" class="block text-xs font-medium text-gray-600 mb-1">
+                            Due Date
+                        </label>
+                        <input type="date" id="task-email-due-date" name="due_date"
+                               class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                {{-- Assigned To --}}
+                <div class="mb-4">
+                    <label for="task-email-assigned" class="block text-xs font-medium text-gray-600 mb-1">
+                        Assign To <span class="text-red-500">*</span>
+                    </label>
+                    <select id="task-email-assigned" name="assigned_to" required
+                            class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Select assessor…</option>
+                        @foreach($assessors as $assessor)
+                            <option value="{{ $assessor->id }}">{{ $assessor->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- ── Add more task fields here in future ── --}}
+
+                {{-- Submit --}}
+                <button type="submit" id="task-email-submit"
+                        class="w-full py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold
+                               hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                    Create Task & Send to Client
+                </button>
+            </form>
+        </div>
+
+    </div>
+
 </div>
 
 <script>
@@ -304,5 +514,27 @@
         toast.classList.remove('hidden');
         toastTimer = setTimeout(() => toast.classList.add('hidden'), 4000);
     }
+
+    // ── Email Sub-tab switching ────────────────────────────────────────────────
+    const emailSubtabs   = document.querySelectorAll('.email-subtab');
+    const emailSubpanels = document.querySelectorAll('.email-subpanel');
+
+    function activateEmailSubtab(key) {
+        emailSubtabs.forEach(t => {
+            const active = t.dataset.emailSubtab === key;
+            t.setAttribute('aria-selected', active ? 'true' : 'false');
+            t.classList.toggle('border-indigo-600', active);
+            t.classList.toggle('text-indigo-600',   active);
+            t.classList.toggle('border-transparent', !active);
+            t.classList.toggle('text-gray-500',      !active);
+        });
+        emailSubpanels.forEach(p => {
+            p.classList.toggle('hidden', p.id !== `email-subpanel-${key}`);
+        });
+    }
+
+    emailSubtabs.forEach(t => {
+        t.addEventListener('click', () => activateEmailSubtab(t.dataset.emailSubtab));
+    });
 })();
 </script>
