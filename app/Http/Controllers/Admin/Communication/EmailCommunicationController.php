@@ -338,6 +338,8 @@ class EmailCommunicationController extends Controller
             'subject'     => 'required|string|max:255',
             'message'     => 'required|string|max:5000',
             'letter_type' => 'nullable|string|in:approval_letter,decline_letter',
+            'template_key'   => 'nullable|string|max:100',
+            'template_label' => 'nullable|string|max:255',
         ]);
     }
 
@@ -381,6 +383,10 @@ class EmailCommunicationController extends Controller
             'status'         => 'sent',
             'sent_at'        => now(),
             'sender_ip'      => $request->ip(),
+            'metadata'       => array_filter([
+                'template_key'   => $validated['template_key']   ?? null,
+                'template_label' => $validated['template_label'] ?? null,
+            ]),
         ]);
     }
 

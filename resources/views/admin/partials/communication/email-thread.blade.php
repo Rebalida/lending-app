@@ -6,63 +6,70 @@
         ->orderBy('created_at', 'asc')
         ->get();
 
+    // Distinct templates actually used in this thread, for the filter dropdown
+    $usedTemplates = $emailComms
+        ->filter(fn($c) => !empty($c->metadata['template_key']))
+        ->unique(fn($c) => $c->metadata['template_key'])
+        ->map(fn($c) => [
+            'key'   => $c->metadata['template_key'],
+            'label' => $c->metadata['template_label'] ?? $c->metadata['template_key'],
+        ])
+        ->values();
+
+    $hasAdHoc = $emailComms->contains(fn($c) => empty($c->metadata['template_key']));
+
+    // NEW: running template context, carried forward from the last outbound email
+    // so that inbound replies inherit the template of the conversation they belong to.
+    $currentTemplateKey = null;
 @endphp
 
 <div class="flex flex-col h-full min-h-0">
 
-    {{-- ── Email Sub-tabs ──────────────────────────────────────────────── --}}
-    <div class="border-b border-gray-200 bg-white flex-shrink-0">
-        <nav class="-mb-px flex" role="tablist" aria-label="Email sections">
-            <button type="button"
-                    role="tab"
-                    id="email-subtab-thread"
-                    data-email-subtab="thread"
-                    aria-selected="true"
-                    aria-controls="email-subpanel-thread"
-                    class="email-subtab flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium
-                           border-b-2 border-indigo-600 text-indigo-600
-                           focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                Email
-            </button>
+    {{-- ── Filter bar ──────────────────────────────────────────────────────── --}}
+    @if($usedTemplates->isNotEmpty())
+        <div class="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-white border-b border-gray-100">
+            <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+            </svg>
+            <label for="email-thread-filter" class="text-xs font-medium text-gray-500 flex-shrink-0">
+                Filter by template
+            </label>
+            <select id="email-thread-filter"
+                    class="text-xs border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 flex-1 max-w-xs">
+                <option value="all">All conversations</option>
+                @foreach($usedTemplates as $ut)
+                    <option value="{{ $ut['key'] }}">{{ $ut['label'] }}</option>
+                @endforeach
+                @if($hasAdHoc)
+                    <option value="__adhoc">No template (ad-hoc)</option>
+                @endif
+            </select>
+            <span id="email-filter-count" class="text-xs text-gray-400 flex-shrink-0"></span>
+        </div>
+    @endif
 
-            <button type="button"
-                    role="tab"
-                    id="email-subtab-tasks"
-                    data-email-subtab="tasks"
-                    aria-selected="false"
-                    aria-controls="email-subpanel-tasks"
-                    class="email-subtab flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium
-                           border-b-2 border-transparent text-gray-500
-                           hover:text-gray-700 hover:border-gray-300
-                           focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                Tasks
-            </button>
-        </nav>
-    </div>
-
-    {{-- ── Sub-panel: Email Thread ──────────────────────────────────────── --}}
-    <div id="email-subpanel-thread"
-         role="tabpanel"
-         aria-labelledby="email-subtab-thread"
-         class="email-subpanel flex flex-col flex-1 min-h-0">
-
-        {{-- Thread --}}
-        <div id="email-thread-scroll" class="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-gray-50" aria-label="Email conversation thread" aria-live="polite">
+    {{-- ── Thread ──────────────────────────────────────────────────────────── --}}
+    <div id="email-thread-scroll" class="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-gray-50" aria-label="Email conversation thread" aria-live="polite">
 
         @forelse($emailComms as $comm)
             @php
                 $isOutbound = $comm->direction === 'outbound' || $comm->sent_by !== null;
+
+                // Every outbound email defines (or resets) the conversation's current
+                // template context — including ad-hoc sends, which reset it to '__adhoc'.
+                if ($isOutbound) {
+                    $currentTemplateKey = $comm->metadata['template_key'] ?? '__adhoc';
+                }
+
+                // Inbound replies inherit whatever template context is currently active.
+                $templateKey = $currentTemplateKey ?? '__adhoc';
             @endphp
 
-            <div class="flex {{ $isOutbound ? 'justify-end' : 'justify-start' }}" data-comm-id="{{ $comm->id }}" data-comm-created-at="{{ $comm->created_at->toDateTimeString() }}">
+            <div class="flex {{ $isOutbound ? 'justify-end' : 'justify-start' }}"
+                 data-comm-id="{{ $comm->id }}"
+                 data-comm-created-at="{{ $comm->created_at->toDateTimeString() }}"
+                 data-template-key="{{ $templateKey }}">
                 <div class="max-w-[80%] {{ $isOutbound ? 'items-end' : 'items-start' }} flex flex-col gap-1">
 
                     @if($isOutbound && !empty($comm->metadata['is_ad_hoc']))
@@ -72,6 +79,12 @@
                                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
                             Third Party · {{ $comm->metadata['recipient_name'] ?? $comm->to_address }}
+                        </span>
+                    @endif
+
+                    @if($isOutbound && !empty($comm->metadata['template_label']))
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-600 border border-indigo-100 self-end">
+                            {{ $comm->metadata['template_label'] }}
                         </span>
                     @endif
 
@@ -133,7 +146,13 @@
                 <p class="text-xs text-gray-400 mt-1">Send the first email to start the conversation.</p>
             </div>
         @endforelse
+    
+        {{-- Shown only when a filter hides everything --}}
+        <div id="email-filter-empty" class="hidden flex-col items-center justify-center py-16 text-center">
+            <p class="text-sm font-medium text-gray-500">No emails for this template</p>
+            <p class="text-xs text-gray-400 mt-1">Try a different filter, or select "All conversations".</p>
         </div>
+    </div>
 
         {{-- ── Compose area ────────────────────────────────────────────────────── --}}
         <div class="flex-shrink-0 border-t border-gray-200 bg-white">
@@ -397,9 +416,34 @@
     const sendIcon    = document.getElementById('email-send-icon');
     const sendLabel   = document.getElementById('email-send-label');
     const scrollEl    = document.getElementById('email-thread-scroll');
+    const filterSelect = document.getElementById('email-thread-filter');
+    const filterCount  = document.getElementById('email-filter-count');
+    const filterEmpty  = document.getElementById('email-filter-empty');
 
     // Scroll thread to bottom on load
     if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+
+    // ── Thread filter ─────────────────────────────────────────────────────────
+    function applyThreadFilter() {
+        if (!filterSelect) return;
+        const val = filterSelect.value;
+        const items = Array.from(scrollEl.querySelectorAll('[data-comm-id]'));
+        let visible = 0;
+
+        items.forEach(item => {
+            const match = val === 'all' || item.dataset.templateKey === val;
+            item.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        filterCount.textContent = val === 'all' ? '' : `${visible} message${visible !== 1 ? 's' : ''}`;
+        if (filterEmpty) {
+            filterEmpty.classList.toggle('hidden', visible > 0 || items.length === 0);
+            filterEmpty.classList.toggle('flex', visible === 0 && items.length > 0);
+        }
+        scrollEl.scrollTop = scrollEl.scrollHeight;
+    }
+    filterSelect?.addEventListener('change', applyThreadFilter);
 
     // ── Compose toggle ────────────────────────────────────────────────────────
     toggle.addEventListener('click', () => {
@@ -462,6 +506,10 @@
     sendBtn.addEventListener('click', async () => {
         if (sendBtn.disabled) return;
         setSending(true);
+
+        const selectedKey = tplSelect.value || null;
+        const selectedTpl = selectedKey ? templates[selectedKey] : null;
+
         try {
             const res  = await fetch(`/admin/applications/${APP_ID}/send-email`, {
                 method: 'POST',
@@ -473,6 +521,9 @@
                 body: JSON.stringify({
                     subject: subjectEl.value,
                     message: messageEl.value,
+                    // NEW: tell the backend which template this belongs to
+                    template_key: selectedKey,
+                    template_label: selectedTpl?.label ?? null,
                 }),
             });
             const data = await res.json();
