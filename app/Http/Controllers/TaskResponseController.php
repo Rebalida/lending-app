@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Communication;
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TaskResponseController extends Controller
 {
@@ -35,7 +37,25 @@ class TaskResponseController extends Controller
             'response' => 'required|string|max:2000',
         ]);
 
-        $task->recordClientResponse($validated['response']);
+        DB::transaction(function () use ($task, $validated, $request) {
+            $task->recordClientResponse($validated['response']);
+
+            // Log the client's response as an inbound email so it lands in the same
+            // conversation thread/timeline as the outbound "task sent" email.
+            Communication::create([
+                'application_id' => $task->application_id,
+                'user_id'        => $task->application->user->id,
+                'type'           => 'email_in',
+                'direction'      => 'inbound',
+                'from_address'   => $task->application->user->email,
+                'to_address'     => config('mail.from.address'),
+                'subject'        => 'Re: Task: ' . $task->title,
+                'body'           => $validated['response'],
+                'status'         => 'delivered',
+                'sent_at'        => now(),
+                'sender_ip'      => $request->ip(),
+            ]);
+        });
 
         return view('tasks.respond-success', compact('task'));
     }
