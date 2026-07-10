@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CreditControllers\CreditSenseController;
 use App\Http\Controllers\Admin\CreditControllers\BasiqController;
-use App\Http\Controllers\SuburbSearchController;
 use App\Http\Middleware\VerifyCsrfToken;
 
 Route::get('/user', function (Request $request) {
@@ -33,7 +32,3 @@ Route::prefix('webhooks')->group(function () {
         ->withoutMiddleware([VerifyCsrfToken::class])
         ->name('webhooks.basiq');
 });
-
-// Suburb helper
-Route::get('/api/suburbs/search', [SuburbSearchController::class, 'search'])
-    ->name('api.suburbs.search');
