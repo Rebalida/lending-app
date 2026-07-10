@@ -30,6 +30,7 @@ class DirectorAssetsLiabilitiesController extends Controller
                 'is_owned'             => 'required|boolean',
                 'ownership_percentage' => 'nullable|numeric|min:0|max:100',
                 'comment'              => 'nullable|string|max:1000',
+                'name'                 => 'nullable|string|max:255',
             ]);
 
             $validated['application_id'] = $application->id;
@@ -108,6 +109,7 @@ class DirectorAssetsLiabilitiesController extends Controller
                 'outstanding_balance' => 'required|numeric|min:0',
                 'monthly_repayment'   => 'nullable|numeric|min:0',
                 'comment'             => 'nullable|string|max:1000',
+                'name'                => 'nullable|string|max:255',
             ], [
                 'credit_limit.required_if' => 'Credit limit is required for credit cards.',
             ]);
@@ -181,6 +183,7 @@ class DirectorAssetsLiabilitiesController extends Controller
             'id'                   => $a->id,
             'asset_type'           => $a->asset_type,
             'asset_type_label'     => $a->asset_type_label,
+            'name'                 => $a->name,
             'description'          => $a->description,
             'property_use'         => $a->property_use,
             'estimated_value'      => $a->estimated_value,
@@ -196,6 +199,7 @@ class DirectorAssetsLiabilitiesController extends Controller
             'id'                    => $l->id,
             'liability_type'        => $l->liability_type,
             'liability_type_label'  => $l->liability_type_label,
+            'name'                  => $l->name,
             'lender_name'           => $l->lender_name,
             'credit_limit'          => $l->credit_limit,
             'outstanding_balance'   => $l->outstanding_balance,
@@ -217,6 +221,7 @@ class DirectorAssetsLiabilitiesController extends Controller
                 'is_owned'             => 'required|boolean',
                 'ownership_percentage' => 'nullable|numeric|min:0|max:100',
                 'comment'              => 'nullable|string|max:1000',
+                'name'                 => 'nullable|string|max:255',
             ]);
 
             $oldValues = $asset->toArray();
@@ -264,6 +269,7 @@ class DirectorAssetsLiabilitiesController extends Controller
                 'outstanding_balance' => 'required|numeric|min:0',
                 'monthly_repayment'   => 'nullable|numeric|min:0',
                 'comment'             => 'nullable|string|max:1000',
+                'name'                => 'nullable|string|max:255',
             ], [
                 'credit_limit.required_if' => 'Credit limit is required for credit cards.',
             ]);

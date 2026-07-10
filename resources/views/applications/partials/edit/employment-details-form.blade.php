@@ -207,7 +207,7 @@
 
                         {{-- Base Income — display input (text + commas) + hidden raw value for submission --}}
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Base Income *</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Base Income Before Tax *</label>
                             <div class="mt-1 relative rounded-xl shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <span class="text-gray-500 text-lg font-semibold">$</span>
@@ -225,7 +225,7 @@
 
                         {{-- Base After Tax Income — display input (text + commas) + hidden raw value for submission --}}
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Base After Tax Income</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Base Income After Tax</label>
                             <div class="mt-1 relative rounded-xl shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <span class="text-gray-500 text-lg font-semibold">$</span>

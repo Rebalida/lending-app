@@ -201,7 +201,7 @@
             </button>
 
             {{-- Create Task --}}
-            @if (!$isLocked)
+            {{-- @if (!$isLocked)
                 <button type="button"
                         id="open-create-task-proxy"
                         class="w-full flex items-center gap-2.5 px-3 py-2 bg-white border border-gray-300
@@ -214,7 +214,7 @@
                     </svg>
                     Create Task
                 </button>
-            @endif
+            @endif --}}
 
             {{-- Return to Client --}}
             @if (in_array($application->status, ['submitted', 'wip']))

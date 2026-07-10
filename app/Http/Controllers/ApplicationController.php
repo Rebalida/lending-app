@@ -684,7 +684,7 @@ class ApplicationController extends Controller
 
                 $this->sendApplicationSms(
                     $application,
-                    "Welcome to LoanFlow! Your loan application #{$application->application_number} has been created. Complete your details to submit."
+                    "Welcome to ZYA Capital! Your loan application #{$application->application_number} has been created. Complete your details to submit."
                 );
             } else {
                 $user->notify(new ApplicationCreated($application));

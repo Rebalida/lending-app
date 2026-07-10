@@ -93,7 +93,7 @@
                                 </thead>
                                 <tbody id="assets-tbody" class="bg-white divide-y divide-gray-100">
                                     @foreach($assets as $asset)
-                                        <tr data-asset-id="{{ $asset->id }}">
+                                        <tr data-asset-id="{{ $asset->id }}" data-asset-name="{{ $asset->name ?? '' }}">
                                             <td class="px-4 py-3 font-medium text-gray-900">
                                                 <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
                                                     {{ $asset->asset_type_label }}
@@ -180,6 +180,15 @@
                                 <option value="other">Other</option>
                             </select>
                             <p id="asset-type-error" class="mt-1 text-sm text-red-600 hidden" role="alert"></p>
+                        </div>
+
+                        {{-- Name --}}
+                        <div>
+                            <label for="asset-name" class="block text-sm font-semibold text-gray-700 mb-1">Name</label>
+                            <input type="text" 
+                                   id="asset-name"
+                                   placeholder="e.g. John Doe"
+                                   class="block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                         </div>
 
                         {{-- Property Use (conditional: house only) --}}
@@ -364,7 +373,7 @@
                                 </thead>
                                 <tbody id="liabilities-tbody" class="bg-white divide-y divide-gray-100">
                                     @foreach($liabilities as $liability)
-                                        <tr data-liability-id="{{ $liability->id }}">
+                                        <tr data-liability-id="{{ $liability->id }}" data-liability-name="{{ $liability->name ?? '' }}">
                                             <td class="px-4 py-3">
                                                 <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">
                                                     {{ $liability->liability_type_label }}
@@ -448,6 +457,15 @@
                                 <option value="other">Other</option>
                             </select>
                             <p id="liability-type-error" class="mt-1 text-sm text-red-600 hidden" role="alert"></p>
+                        </div>
+
+                        {{-- Name --}}
+                        <div>
+                            <label for="liability-name" class="block text-sm font-semibold text-gray-700 mb-1">Name</label>
+                            <input type="text" 
+                                   id="liability-name"
+                                   placeholder="e.g. John Doe"
+                                   class="block w-full py-3 px-4 border border-gray-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400">
                         </div>
 
                         {{-- Lender Name --}}
