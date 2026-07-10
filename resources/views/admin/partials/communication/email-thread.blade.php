@@ -533,7 +533,7 @@
         const selectedTpl = selectedKey ? templates[selectedKey] : null;
 
         try {
-            const res = await fetch(`/admin/applications/${APP_ID}/emails`, {
+            const res = await fetch(`/admin/applications/${APP_ID}/send-email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

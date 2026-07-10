@@ -12,6 +12,8 @@
                         Request IP: {{ request()->ip() ?? 'N/A' }}<br>
                         Sent at: {{ now()->toDayDateTimeString() }} (UTC)
                     </p>
+
+                    {!! \App\Helpers\EmailSignature::html() !!}
                 </td>
             </tr>
         </table>

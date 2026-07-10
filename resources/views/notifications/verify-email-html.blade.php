@@ -69,15 +69,14 @@
                 <p>If you did not create an account, no further action is required.</p>
 
                 <p style="margin-top: 32px; margin-bottom: 8px;">Kind regards,</p>
-                <p style="margin: 0;">ZYA Capital Pty Ltd</p>
-                <p style="margin: 4px 0 0;">ABN: 55695692052</p>
-                <p style="margin: 8px 0 0;"><a href="https://www.zyacapital.com.au">www.zyacapital.com.au</a></p>
 
-                <p style="margin-top: 24px;">
+                <p style="margin-top: 8px;">
                     <img src="https://shaded-grating-limpness.ngrok-free.dev/images/email/sample-signature.png"
                          alt="Signature"
                          class="signature">
                 </p>
+
+                {!! \App\Helpers\EmailSignature::html() !!}
             </div>
         </div>
     </div>
