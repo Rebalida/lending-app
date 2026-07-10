@@ -85,7 +85,7 @@ class Application extends Model
         'loan_amount',
         'loan_purpose',
         'loan_purpose_details',
-        'term_months',
+        'term_weeks',
         'security_type',
         'submitted_at',
         'completed_at',

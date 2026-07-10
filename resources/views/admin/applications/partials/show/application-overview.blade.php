@@ -49,7 +49,7 @@
             </div>
             <div>
                 <span class="text-sm font-medium text-gray-500">Term:</span>
-                <p class="mt-1 text-xl font-semibold text-gray-900">{{ $application->term_months }} months</p>
+                <p class="mt-1 text-xl font-semibold text-gray-900">{{ $application->term_weeks }} weeks</p>
             </div>
             <div>
                 <span class="text-sm font-medium text-gray-500">Submitted:</span>

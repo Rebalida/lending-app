@@ -76,9 +76,9 @@
                     </div>
 
                     <div>
-                        <label for="term_months" class="block text-sm font-semibold text-gray-700 mb-2">Loan Term (Months) *</label>
-                        <input type="number" name="term_months" id="term_months" min="1" max="360"
-                                value="{{ old('term_months', $application->term_months) }}"
+                        <label for="term_weeks" class="block text-sm font-semibold text-gray-700 mb-2">Loan Term (Weeks) *</label>
+                        <input type="number" name="term_weeks" id="term_weeks" min="4" max="1560"
+                                value="{{ old('term_weeks', $application->term_weeks) }}"
                                 class="mt-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full py-3 px-4 shadow-sm border-gray-300 rounded-xl" required>
                     </div>
 

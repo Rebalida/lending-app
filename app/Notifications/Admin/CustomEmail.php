@@ -33,8 +33,13 @@ class CustomEmail extends Notification
             ->bcc(config('mail.archive_email'))
             ->subject($this->subject)
             ->greeting('Hello!')
-            ->line('Dear ' . $notifiable->name . ',')
-            ->line($this->messageBody)
+            ->line('Dear ' . $notifiable->name . ',');
+            
+        foreach (explode("\n", $this->messageBody) as $line) {
+            $mail->line($line === '' ? ' ' : $line);
+        }
+
+        return $mail
             ->line('Application: ' . $this->application->application_number)
             ->action('View Application', route('applications.show', $this->application))
             ->line('If you have any questions, please don\'t hesitate to contact us.');
