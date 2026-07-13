@@ -356,7 +356,7 @@
     <table>
         <tr><th>Application Number</th><td>{{ $application->application_number }}</td></tr>
         <tr><th>Loan Amount</th><td>${{ number_format($application->loan_amount, 2) }}</td></tr>
-        <tr><th>Term</th><td>{{ $application->term_months }} months</td></tr>
+        <tr><th>Term</th><td>{{ $application->term_weeks }} weeks</td></tr>
         <tr><th>Purpose</th><td>{{ ucwords(str_replace('_', ' ', $application->loan_purpose)) }}</td></tr>
         @if($application->loan_purpose_details)
         <tr><th>Purpose Details</th><td>{{ $application->loan_purpose_details }}</td></tr>

@@ -117,14 +117,14 @@ class ApplicationController extends Controller
      * @return View               The `applications.create` view.
      *
      * @queryParam numeric amount  Loan amount to pre-fill (default: 100000).
-     * @queryParam int    term     Loan term in months to pre-fill (default: 60).
+     * @queryParam int    term     Loan term in weeks to pre-fill (default: 260).
      * @queryParam float  rate     Interest rate to pre-fill (default: 8.5).
      */
     public function create(Request $request): View
     {
         $calculatorValues = [
             'loan_amount'   => $request->query('amount', 100000),
-            'term_months'   => $request->query('term', 60),
+            'term_weeks'    => $request->query('term', 260),
             'interest_rate' => $request->query('rate', 8.5),
         ];
 
@@ -151,7 +151,7 @@ class ApplicationController extends Controller
      * @bodyParam numeric loan_amount          required  Requested loan amount (min 1000).
      * @bodyParam string  loan_purpose         required  Purpose of the loan.
      * @bodyParam string  loan_purpose_details nullable  Additional loan purpose detail.
-     * @bodyParam int     term_months          required  Loan term in months (1–360).
+     * @bodyParam int     term_weeks           required  Loan term in weeks (4–1560).
      * @bodyParam string  security_type        nullable  Type of security offered.
      * @bodyParam boolean privacy_consent      required  Must be accepted.
      * @bodyParam boolean terms_consent        required  Must be accepted.
@@ -295,7 +295,7 @@ class ApplicationController extends Controller
      * @bodyParam numeric loan_amount          required  Updated loan amount (min 1000).
      * @bodyParam string  loan_purpose         required  Updated loan purpose.
      * @bodyParam string  loan_purpose_details nullable  Updated loan purpose detail.
-     * @bodyParam int     term_months          required  Updated term in months (1–360).
+     * @bodyParam int     term_weeks           required  Updated term in weeks (4–1560).
      * @bodyParam string  security_type        nullable  Updated security type.
      */
     public function update(Request $request, Application $application): RedirectResponse
@@ -494,7 +494,7 @@ class ApplicationController extends Controller
             'loan_amount'          => ['required', 'numeric', 'min:1000'],
             'loan_purpose'         => ['required', 'string'],
             'loan_purpose_details' => ['nullable', 'string'],
-            'term_months'          => ['required', 'integer', 'min:1', 'max:360'],
+            'term_weeks'           => ['required', 'integer', 'min:4', 'max:1560'],
             'security_type'        => ['nullable', 'string'],
             'privacy_consent'      => ['required', 'accepted'],
             'terms_consent'        => ['required', 'accepted'],
@@ -526,7 +526,7 @@ class ApplicationController extends Controller
             'loan_amount'          => ['required', 'numeric', 'min:1000'],
             'loan_purpose'         => ['required', 'string'],
             'loan_purpose_details' => ['nullable', 'string'],
-            'term_months'          => ['required', 'integer', 'min:1', 'max:360'],
+            'term_weeks'           => ['required', 'integer', 'min:4', 'max:1560'],
             'security_type'        => ['nullable', 'string'],
         ]);
     }
@@ -579,7 +579,7 @@ class ApplicationController extends Controller
             'loan_amount'          => $validated['loan_amount'],
             'loan_purpose'         => $validated['loan_purpose'],
             'loan_purpose_details' => $validated['loan_purpose_details'] ?? null,
-            'term_months'          => $validated['term_months'],
+            'term_weeks'           => $validated['term_weeks'],
             'security_type'        => $validated['security_type'] ?? null,
             'submission_ip'        => $request->ip(),
         ]);

@@ -647,13 +647,13 @@
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
-                                            <label for="term_months" class="form-label">Loan Term <span class="text-indigo-500">*</span></label>
-                                            <input type="number" name="term_months" id="term_months" min="1" max="360"
-                                                value="{{ old('term_months', $calculatorValues['term_months']) }}"
-                                                class="form-input @error('term_months') error @enderror"
+                                            <label for="term_weeks" class="form-label">Loan Term (Weeks) <span class="text-indigo-500">*</span></label>
+                                            <input type="number" name="term_weeks" id="term_weeks" min="4" max="1560"
+                                                value="{{ old('term_weeks', $calculatorValues['term_weeks']) }}"
+                                                class="form-input @error('term_weeks') error @enderror"
                                                 required>
-                                            <p class="mt-1 text-xs text-gray-400">Months — typically 12–360</p>
-                                            @error('term_months')
+                                            <p class="mt-1 text-xs text-gray-400">Weeks — typically 52–1560</p>
+                                            @error('term_weeks')
                                                 <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
                                                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
                                                     {{ $message }}
@@ -804,18 +804,18 @@
                             <div>
                                 <div class="flex justify-between items-center mb-3">
                                     <label class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Loan Term</label>
-                                    <span class="text-lg font-bold text-indigo-600" id="calcLoanTerm">60 months</span>
+                                    <span class="text-lg font-bold text-indigo-600" id="calcLoanTerm">260 weeks</span>
                                 </div>
                                 <div class="py-2 range-wrapper">
                                     <div class="range-background"></div>
                                     <div class="range-fill" id="calcTermFill"></div>
-                                    <input type="range" min="12" max="84"
-                                        value="{{ $calculatorValues['term_months'] }}"
-                                        step="12" id="calcTermSlider" class="w-full">
+                                    <input type="range" min="52" max="260"
+                                        value="{{ $calculatorValues['term_weeks'] }}"
+                                        step="52" id="calcTermSlider" class="w-full">
                                 </div>
                                 <div class="flex justify-between text-xs text-gray-400 mt-2">
-                                    <span>12 months</span>
-                                    <span>84 months</span>
+                                    <span>52 weeks</span>
+                                    <span>260 weeks</span>
                                 </div>
                             </div>
 
@@ -841,8 +841,8 @@
                             <!-- Calculator Results -->
                             <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 mt-6">
                                 <div class="flex justify-between items-center mb-3">
-                                    <span class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Monthly Payment</span>
-                                    <span class="text-2xl font-bold text-indigo-600" id="calcMonthlyPayment">$2,058</span>
+                                    <span class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Weekly Payment</span>
+                                    <span class="text-2xl font-bold text-indigo-600" id="calcMonthlyPayment">$475</span>
                                 </div>
                                 <div class="flex justify-between items-center mb-3">
                                     <span class="text-xs text-gray-600">Total Interest</span>
@@ -1009,18 +1009,18 @@
             const rateSlider = document.getElementById('calcRateSlider');
 
             const principal  = parseFloat(loanSlider.value);
-            const termMonths = parseInt(termSlider.value);
+            const termWeeks  = parseInt(termSlider.value);
             const annualRate = parseFloat(rateSlider.value);
-            const monthlyRate = annualRate / 100 / 12;
+            const weeklyRate = annualRate / 100 / 52;
 
-            const monthlyPayment  = principal * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / (Math.pow(1 + monthlyRate, termMonths) - 1);
-            const totalRepayment  = monthlyPayment * termMonths;
-            const totalInterest   = totalRepayment - principal;
+            const weeklyPayment  = principal * (weeklyRate * Math.pow(1 + weeklyRate, termWeeks)) / (Math.pow(1 + weeklyRate, termWeeks) - 1);
+            const totalRepayment = weeklyPayment * termWeeks;
+            const totalInterest  = totalRepayment - principal;
 
             document.getElementById('calcLoanAmount').textContent    = formatCurrency(principal);
-            document.getElementById('calcLoanTerm').textContent       = termMonths + ' months';
+            document.getElementById('calcLoanTerm').textContent       = termWeeks + ' weeks';
             document.getElementById('calcInterestRate').textContent   = annualRate + '%';
-            document.getElementById('calcMonthlyPayment').textContent = formatCurrency(monthlyPayment);
+            document.getElementById('calcMonthlyPayment').textContent = formatCurrency(weeklyPayment);
             document.getElementById('calcTotalInterest').textContent  = formatCurrency(totalInterest);
             document.getElementById('calcTotalRepayment').textContent = formatCurrency(totalRepayment);
 
@@ -1040,10 +1040,10 @@
             // Update hidden input with raw value for server submission
             document.getElementById('loan_amount').value = rawAmount;
 
-            document.getElementById('term_months').value = document.getElementById('calcTermSlider').value;
+            document.getElementById('term_weeks').value = document.getElementById('calcTermSlider').value;
 
             // Brief flash to confirm the copy
-            ['loan_amount_display', 'term_months'].forEach(id => {
+            ['loan_amount_display', 'term_weeks'].forEach(id => {
                 const el = document.getElementById(id);
                 el.style.borderColor = '#6366F1';
                 el.style.boxShadow   = '0 0 0 4px rgba(99,102,241,0.15)';
