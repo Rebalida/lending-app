@@ -1,9 +1,15 @@
 <?php
 
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\Auth\EmailTwoFactorChallengeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => view('welcome'))->name('welcome');
+
+// Resend the email OTP code while a login is mid two-factor challenge.
+Route::post('two-factor-challenge/resend-email-code', [EmailTwoFactorChallengeController::class, 'resend'])
+    ->middleware(['web', 'throttle:email-otp-resend'])
+    ->name('two-factor.email.resend');
 
 Route::get('apply',  [ApplicationController::class, 'create'])->name('applications.create');
 Route::post('apply', [ApplicationController::class, 'store'])->name('applications.store');
