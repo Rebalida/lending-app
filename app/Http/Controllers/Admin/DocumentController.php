@@ -26,6 +26,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Application;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Document;
