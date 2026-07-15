@@ -11,6 +11,8 @@ use App\Events\Application\ApplicationReturned;
 use App\Events\Application\ApplicationStatusChanged;
 use App\Listeners\Application\SendReturnNotifications;
 use App\Listeners\Application\SendStatusChangeNotifications;
+use App\Listeners\Auth\EnableEmailTwoFactorOnVerification;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 
@@ -44,6 +46,14 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             ApplicationReturned::class,
             SendReturnNotifications::class,
+        );
+
+        // First-time email verification auto-enables Email OTP as the
+        // user's 2FA method, unless they already have Authenticator App
+        // (or Email OTP) active — see App\Listeners\Auth\EnableEmailTwoFactorOnVerification.
+        Event::listen(
+            Verified::class,
+            EnableEmailTwoFactorOnVerification::class,
         );
 
         \Illuminate\Support\Facades\Blade::directive('formatDate', function ($expression) {

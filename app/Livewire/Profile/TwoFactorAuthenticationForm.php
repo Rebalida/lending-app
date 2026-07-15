@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Profile;
 
+use App\Actions\Fortify\EnableEmailTwoFactorAuthentication;
 use App\Actions\Fortify\GenerateEmailTwoFactorCode;
 use App\Actions\Fortify\VerifyEmailTwoFactorCode;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
-use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
 use Laravel\Fortify\Features;
 use Laravel\Jetstream\Http\Livewire\TwoFactorAuthenticationForm as JetstreamTwoFactorAuthenticationForm;
 
@@ -91,7 +91,7 @@ class TwoFactorAuthenticationForm extends JetstreamTwoFactorAuthenticationForm
     /**
      * Confirm email two factor authentication for the user.
      */
-    public function confirmEmailTwoFactorAuthentication(VerifyEmailTwoFactorCode $verify)
+    public function confirmEmailTwoFactorAuthentication(VerifyEmailTwoFactorCode $verify, EnableEmailTwoFactorAuthentication $enable)
     {
         if (Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')) {
             $this->ensurePasswordIsConfirmed();
@@ -103,15 +103,7 @@ class TwoFactorAuthenticationForm extends JetstreamTwoFactorAuthenticationForm
             return;
         }
 
-        $this->user->forceFill([
-            'two_factor_method' => 'email',
-            'email_two_factor_confirmed_at' => now(),
-        ])->save();
-
-        // Only one method may be active at a time.
-        if ($this->user->two_factor_secret) {
-            app(DisableTwoFactorAuthentication::class)($this->user);
-        }
+        $enable($this->user);
 
         $this->showingEmailCode = false;
         $this->emailCode = null;
