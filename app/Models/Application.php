@@ -119,6 +119,7 @@ class Application extends Model
         'decline_letter_sent_at',
         'decline_reason',
         'guarantor_data',
+        'guarantor_required',
     ];
 
     protected $casts = [
@@ -615,5 +616,10 @@ class Application extends Model
     public function isGuarantorFormSigned(): bool
     {
         return !is_null($this->guarantor_form_signed_at);
+    }
+
+    public function requiresGuarantor(): bool
+    {
+        return (bool) $this->guarantor_required;
     }
 }

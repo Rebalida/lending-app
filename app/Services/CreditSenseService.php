@@ -333,6 +333,7 @@ class CreditSenseService
                     'Payload'  => [
                         'App_ID'            => (int) $csAppId,
                         'CS_Report_Formats' => $formats,
+                        'CS_Report_Code'    => 'detailed_affordability_lixi2',
                     ],
                 ]);
 

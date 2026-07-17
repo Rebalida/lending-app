@@ -61,6 +61,8 @@ Route::post('/applications/{application}/guarantor-form/send', [GuarantorFormCon
     ->name('applications.guarantor-form.send');
 Route::get('/applications/{application}/guarantor-form/signed', [GuarantorFormController::class, 'viewSigned'])
     ->name('applications.guarantor-form.signed');
+Route::patch('/applications/{application}/guarantor-required', [GuarantorFormController::class, 'toggleGuarantorRequired'])
+    ->name('applications.guarantor-required.toggle');
 
 // Business Declaration
 Route::post('/applications/{application}/business-declaration/send',

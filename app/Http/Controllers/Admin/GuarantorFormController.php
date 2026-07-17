@@ -161,4 +161,30 @@ class GuarantorFormController extends Controller
 
         return view('admin.applications.guarantor-form-signed', compact('application', 'guarantorData'));
     }
+
+    /**
+     * Toggle whether a guarantor is required for this application.
+     */
+    public function toggleGuarantorRequired(Request $request, Application $application): RedirectResponse
+    {
+        abort_if(
+            $application->status !== Application::STATUS_APPROVED,
+            403
+        );
+
+        $required = $request->boolean('guarantor_required');
+
+        $application->update(['guarantor_required' => $required]);
+
+        ActivityLog::logActivity(
+            'guarantor_requirement_updated',
+            $required ? 'Guarantor marked as required' : 'Guarantor marked as not required',
+            $application
+        );
+
+        return back()->with('success', $required
+            ? 'Guarantor marked as required.'
+            : 'Guarantor requirement removed.'
+        );
+    }
 }
