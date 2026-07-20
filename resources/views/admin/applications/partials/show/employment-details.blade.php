@@ -131,6 +131,16 @@
                         </p>
                     </div>
                     <div>
+                        <span class="text-xs font-medium text-gray-500">Base Income (After Tax)</span>
+                        <p class="mt-1 text-sm text-gray-900">
+                            @if($employment->after_tax_income !== null)
+                                ${{ number_format($employment->after_tax_income, 2) }} / {{ ucfirst($employment->income_frequency) }}
+                            @else
+                                —
+                            @endif
+                        </p>
+                    </div>
+                    <div>
                         <span class="text-xs font-medium text-gray-500">Annual Income</span>
                         <p class="mt-1 text-sm font-semibold text-indigo-600">${{ number_format($employment->getDisplayAnnualIncome(), 2) }}</p>
                     </div>
@@ -431,6 +441,7 @@ window.EMP_ADMIN_CONFIG = {
             'comment'                     => $e->comment,
             'annual_income'               => $e->getAnnualIncome(),
             'monthly_income'              => $e->getMonthlyIncome(),
+            'monthly_income_after_tax'    => $e->getMonthlyAfterTaxIncome(),
             'history'                     => $e->history->map(fn($h) => [
                 'field_label' => $h->field_label,
                 'old_value'   => $h->old_value,

@@ -70,6 +70,18 @@ class BusinessDeclarationController extends Controller
             $application
         );
 
+        ActivityLog::logActivity(
+            'document_generated',
+            'Business declaration signed by client',
+            $application,
+            null,
+            [
+                'doc_type'  => 'declaration',
+                'doc_label' => 'Business Declaration PDF',
+                'saved'     => null,
+            ]
+        );
+
         return redirect()
             ->route('applications.show', $application)
             ->with('success', 'Business declaration signed successfully. Thank you.');

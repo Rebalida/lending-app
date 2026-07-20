@@ -96,6 +96,18 @@ class GuarantorFormController extends Controller
             $application
         );
 
+        ActivityLog::logActivity(
+            'document_generated',
+            'Guarantor form signed by client',
+            $application,
+            null,
+            [
+                'doc_type'  => 'guarantor',
+                'doc_label' => 'Guarantor Form PDF',
+                'saved'     => null,
+            ]
+        );
+
         return redirect()
             ->route('applications.show', $application)
             ->with('success', 'Guarantor form signed successfully. Thank you.');

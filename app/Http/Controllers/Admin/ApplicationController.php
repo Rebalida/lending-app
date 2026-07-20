@@ -343,21 +343,30 @@ class ApplicationController extends Controller
             'accountantDetail',
             'declarations',
         ]);
-
+ 
         // Grab the final submission declaration if it exists
         $declaration = $application->declarations()
             ->where('declaration_type', 'final_submission')
             ->where('is_agreed', true)
             ->first();
-
+ 
         $pdf = Pdf::loadView('admin.applications.pdf', [
             'application' => $application,
             'declaration' => $declaration,
             'generatedAt' => now(),
         ]);
-
+ 
         $pdf->setPaper('a4', 'portrait');
-
+ 
+        // Log before streaming — response is returned immediately after.
+        ActivityLog::logActivity(
+            'document_generated',
+            'Application export PDF generated',
+            $application,
+            null,
+            ['doc_type' => 'export', 'doc_label' => 'Application Export PDF']
+        );
+ 
         return $pdf->download("loan-application-{$application->application_number}.pdf");
     }
 
@@ -384,19 +393,27 @@ class ApplicationController extends Controller
         if (! $application->hasGuarantorForm()) {
             return back()->with('error', 'Guarantor form has not been generated yet.');
         }
-
+ 
         $fullPath = public_path($application->guarantor_form_path);
-
+ 
         if (! file_exists($fullPath)) {
             return back()->with('error', 'Guarantor form file not found. Please regenerate.');
         }
-
+ 
         $filename = "{$application->application_number}-guarantor.pdf";
-
+ 
+        ActivityLog::logActivity(
+            'document_generated',
+            'Guarantor form PDF downloaded',
+            $application,
+            null,
+            ['doc_type' => 'guarantor', 'doc_label' => 'Guarantor Form PDF']
+        );
+ 
         if (request()->boolean('download', true)) {
             return response()->download($fullPath, $filename, ['Content-Type' => 'application/pdf']);
         }
-
+ 
         return response()->file($fullPath, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => "inline; filename=\"{$filename}\"",

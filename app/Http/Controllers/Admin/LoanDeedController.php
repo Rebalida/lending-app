@@ -176,17 +176,25 @@ class LoanDeedController extends Controller
     public function downloadPdf(Application $application): Response
     {
         abort_if(! $application->isLoanDeedSigned(), 404);
-
+ 
         $deedData = LoanDeedData::for($application);
-
+ 
         $pdf = Pdf::loadView('admin.applications.pdf.loan-deed', [
             'application' => $application,
             'deedData'    => $deedData,
             'generatedAt' => now(),
         ]);
-
+ 
         $pdf->setPaper('a4', 'portrait');
-
+ 
+        ActivityLog::logActivity(
+            'document_generated',
+            'Loan deed PDF downloaded',
+            $application,
+            null,
+            ['doc_type' => 'loan_deed', 'doc_label' => 'Loan Deed PDF']
+        );
+ 
         return $pdf->download('loan-deed-' . $application->application_number . '.pdf');
     }
 }

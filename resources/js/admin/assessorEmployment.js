@@ -328,8 +328,10 @@
                     <div><span class="text-xs font-medium text-gray-500">Employer</span><p class="mt-1 text-sm text-gray-900">${e.employer_business_name || '—'}</p></div>
                     <div><span class="text-xs font-medium text-gray-500">Position</span><p class="mt-1 text-sm text-gray-900">${e.position || '—'}</p></div>
                     <div><span class="text-xs font-medium text-gray-500">Base Income</span><p class="mt-1 text-sm text-gray-900">${fmt(e.base_income)} / ${e.income_frequency}</p></div>
+                    <div><span class="text-xs font-medium text-gray-500">Base Income (After Tax)</span><p class="mt-1 text-sm text-gray-900">${e.after_tax_income != null ? fmt(e.after_tax_income) + ' / ' + (e.income_frequency.charAt(0).toUpperCase() + e.income_frequency.slice(1)) : '—'}</p></div>
                     <div><span class="text-xs font-medium text-gray-500">Annual Income</span><p class="mt-1 text-sm font-semibold text-indigo-600">${fmt(e.annual_income)}</p></div>
                     <div><span class="text-xs font-medium text-gray-500">Monthly Income</span><p class="mt-1 text-sm font-semibold text-indigo-600">${fmt(e.monthly_income)}</p></div>
+                    <div><span class="text-xs font-medium text-gray-500">Monthly Income (After Tax)</span><p class="mt-1 text-sm font-semibold text-green-600">${fmt(e.monthly_income_after_tax)}</p></div>
                     ${e.employment_start_date ? `<div><span class="text-xs font-medium text-gray-500">Start Date</span><p class="mt-1 text-sm text-gray-900">${e.employment_start_date}</p></div>` : ''}
                     ${e.abn ? `<div><span class="text-xs font-medium text-gray-500">ABN</span><p class="mt-1 text-sm text-gray-900">${e.abn}</p></div>` : ''}
                 </div>

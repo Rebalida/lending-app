@@ -115,17 +115,25 @@ class BusinessDeclarationController extends Controller
     public function downloadPdf(Application $application): Response
     {
         abort_if(! $application->business_declaration_signed_at, 404);
-
+ 
         $declarationData = BusinessDeclarationData::for($application);
-
+ 
         $pdf = Pdf::loadView('admin.applications.pdf.business-declaration', [
             'application'     => $application,
             'declarationData' => $declarationData,
             'generatedAt'     => now(),
         ]);
-
+ 
         $pdf->setPaper('a4', 'portrait');
-
+ 
+        ActivityLog::logActivity(
+            'document_generated',
+            'Business declaration PDF downloaded',
+            $application,
+            null,
+            ['doc_type' => 'declaration', 'doc_label' => 'Business Declaration PDF']
+        );
+ 
         return $pdf->download('business-declaration-' . $application->application_number . '.pdf');
     }
 }

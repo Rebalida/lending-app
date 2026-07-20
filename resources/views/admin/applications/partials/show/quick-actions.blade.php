@@ -279,6 +279,9 @@
     </div>
 </div>
 
+{{-- ── Document History ────────────────────────────────────────────────────── --}}
+@include('admin.applications.partials.show.document-timeline')
+
 {{-- ── Modals (hidden, trigger buttons suppressed) ────────────────────────── --}}
 
 {{-- Contact Third Party off-canvas — real trigger button is hidden, proxy fires it --}}

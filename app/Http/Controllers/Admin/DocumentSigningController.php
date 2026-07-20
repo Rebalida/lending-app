@@ -126,11 +126,19 @@ class DocumentSigningController extends Controller
     public function downloadPdf(Application $application): Response
     {
         abort_if(! $application->isDocumentSigningSigned(), 404);
-
+ 
         $bytes = (new StampSignedDocument)->execute($application);
-
+ 
         $filename = 'signed-' . $application->application_number . '.pdf';
-
+ 
+        ActivityLog::logActivity(
+            'document_generated',
+            'Signed document PDF downloaded',
+            $application,
+            null,
+            ['doc_type' => 'signing', 'doc_label' => 'Signed Document PDF']
+        );
+ 
         return response($bytes, 200, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',

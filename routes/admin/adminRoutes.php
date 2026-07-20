@@ -1,6 +1,8 @@
 <?php
 // routes/admin/adminRoutes.php
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Route;
+use App\Actions\Application\GenerateSubmissionPdf;
 use App\Http\Controllers\Admin\ApplicationController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CommentController;
@@ -23,6 +25,8 @@ use App\Http\Controllers\Admin\Communication\AdHocCommunicationController;
 use App\Http\Controllers\Admin\CreditControllers\CreditSenseController;
 use App\Http\Controllers\Admin\CommunicationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\SubmissionPdfController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -306,12 +310,11 @@ Route::post('applications/{application}/creditsense/upload-report',
     ->name('creditsense.uploadReport');
 
 Route::get('submissions/{filename}', function ($filename) {
-    // Security: only allow accessing PDF files with valid application numbers
-    $path = public_path('submissions/' . $filename);
-    
-    if (!file_exists($path) || !str_ends_with($filename, '.pdf')) {
-        abort(404);
-    }
-    
-    return response()->download($path);
+    abort_unless(str_ends_with($filename, '.pdf'), 404);
+    $path = GenerateSubmissionPdf::FOLDER . '/' . $filename;
+    abort_unless(
+        Storage::disk(GenerateSubmissionPdf::DISK)->exists($path),
+        404
+    );
+    return Storage::disk(GenerateSubmissionPdf::DISK)->download($path);
 })->name('submissions.download');

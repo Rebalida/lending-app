@@ -75,6 +75,18 @@ class LoanDeedController extends Controller
             $application
         );
 
+        ActivityLog::logActivity(
+            'document_generated',
+            'Loan deed signed by client',
+            $application,
+            null,
+            [
+                'doc_type'  => 'loan_deed',
+                'doc_label' => 'Loan Deed PDF',
+                'saved'     => null,
+            ]
+        );
+
         return redirect()
             ->route('applications.show', $application)
             ->with('success', 'Loan deed signed successfully. Thank you.');

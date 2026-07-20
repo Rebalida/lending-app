@@ -98,6 +98,18 @@ class DocumentSigningController extends Controller
             $application
         );
 
+        ActivityLog::logActivity(
+            'document_generated',
+            'Document signed by client',
+            $application,
+            null,
+            [
+                'doc_type'  => 'signing',
+                'doc_label' => 'Signed Document PDF',
+                'saved'     => null,
+            ]
+        );
+
         return redirect()
             ->route('applications.show', $application)
             ->with('success', 'Document signed successfully. Thank you.');
