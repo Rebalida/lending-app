@@ -59,6 +59,12 @@ class EmploymentDetailsController extends Controller
                 'employment_end_date' => 'nullable|required_if:is_current,false|date|after_or_equal:employment_start_date',
             ]);
 
+            $taxResult = EmploymentDetail::calculateAfterTaxIncomeForFrequency(
+                (float) $validated['base_income'],
+                $validated['income_frequency']
+            );
+            $validated['after_tax_income'] = $taxResult['after_tax_income_per_period'];
+
             $employment = $application->employmentDetails()->create($validated);
 
             if ($employment->employment_start_date) {
@@ -133,6 +139,13 @@ class EmploymentDetailsController extends Controller
                 'employment_end_date' => 'nullable|required_if:is_current,false|date|after_or_equal:employment_start_date',
             ]);
     
+            // Recalculate after_tax_income server-side — never trust the client value
+            $taxResult = EmploymentDetail::calculateAfterTaxIncomeForFrequency(
+                (float) $validated['base_income'],
+                $validated['income_frequency']
+            );
+            $validated['after_tax_income'] = $taxResult['after_tax_income_per_period'];
+
             $oldValues = $employmentDetail->toArray();
             $employmentDetail->update($validated);
     

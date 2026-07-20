@@ -73,6 +73,35 @@ document.addEventListener('DOMContentLoaded', () => {
         recalcAll(); // recalcAll computes fresh totalMonthly and passes it to updateSummary
     });
 
+    // ── Auto-fill Loans (debt) row from Director Liabilities ────────────────────
+    const debtAmountDisplay = document.getElementById('amount-display-debt');
+    const debtAmountHidden  = document.getElementById('amount-debt');
+    let debtManuallyEdited = false;
+
+    debtAmountDisplay?.addEventListener('input', () => {
+        debtManuallyEdited = true; // once the user types here, stop auto-updating it
+    }, { once: true });
+
+    function applySuggestedLoanRepayment(amount) {
+        if (debtManuallyEdited || !debtAmountHidden || !debtAmountDisplay) return;
+        if (parseFloat(debtAmountHidden.value || 0) > 0) return; // already has a saved value — don't override
+
+        debtAmountHidden.value = amount;
+        debtAmountDisplay.value = parseFloat(amount).toLocaleString('en-AU', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+        recalcAll();
+    }
+
+    // Seed on page load from the server-computed total
+    applySuggestedLoanRepayment(window.EXPENSES_CONFIG?.initialLoanRepayment ?? 0);
+
+    // Live update if a liability is added/edited/removed without a page reload
+    document.addEventListener('directorLiabilityRepaymentUpdated', e => {
+        applySuggestedLoanRepayment(e.detail.totalMonthlyRepayment ?? 0);
+    });
+
     function recalcAll() {
         let total = 0;
 

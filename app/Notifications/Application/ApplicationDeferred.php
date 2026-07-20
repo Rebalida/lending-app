@@ -36,7 +36,8 @@ class ApplicationDeferred extends Notification
         return $mail
             ->line('Our team may reach out if your circumstances change or if further information is required.')
             ->action('View Application', route('applications.show', $this->application))
-            ->line('If you have any questions, please do not hesitate to contact our support team.');
+            ->line('If you have any questions, please do not hesitate to contact our support team.')
+            ->line('Visit us at: ' . config('app.url'));
     }
 
     public function toArray($notifiable): array

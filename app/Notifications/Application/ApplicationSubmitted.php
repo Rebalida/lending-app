@@ -47,6 +47,7 @@ class ApplicationSubmitted extends Notification implements ShouldQueue
             ->line('• Not edited or filtered.')
             ->line('Simply reply to this email and attach the requested images. Once we receive your documents, we will review them promptly and contact you if any further information is required.')
             ->line('If you have any questions or require assistance, please do not hesitate to contact us.')
+            ->line('Visit us at: ' . config('app.url'))
             ->salutation('Kind regards, ' . config('app.name'));
     }
 

@@ -50,14 +50,14 @@
                             data-abn="{{ $employment->abn }}"
                             data-employment-role="{{ $employment->employment_role }}"
                             data-position="{{ $employment->position }}"
-                            data-start-date="{{ $employment->employment_start_date }}"
+                            data-start-date="{{ optional($employment->employment_start_date)->format('Y-m-d') }}"
                             data-base-income="{{ $employment->base_income }}"
                             data-after-tax-income="{{ $employment->after_tax_income }}"
                             data-additional-income="{{ $employment->additional_income ?? 0 }}"
                             data-income-frequency="{{ $employment->income_frequency }}"
                             data-employer-phone="{{ $employment->employer_phone }}"
                             data-is-current="{{ $employment->is_current ? '1' : '0' }}"
-                            data-end-date="{{ $employment->employment_end_date }}"
+                            data-end-date="{{ optional($employment->employment_end_date)->format('Y-m-d') }}"
                             class="employment-item p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:shadow-md transition">
                             <div class="flex justify-between items-start">
                                 <div class="flex items-start space-x-4">

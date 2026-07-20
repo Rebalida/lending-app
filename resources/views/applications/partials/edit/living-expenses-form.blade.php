@@ -270,5 +270,6 @@
         applicationId: @js($application->id),
         storeRoute: @js(route('applications.living-expenses.store', $application)),
         initialAnnualIncome: @js($application->employmentDetails->sum(fn($e) => $e->getDisplayAnnualIncome())),
+        initialLoanRepayment: @js($application->directorLiabilities->sum('monthly_repayment')),
     });
 </script>

@@ -69,6 +69,8 @@ class CommunicationTemplateService
 
     public static function getSMSTemplates(Application $application): array
     {
+        $url = config('app.url');
+
         return [
             'blank' => [
                 'label' => 'Blank SMS',
@@ -76,43 +78,43 @@ class CommunicationTemplateService
             ],
             'additional_requirements' => [
                 'label' => 'Request Additional Info',
-                'body' => "Hi {$application->user->name}, we need additional information for your loan application #{$application->application_number}. Please check your email or log in to view details. - Loan Team",
+                'body' => "Hi {$application->user->name}, we need additional information for your loan application #{$application->application_number}. Please check your email or log in to view details. - Loan Team\n{$url}",
             ],
             'follow_up' => [
                 'label' => 'Follow Up',
-                'body' => "Hi {$application->user->name}, following up on your loan application #{$application->application_number}. Please check your email for details or contact us if you have questions. - Loan Team",
+                'body' => "Hi {$application->user->name}, following up on your loan application #{$application->application_number}. Please check your email for details or contact us if you have questions. - Loan Team\n{$url}",
             ],
             'notice' => [
                 'label' => 'Important Notice',
-                'body' => "Important notice about your loan application #{$application->application_number}. Please check your email for full details. - Loan Team",
+                'body' => "Important notice about your loan application #{$application->application_number}. Please check your email for full details. - Loan Team\n{$url}",
             ],
             'approved' => [
                 'label' => 'Application Approved',
-                'body' => "🎉 Congratulations {$application->user->name}! Your loan application #{$application->application_number} for $" . number_format($application->loan_amount, 2) . " has been APPROVED! Check your email for next steps. - Loan Team",
+                'body' => "🎉 Congratulations {$application->user->name}! Your loan application #{$application->application_number} for $" . number_format($application->loan_amount, 2) . " has been APPROVED! Check your email for next steps. - Loan Team\n{$url}",
             ],
             'declined' => [
                 'label' => 'Application Declined',
-                'body' => "Hi {$application->user->name}, regarding your application #{$application->application_number} - we're unable to proceed at this time. Please check your email for details. - Loan Team",
+                'body' => "Hi {$application->user->name}, regarding your application #{$application->application_number} - we're unable to proceed at this time. Please check your email for details. - Loan Team\n{$url}",
             ],
             'document_received' => [
                 'label' => 'Documents Received',
-                'body' => "Hi {$application->user->name}, we've received your documents for application #{$application->application_number}. We'll review them shortly. - Loan Team",
+                'body' => "Hi {$application->user->name}, we've received your documents for application #{$application->application_number}. We'll review them shortly. - Loan Team\n{$url}",
             ],
             'interview_scheduled' => [
                 'label' => 'Interview Scheduled',
-                'body' => "Hi {$application->user->name}, we've scheduled an interview for your loan application #{$application->application_number}. Please check your email for date and time. - Loan Team",
+                'body' => "Hi {$application->user->name}, we've scheduled an interview for your loan application #{$application->application_number}. Please check your email for date and time. - Loan Team\n{$url}",
             ],
             'wip' => [
                 'label' => 'Under Review',
-                'body' => "Hi {$application->user->name}, your loan application #{$application->application_number} is now under review. We'll update you within 2-3 business days. - Loan Team",
+                'body' => "Hi {$application->user->name}, your loan application #{$application->application_number} is now under review. We'll update you within 2-3 business days. - Loan Team\n{$url}",
             ],
             'documents_needed' => [
                 'label' => 'Documents Needed',
-                'body' => "Hi {$application->user->name}, we need specific documents for application #{$application->application_number}. Please log in to view and upload. - Loan Team",
+                'body' => "Hi {$application->user->name}, we need specific documents for application #{$application->application_number}. Please log in to view and upload. - Loan Team\n{$url}",
             ],
             'payment_reminder' => [
                 'label' => 'Payment Reminder',
-                'body' => "Reminder: Payment due soon for loan #{$application->application_number}. Please ensure timely payment to avoid late fees. - Loan Team",
+                'body' => "Reminder: Payment due soon for loan #{$application->application_number}. Please ensure timely payment to avoid late fees. - Loan Team\n{$url}",
             ],
         ];
     }
@@ -145,6 +147,8 @@ class CommunicationTemplateService
  
     public static function getAdHocSmsTemplates(Application $application): array
     {
+        $url = config('app.url');
+
         return [
             'blank' => [
                 'label' => 'Blank SMS',
@@ -152,15 +156,15 @@ class CommunicationTemplateService
             ],
             'document_request' => [
                 'label' => 'Document Request',
-                'body'  => "Hi [Recipient Name], we require documents for loan application #{$application->application_number}. Please check your email for details or contact us. - Loan Team",
+                'body'  => "Hi [Recipient Name], we require documents for loan application #{$application->application_number}. Please check your email for details or contact us. - Loan Team\n{$url}",
             ],
             'verification' => [
                 'label' => 'Verification Request',
-                'body'  => "Hi [Recipient Name], we need to verify some information for application #{$application->application_number}. Please check your email or call us. - Loan Team",
+                'body'  => "Hi [Recipient Name], we need to verify some information for application #{$application->application_number}. Please check your email or call us. - Loan Team\n{$url}",
             ],
             'general_enquiry' => [
                 'label' => 'General Enquiry',
-                'body'  => "Hi [Recipient Name], we're reaching out regarding loan application #{$application->application_number}. Please check your email or contact us. - Loan Team",
+                'body'  => "Hi [Recipient Name], we're reaching out regarding loan application #{$application->application_number}. Please check your email or contact us. - Loan Team\n{$url}",
             ],
         ];
     }

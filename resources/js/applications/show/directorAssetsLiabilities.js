@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.initCurrencyInput('liability-limit-display',          'liability-limit',          { min: 0, max: CURRENCY_MAX, errorId: 'liability-limit-error' });
     window.initCurrencyInput('liability-repayment-display',      'liability-repayment',      { min: 0, max: CURRENCY_MAX, errorId: 'liability-repayment-error' });
 
+    updateTotals();
+
     // ── Asset type → show/hide property use ──────────────────────────────────
     const assetTypeEl      = document.getElementById('asset-type');
     const propertyUseField = document.getElementById('property-use-field');
@@ -568,6 +570,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const liabsRepaymentTotal = document.getElementById('liabilities-total-repayment');
         if (liabsRepaymentTotal) liabsRepaymentTotal.textContent = '$' + fmtMoney(liabRepaymentTotal);
+
+        // Let Living Expenses know the current total monthly loan repayment
+        document.dispatchEvent(new CustomEvent('directorLiabilityRepaymentUpdated', {
+            detail: { totalMonthlyRepayment: liabRepaymentTotal },
+        }));
 
         document.getElementById('summary-assets').textContent      = '$' + fmtMoney(assetTotal);
         document.getElementById('summary-liabilities').textContent = '$' + fmtMoney(liabTotal);

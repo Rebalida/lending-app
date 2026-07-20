@@ -46,9 +46,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseIncomeDisplay = document.getElementById("base-income-display");
     
     baseIncomeDisplay?.addEventListener("input", () => {
-        const baseValue = baseIncomeHidden.value; // Get the raw value from hidden input
+        const baseValue = baseIncomeHidden.value;
+        const frequency = document.getElementById("income-frequency").value || "annual";
         if (baseValue) {
-            const afterTax = calculateAfterTaxIncome(baseValue);
+            const afterTax = calculateAfterTaxIncome(baseValue, frequency);
+            afterTaxHidden.value = afterTax;
+            afterTaxDisplay.value = afterTax.toLocaleString("en-AU", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }
+    });
+
+    document.getElementById("income-frequency")?.addEventListener("change", () => {
+        const baseValue = baseIncomeHidden.value;
+        const frequency = document.getElementById("income-frequency").value || "annual";
+        if (baseValue) {
+            const afterTax = calculateAfterTaxIncome(baseValue, frequency);
             afterTaxHidden.value = afterTax;
             afterTaxDisplay.value = afterTax.toLocaleString("en-AU", {
                 minimumFractionDigits: 2,
@@ -102,6 +116,16 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleEndDateField();
 
     // ── Helpers ───────────────────────────────────────────────────────────
+
+    // <input type="date"> only accepts YYYY-MM-DD. Laravel can hand back
+    // "2026-02-09 00:00:00" (Blade-echoed Carbon) or
+    // "2026-02-09T00:00:00.000000Z" (JSON-serialized Carbon) — both get
+    // silently rejected by the input, which is why the date "disappears"
+    // when editing. Normalize to just the date portion before using it.
+    function toDateInputValue(value) {
+        if (!value) return "";
+        return String(value).slice(0, 10);
+    }
 
     function broadcastTotalIncome() {
         let total = 0;
@@ -377,14 +401,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 data-abn="${employment.abn || ""}"
                 data-employment-role="${employment.employment_role || ""}"
                 data-position="${employment.position || ""}"
-                data-start-date="${employment.employment_start_date || ""}"
+                data-start-date="${toDateInputValue(employment.employment_start_date)}"
                 data-base-income="${employment.base_income}"
                 data-after-tax-income="${employment.after_tax_income || ""}"
                 data-additional-income="${employment.additional_income || 0}"
                 data-income-frequency="${employment.income_frequency}"
                 data-employer-phone="${employment.employer_phone || ""}"
                 data-is-current="${employment.is_current ? "1" : "0"}"
-                data-end-date="${employment.employment_end_date || ""}">
+                data-end-date="${toDateInputValue(employment.employment_end_date)}">
                 <div class="flex justify-between items-start">
                     <div class="flex items-start space-x-4">
                         <div class="flex-shrink-0">
@@ -469,27 +493,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function calculateAfterTaxIncome(baseIncome) {
-        const gross = parseFloat(baseIncome) || 0;
-        
+    function calculateAfterTaxIncome(baseIncome, frequency) {
+        const multipliers = { weekly: 52, fortnightly: 26, monthly: 12, annual: 1 };
+        const annualMultiplier = multipliers[frequency] ?? 1;
+
+        const gross = (parseFloat(baseIncome) || 0) * annualMultiplier;
+
         let incomeTax = 0;
-        if (gross <= 18200) {
-            incomeTax = 0;
-        } else if (gross <= 45000) {
-            incomeTax = (gross - 18200) * 0.16;
-        } else if (gross <= 135000) {
-            incomeTax = 4288 + ((gross - 45000) * 0.30);
-        } else if (gross <= 190000) {
-            incomeTax = 31288 + ((gross - 135000) * 0.37);
-        } else {
-            incomeTax = 51638 + ((gross - 190000) * 0.45);
-        }
+        if (gross <= 18200) incomeTax = 0;
+        else if (gross <= 45000) incomeTax = (gross - 18200) * 0.16;
+        else if (gross <= 135000) incomeTax = 4288 + (gross - 45000) * 0.30;
+        else if (gross <= 190000) incomeTax = 31288 + (gross - 135000) * 0.37;
+        else incomeTax = 51638 + (gross - 190000) * 0.45;
 
         const medicareLevy = gross * 0.02;
-        const totalTax = incomeTax + medicareLevy;
-        const afterTax = gross - totalTax;
+        const afterTaxAnnual = gross - (incomeTax + medicareLevy);
 
-        return Math.round(afterTax * 100) / 100;
+        return Math.round((afterTaxAnnual / annualMultiplier) * 100) / 100;
     }
 
     function updateEmploymentCount() {
@@ -598,7 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.dataset.employmentRole || "";
         document.getElementById("position").value = card.dataset.position || "";
         document.getElementById("employment-start-date").value =
-            card.dataset.startDate || "";
+            toDateInputValue(card.dataset.startDate);
         document.getElementById("employer-phone").value =
             card.dataset.employerPhone || "";
         document.getElementById("base-income-display").value =
@@ -621,7 +641,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("is_current_no").checked =
             card.dataset.isCurrent !== "1";
         document.getElementById("employment-end-date").value =
-            card.dataset.endDate || "";
+            toDateInputValue(card.dataset.endDate);
         toggleEndDateField();
 
         updateFormTitle();

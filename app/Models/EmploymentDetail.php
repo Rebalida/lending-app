@@ -180,6 +180,26 @@ class EmploymentDetail extends Model
         ];
     }
 
+    public static function calculateAfterTaxIncomeForFrequency(float $amount, string $frequency): array
+    {
+        $multipliers = [
+            'weekly'      => 52,
+            'fortnightly' => 26,
+            'monthly'     => 12,
+            'annual'      => 1,
+        ];
+
+        $annualMultiplier = $multipliers[$frequency] ?? 1;
+        $annualGross      = $amount * $annualMultiplier;
+
+        $result = self::calculateAfterTaxIncome($annualGross);
+
+        $result['after_tax_income_per_period'] = round($result['after_tax_income'] / $annualMultiplier, 2);
+        $result['frequency'] = $frequency;
+
+        return $result;
+    }
+
     public function getMonthlyAfterTaxIncome(): float
     {
         $income = $this->after_tax_income ?? $this->base_income;
