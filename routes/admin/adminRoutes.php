@@ -6,7 +6,9 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\GuarantorFormController;
+use App\Http\Controllers\Admin\LoanDeedController;
 use App\Http\Controllers\Admin\BusinessDeclarationController;
+use App\Http\Controllers\Admin\DocumentSigningController;
 use App\Http\Controllers\Admin\CreditControllers\CreditCheckController;
 use App\Http\Controllers\Admin\LivingExpenseVerificationController;
 use App\Http\Controllers\Admin\AssessorDirectorAssetsLiabilitiesController;
@@ -64,7 +66,27 @@ Route::get('/applications/{application}/guarantor-form/signed', [GuarantorFormCo
 Route::patch('/applications/{application}/guarantor-required', [GuarantorFormController::class, 'toggleGuarantorRequired'])
     ->name('applications.guarantor-required.toggle');
 
+// Loan Deed
+Route::get('/applications/{application}/loan-deed',         [LoanDeedController::class, 'show'])
+    ->name('applications.loan-deed.show');
+Route::post('/applications/{application}/loan-deed',        [LoanDeedController::class, 'store'])
+    ->name('applications.loan-deed.store');
+Route::post('/applications/{application}/loan-deed/send',   [LoanDeedController::class, 'send'])
+    ->name('applications.loan-deed.send');
+Route::get('/applications/{application}/loan-deed/signed',  [LoanDeedController::class, 'viewSigned'])
+    ->name('applications.loan-deed.signed');
+Route::get('/applications/{application}/loan-deed/pdf',     [LoanDeedController::class, 'downloadPdf'])
+    ->name('applications.loan-deed.pdf');
+
 // Business Declaration
+Route::get('/applications/{application}/business-declaration',
+    [BusinessDeclarationController::class, 'show'])
+    ->name('applications.business-declaration.show');
+
+Route::post('/applications/{application}/business-declaration',
+    [BusinessDeclarationController::class, 'store'])
+    ->name('applications.business-declaration.store');
+
 Route::post('/applications/{application}/business-declaration/send',
     [BusinessDeclarationController::class, 'send'])
     ->name('applications.business-declaration.send');
@@ -72,6 +94,31 @@ Route::post('/applications/{application}/business-declaration/send',
 Route::get('/applications/{application}/business-declaration/signed',
     [BusinessDeclarationController::class, 'view'])
     ->name('applications.business-declaration.view');
+
+Route::get('/applications/{application}/business-declaration/pdf',
+    [BusinessDeclarationController::class, 'downloadPdf'])
+    ->name('applications.business-declaration.pdf');
+
+// Document Signing
+Route::get('/applications/{application}/document-signing',
+    [DocumentSigningController::class, 'show'])
+    ->name('applications.document-signing.show');
+
+Route::post('/applications/{application}/document-signing',
+    [DocumentSigningController::class, 'store'])
+    ->name('applications.document-signing.store');
+
+Route::post('/applications/{application}/document-signing/send',
+    [DocumentSigningController::class, 'send'])
+    ->name('applications.document-signing.send');
+
+Route::get('/applications/{application}/document-signing/signed',
+    [DocumentSigningController::class, 'viewSigned'])
+    ->name('applications.document-signing.view');
+
+Route::get('/applications/{application}/document-signing/pdf',
+    [DocumentSigningController::class, 'downloadPdf'])
+    ->name('applications.document-signing.pdf');
 
 // Comments
 Route::post('applications/{application}/comments', [CommentController::class, 'store'])

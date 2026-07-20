@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Models\ActivityLog;
+use App\Support\BusinessDeclarationData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,7 +28,9 @@ class BusinessDeclarationController extends Controller
             'This declaration is not ready yet.'
         );
 
-        return view('applications.business-declaration', compact('application'));
+        $declarationData = BusinessDeclarationData::for($application);
+
+        return view('applications.business-declaration', compact('application', 'declarationData'));
     }
 
     /**

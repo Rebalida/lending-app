@@ -10,6 +10,8 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\GuarantorFormController;
 use App\Http\Controllers\BusinessDeclarationController;
+use App\Http\Controllers\LoanDeedController;
+use App\Http\Controllers\DocumentSigningController;
 use App\Http\Controllers\DeclarationController;
 use App\Http\Controllers\CreditControllers\BasiqController;
 use App\Http\Controllers\CreditControllers\CreditSenseController;
@@ -114,6 +116,26 @@ Route::get('/applications/{application}/business-declaration',
 Route::post('/applications/{application}/business-declaration/sign',
     [BusinessDeclarationController::class, 'sign'])
     ->name('applications.business-declaration.sign');
+
+// Loan Deed
+Route::get('/applications/{application}/loan-deed',       [LoanDeedController::class, 'show'])
+    ->name('applications.loan-deed.client.show')
+    ->middleware('signed');
+
+Route::post('/applications/{application}/loan-deed/sign', [LoanDeedController::class, 'sign'])
+    ->name('applications.loan-deed.sign');
+
+// Document Signing
+Route::get('/applications/{application}/document-signing', [DocumentSigningController::class, 'show'])
+    ->name('applications.document-signing.client.show')
+    ->middleware('signed');
+
+Route::get('/applications/{application}/document-signing/file', [DocumentSigningController::class, 'streamFile'])
+    ->name('applications.document-signing.client.file')
+    ->middleware('signed');
+
+Route::post('/applications/{application}/document-signing/sign', [DocumentSigningController::class, 'sign'])
+    ->name('applications.document-signing.sign');
 
 // CreditSense Bank Statement Connection
 Route::prefix('applications/{application}/creditsense')->name('creditsense.')->group(function () {

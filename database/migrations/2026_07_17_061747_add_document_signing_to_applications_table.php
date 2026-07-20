@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Column may already exist: it was originally added by a migration file
-        // that was applied and later deleted from disk.
-        if (Schema::hasColumn('applications', 'guarantor_required')) {
-            return;
-        }
-
         Schema::table('applications', function (Blueprint $table) {
-            $table->boolean('guarantor_required')->default(true)->after('guarantor_data');
+            $table->string('document_signing_file_path')->nullable()->after('business_declaration_requested_at');
+            $table->json('document_signing_data')->nullable()->after('document_signing_file_path');
         });
     }
 
@@ -28,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('applications', function (Blueprint $table) {
-            $table->dropColumn('guarantor_required');
+            $table->dropColumn(['document_signing_file_path', 'document_signing_data']);
         });
     }
 };

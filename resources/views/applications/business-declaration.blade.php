@@ -31,19 +31,19 @@
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase">Borrower Name</p>
                             <p class="text-sm text-gray-900 mt-0.5">
-                                {{ $application->borrowerInformation?->company_name ?? $application->user->name }}
+                                {{ $declarationData['borrower_name'] }}
                             </p>
                         </div>
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase">Loan Purpose</p>
                             <p class="text-sm text-gray-900 mt-0.5">
-                                {{ ucwords(str_replace('_', ' ', $application->loan_purpose ?? '—')) }}
+                                {{ $declarationData['loan_purpose'] ?: '—' }}
                             </p>
                         </div>
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase">Amount</p>
                             <p class="text-sm text-gray-900 mt-0.5">
-                                ${{ number_format($application->loan_amount, 2) }}
+                                {{ $declarationData['loan_amount_display'] }}
                             </p>
                         </div>
                     </div>

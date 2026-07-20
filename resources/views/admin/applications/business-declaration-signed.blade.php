@@ -16,9 +16,18 @@
                           rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
                     ← Back
                 </a>
+                <a href="{{ route('admin.applications.business-declaration.pdf', $application) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white
+                          text-sm font-semibold rounded-md hover:bg-indigo-700 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Download PDF
+                </a>
                 <button onclick="window.print()"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white
-                               text-sm font-semibold rounded-md hover:bg-indigo-700 transition">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300
+                               text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 transition">
                     Print / Save as PDF
                 </button>
             </div>
@@ -32,10 +41,6 @@
             .print-card { page-break-inside: avoid; }
         }
     </style>
-
-    @php
-        $declaration = $application->guarantor_data['business_declaration'] ?? [];
-    @endphp
 
     <div class="py-8">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -57,19 +62,19 @@
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase">Borrower Name</p>
                             <p class="text-sm text-gray-900 mt-0.5">
-                                {{ $application->borrowerInformation?->company_name ?? $application->user->name }}
+                                {{ $declarationData['borrower_name'] }}
                             </p>
                         </div>
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase">Loan Purpose</p>
                             <p class="text-sm text-gray-900 mt-0.5">
-                                {{ ucwords(str_replace('_', ' ', $application->loan_purpose ?? '—')) }}
+                                {{ $declarationData['loan_purpose'] ?: '—' }}
                             </p>
                         </div>
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase">Amount</p>
                             <p class="text-sm text-gray-900 mt-0.5">
-                                ${{ number_format($application->loan_amount, 2) }}
+                                {{ $declarationData['loan_amount_display'] }}
                             </p>
                         </div>
                     </div>
@@ -103,11 +108,11 @@
                     <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Client Signature</h2>
                 </div>
                 <div class="p-6 space-y-4">
-                    @if(!empty($declaration['signature']))
+                    @if(!empty($declarationData['signature']))
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Signature</p>
                             <div class="border border-gray-200 rounded-lg bg-gray-50 p-2 inline-block">
-                                <img src="{{ $declaration['signature'] }}"
+                                <img src="{{ $declarationData['signature'] }}"
                                      alt="Client Signature" class="h-24 object-contain">
                             </div>
                         </div>
@@ -116,14 +121,14 @@
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase">Date Signed</p>
                             <p class="text-sm text-gray-900 mt-0.5">
-                                {{ isset($declaration['signed_at'])
-                                    ? \Carbon\Carbon::parse($declaration['signed_at'])->format('d M Y \a\t g:i A')
+                                {{ !empty($declarationData['signed_at'])
+                                    ? \Carbon\Carbon::parse($declarationData['signed_at'])->format('d M Y \a\t g:i A')
                                     : '—' }}
                             </p>
                         </div>
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase">IP Address</p>
-                            <p class="text-sm text-gray-900 mt-0.5">{{ $declaration['signed_ip'] ?? '—' }}</p>
+                            <p class="text-sm text-gray-900 mt-0.5">{{ $declarationData['signed_ip'] ?: '—' }}</p>
                         </div>
                     </div>
                 </div>

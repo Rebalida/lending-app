@@ -120,6 +120,14 @@ class Application extends Model
         'decline_reason',
         'guarantor_data',
         'guarantor_required',
+        'loan_deed_data',
+        'loan_deed_requested_at',
+        'loan_deed_request_url',
+        'loan_deed_signed_at',
+        'business_declaration_data',
+        'business_declaration_requested_at',
+        'document_signing_file_path',
+        'document_signing_data',
     ];
 
     protected $casts = [
@@ -142,6 +150,12 @@ class Application extends Model
         'business_declaration_signed_at'   => 'datetime',
         'decline_letter_sent_at'           => 'datetime',
         'guarantor_data'                   => 'array',
+        'loan_deed_data'                   => 'array',
+        'loan_deed_requested_at'           => 'datetime',
+        'loan_deed_signed_at'              => 'datetime',
+        'business_declaration_data'        => 'array',
+        'business_declaration_requested_at' => 'datetime',
+        'document_signing_data'            => 'array',
         'bank_api_report_received_at' => 'datetime',
         'credit_sense_report_received_at' => 'datetime',
     ];
@@ -621,5 +635,30 @@ class Application extends Model
     public function requiresGuarantor(): bool
     {
         return (bool) $this->guarantor_required;
+    }
+
+    public function hasLoanDeedData(): bool
+    {
+        return !is_null($this->loan_deed_data);
+    }
+
+    public function isLoanDeedSigned(): bool
+    {
+        return !is_null($this->loan_deed_signed_at);
+    }
+
+    public function hasBusinessDeclarationData(): bool
+    {
+        return !is_null($this->business_declaration_data);
+    }
+
+    public function hasDocumentSigningFile(): bool
+    {
+        return !is_null($this->document_signing_file_path);
+    }
+
+    public function isDocumentSigningSigned(): bool
+    {
+        return !empty($this->document_signing_data['signed_at'] ?? null);
     }
 }
