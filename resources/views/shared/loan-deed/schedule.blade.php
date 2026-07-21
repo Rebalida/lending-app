@@ -70,6 +70,7 @@
     </table>
 </div>
 
+@if($mode === 'pdf')<div style="page-break-before: always;"></div>@endif
 <div class="deed-page">
     <h2 class="deed-h2">Schedule 2</h2>
     <p class="deed-p"><strong>Loan Repayment Schedule</strong></p>
@@ -94,6 +95,7 @@
     @endif
 </div>
 
+@if($mode === 'pdf')<div style="page-break-before: always;"></div>@endif
 <div class="deed-page">
     <h2 class="deed-h2">Schedule 3</h2>
     <p class="deed-p"><strong>Business Purpose Declaration</strong></p>

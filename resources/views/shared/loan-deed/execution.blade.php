@@ -1,82 +1,101 @@
-{{-- Loan Deed — execution page (source PDF page 31).
+{{-- Loan Deed — execution page (source PDF page 28/31).
      Renders captured signatures as <img> when present, blank lines otherwise. --}}
-<div class="deed-page">
-    <p class="deed-p"><strong>Executed as a deed:</strong></p>
+<div class="deed-page deed-execution-page">
+    <p class="deed-execution-title">Executed as a deed:</p>
 
-    <p class="deed-p deed-dated">
-        <strong>Dated:</strong>
-        <span class="deed-dated-line">{{ !empty($d['signed_at']) ? \Illuminate\Support\Carbon::parse($d['signed_at'])->format('d F') : '' }}</span>
-        {{ !empty($d['signed_at']) ? \Illuminate\Support\Carbon::parse($d['signed_at'])->format('Y') : date('Y') }}
-    </p>
-
-    {{-- Lender execution --}}
-    <table class="deed-exec-table">
+    <table class="deed-dated-table">
         <tr>
-            <td class="deed-exec-left">
-                <strong>EXECUTED</strong> by <strong>ZYA Capital Pty Ltd ACN 695 692 052</strong>
-                in accordance with Section 127 of the <em>Corporations Act 2001</em> (Cth):
+            <td class="deed-dated-label">Dated:</td>
+            <td class="deed-dated-line">
+                {{ !empty($d['signed_at']) ? \Illuminate\Support\Carbon::parse($d['signed_at'])->format('d F') : '' }}
             </td>
-            <td class="deed-exec-right">
-                <div class="deed-sig-line"></div>
-                Sole Director/Secretary
+            <td class="deed-dated-year">
+                {{ !empty($d['signed_at']) ? \Illuminate\Support\Carbon::parse($d['signed_at'])->format('Y') : date('Y') }}
             </td>
         </tr>
     </table>
 
-    {{-- Borrower company execution — one row per director --}}
-    <table class="deed-exec-table">
+    {{-- Lender execution --}}
+    <table class="deed-execution-table">
         <tr>
-            <td class="deed-exec-left">
+            <td class="deed-execution-left">
+                <strong>EXECUTED</strong> by <strong>ZYA Capital Pty Ltd ACN 695 692 052</strong>
+                in accordance with Section 127 of the <em>Corporations Act 2001</em> (Cth):
+            </td>
+            <td class="deed-execution-gap"></td>
+            <td class="deed-execution-right">
+                <div class="deed-signature-block">
+                    <div class="deed-signature-line"></div>
+                    <div class="deed-name">Gang Chen</div>
+                    <strong class="deed-role">Sole Director/Secretary</strong>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    {{-- Borrower company execution — one block per director --}}
+    <table class="deed-execution-table">
+        <tr>
+            <td class="deed-execution-left">
                 <strong>EXECUTED</strong> by <strong>{{ $d['borrower_name'] ?: '[insert]' }}
                 {{ $d['borrower_acn'] ? 'ACN ' . $d['borrower_acn'] : ($d['borrower_abn'] ? 'ABN ' . $d['borrower_abn'] : '') }}</strong>
                 in accordance with Section 127 of the <em>Corporations Act 2001</em> (Cth):
             </td>
-            <td class="deed-exec-right">
+            <td class="deed-execution-gap"></td>
+            <td class="deed-execution-right">
                 @forelse($d['directors'] as $director)
-                    <div class="deed-sig-line"></div>
-                    {{ $director['full_name'] }}<br>
-                    <strong>Director</strong>
-                    @if(!$loop->last)<br><br>@endif
+                    <div class="deed-signature-block">
+                        <div class="deed-signature-line"></div>
+                        <div class="deed-name">{{ $director['full_name'] }}</div>
+                        <strong class="deed-role">Director</strong>
+                    </div>
                 @empty
-                    <div class="deed-sig-line"></div>
-                    [insert]<br>
-                    <strong>Director</strong>
+                    <div class="deed-signature-block">
+                        <div class="deed-signature-line"></div>
+                        <div class="deed-name">[insert]</div>
+                        <strong class="deed-role">Director</strong>
+                    </div>
                 @endforelse
             </td>
         </tr>
     </table>
 
-    {{-- Client (borrower/guarantor individual) execution --}}
-    <table class="deed-exec-table">
+    {{-- Witness + client (borrower/guarantor individual) execution --}}
+    <table class="deed-execution-table">
         <tr>
-            <td class="deed-exec-left">
+            <td class="deed-execution-left">
                 <strong>SIGNED, SEALED AND DELIVERED</strong> by
                 {{ $d['guarantor_name'] ?: $d['borrower_name'] ?: '[Insert]' }} in the presence of:
-                <br><br>
-                @if(!empty($d['witness_signature']))
-                    <img src="{{ $d['witness_signature'] }}" alt="Witness signature" class="deed-sig-img">
-                @else
-                    <div class="deed-sig-line"></div>
-                @endif
-                Witness signature
-                <br><br>
-                <div class="deed-sig-underline">{{ $d['witness_name'] ?: '' }}</div>
-                Print name
+
+                <div class="deed-signature-block">
+                    @if(!empty($d['witness_signature']))
+                        <img src="{{ $d['witness_signature'] }}" alt="Witness signature" class="deed-signature-image">
+                    @endif
+                    <div class="deed-signature-line"></div>
+                    <span class="deed-role">Witness signature</span>
+                </div>
+
+                <div class="deed-signature-block">
+                    <div class="deed-print-line">{{ $d['witness_name'] ?: '' }}</div>
+                    <span class="deed-role">Print name</span>
+                </div>
             </td>
-            <td class="deed-exec-right">
-                @if(!empty($d['client_signature']))
-                    <img src="{{ $d['client_signature'] }}" alt="Signature" class="deed-sig-img">
-                @else
-                    <div class="deed-sig-line"></div>
-                @endif
-                {{ $d['guarantor_name'] ?: $d['borrower_name'] ?: '[Insert]' }}<br>
-                Signature
-                @if(!empty($d['signed_at']))
-                    <br><span class="deed-muted">Signed: {{ $d['signed_at'] }}</span>
-                @endif
-                @if(!empty($d['signed_ip']))
-                    <br><span class="deed-muted">IP: {{ $d['signed_ip'] }}</span>
-                @endif
+            <td class="deed-execution-gap"></td>
+            <td class="deed-execution-right">
+                <div class="deed-signature-block">
+                    @if(!empty($d['client_signature']))
+                        <img src="{{ $d['client_signature'] }}" alt="Signature" class="deed-signature-image">
+                    @endif
+                    <div class="deed-signature-line"></div>
+                    <div class="deed-name">{{ $d['guarantor_name'] ?: $d['borrower_name'] ?: '[Insert]' }}</div>
+                    <span class="deed-role">Signature</span>
+                    @if(!empty($d['signed_at']))
+                        <div class="deed-meta">Signed: {{ $d['signed_at'] }}</div>
+                    @endif
+                    @if(!empty($d['signed_ip']))
+                        <div class="deed-meta">IP: {{ $d['signed_ip'] }}</div>
+                    @endif
+                </div>
             </td>
         </tr>
     </table>

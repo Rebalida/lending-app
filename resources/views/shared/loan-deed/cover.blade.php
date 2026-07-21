@@ -19,7 +19,7 @@
             <span class="deed-cover-dash">-</span>
             <div>
                 {{ $d['borrower_name'] ?: '[insert]' }}<br>
-                (<strong>Borrowers</strong>)
+                <strong>(Borrowers)</strong>
             </div>
         </div>
 
@@ -29,7 +29,7 @@
             <span class="deed-cover-dash">-</span>
             <div>
                 {{ $d['guarantor_name'] ?: '[insert]' }}<br>
-                (<strong>Director Guarantors</strong>)
+                <strong>(Director Guarantors)</strong>
             </div>
         </div>
     </div>

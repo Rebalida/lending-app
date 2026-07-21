@@ -16,16 +16,27 @@
     .deed-document .deed-firm-light { color: #9ca3af; font-weight: 300; }
     .deed-document .deed-firm-address { font-size: 0.8rem; color: #4b5563; margin-top: 0.5rem; }
 
-    /* TOC */
-    .deed-document .deed-toc-heading { font-size: 1.5rem; color: #1e2a78; margin-bottom: 1rem; }
-    .deed-document .deed-toc-table { width: 100%; border-collapse: collapse; }
-    .deed-document .deed-toc-table td { padding: 0.15rem 0; vertical-align: bottom; }
-    .deed-document .deed-toc-num { width: 3.5rem; }
-    .deed-document .deed-toc-main td { font-weight: 700; color: #1e2a78; padding-top: 0.5rem; }
-    .deed-document .deed-toc-sub .deed-toc-num { padding-left: 1.5rem; }
-    .deed-document .deed-toc-title { position: relative; }
-    .deed-document .deed-toc-leader { display: inline-block; width: 100%; border-bottom: 1px dotted #9ca3af; }
-    .deed-document .deed-toc-page { width: 2.5rem; text-align: right; }
+    /* TOC — mirrors the DomPDF template: three zones (number / title+leader / page), widths in
+       percent. The leader lives inside the title cell (not a separate column) as a border-bottom
+       on a nested 2-cell table, using the width:1%+white-space:nowrap shrink-to-fit trick on the
+       text cell so the sibling absorbs remaining width and carries the border — a genuinely
+       proportional leader, not a fixed dot run. See toc-entries.blade.php for how this was
+       verified against DomPDF's actual rendered output. */
+    .deed-document .deed-toc-heading { font-size: 1.6rem; font-weight: 700; color: #1e2a78; margin-bottom: 1.1rem; }
+    .deed-document .deed-toc-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .deed-document .deed-toc-table td { padding: 0.2rem 0; vertical-align: bottom; }
+    .deed-document .deed-toc-num { width: 8%; text-align: left; }
+    .deed-document .deed-toc-titlewrap { width: 87%; padding-right: 0.4rem; }
+    .deed-document .deed-toc-leader-table { width: 100%; border-collapse: collapse; }
+    .deed-document .deed-toc-leader-table td { padding: 0; vertical-align: bottom; }
+    .deed-document .deed-toc-text { width: 1%; white-space: nowrap; padding-right: 0.3rem; text-align: left; }
+    .deed-document .deed-toc-leader { border-bottom: 1px dotted #9ca3af; }
+    .deed-document .deed-toc-page { width: 5%; text-align: right; white-space: nowrap; }
+    .deed-document .deed-toc-main td { font-weight: 700; color: #1e2a78; padding-top: 1rem; }
+    .deed-document .deed-toc-main:first-child td { padding-top: 0; }
+    .deed-document .deed-toc-main .deed-toc-leader-table td { padding-top: 0; }
+    .deed-document .deed-toc-sub td { font-weight: 400; color: #1a1a2e; }
+    .deed-document .deed-toc-sub .deed-toc-num { padding-left: 1.1rem; }
 
     /* Headings and text */
     .deed-document .deed-h1 { font-size: 1.9rem; font-weight: 700; color: #1e2a78; margin-bottom: 1.25rem; }
@@ -57,14 +68,30 @@
     .deed-document .deed-sched-label { width: 27%; background: #bfd0e4; font-weight: 700; }
     .deed-document .deed-schedule-table tr td:last-child { background: #eceff4; }
 
-    /* Execution */
-    .deed-document .deed-exec-table { width: 100%; border-collapse: collapse; margin: 1.75rem 0; }
-    .deed-document .deed-exec-table td { vertical-align: bottom; padding: 0.25rem 0; }
-    .deed-document .deed-exec-left { width: 55%; padding-right: 2rem !important; vertical-align: top !important; }
-    .deed-document .deed-exec-right { width: 45%; }
-    .deed-document .deed-sig-line { border-bottom: 1px solid #1a1a2e; height: 3rem; margin-bottom: 0.25rem; width: 90%; }
-    .deed-document .deed-sig-underline { border-bottom: 1px solid #1a1a2e; min-height: 1.5rem; margin-bottom: 0.25rem; width: 90%; }
-    .deed-document .deed-sig-img { max-height: 4.5rem; max-width: 90%; border-bottom: 1px solid #1a1a2e; margin-bottom: 0.25rem; }
-    .deed-document .deed-dated { margin: 1.5rem 0; }
-    .deed-document .deed-dated-line { display: inline-block; border-bottom: 1px solid #1a1a2e; min-width: 24rem; }
+    /* Execution — plain black, no theme colour, tables only (no flex/grid) */
+    .deed-document .deed-execution-page { color: #000; }
+    .deed-document .deed-execution-title { font-size: 1rem; font-weight: 700; margin-bottom: 2rem; }
+
+    .deed-document .deed-dated-table { width: 100%; border-collapse: collapse; margin: 0 0 2.75rem; }
+    .deed-document .deed-dated-table td { padding: 0; vertical-align: bottom; }
+    .deed-document .deed-dated-label { width: 3rem; font-weight: 700; white-space: nowrap; }
+    .deed-document .deed-dated-line { border-bottom: 1px solid #000; }
+    .deed-document .deed-dated-year { width: 2.5rem; text-align: right; white-space: nowrap; padding-left: 0.4rem; }
+
+    .deed-document .deed-execution-table { width: 100%; border-collapse: collapse; margin: 0 0 2.5rem; }
+    .deed-document .deed-execution-table td { padding: 0; vertical-align: top; }
+    .deed-document .deed-execution-left { width: 52%; text-align: justify; }
+    .deed-document .deed-execution-gap { width: 6%; }
+    .deed-document .deed-execution-right { width: 42%; vertical-align: top; }
+
+    .deed-document .deed-signature-block { margin-top: 0.75rem; margin-bottom: 1.4rem; }
+    .deed-document .deed-signature-block:first-child { margin-top: 0; }
+    .deed-document .deed-signature-block:last-child { margin-bottom: 0; }
+
+    .deed-document .deed-signature-line { border-bottom: 1px solid #000; height: 2.25rem; width: 85%; margin-bottom: 0.25rem; }
+    .deed-document .deed-signature-image { display: block; max-height: 3.5rem; max-width: 85%; margin-bottom: 0.25rem; }
+    .deed-document .deed-print-line { border-bottom: 1px solid #000; min-height: 1rem; width: 85%; margin-bottom: 0.25rem; }
+
+    .deed-document .deed-name { margin-bottom: 0.15rem; }
+    .deed-document .deed-meta { font-size: 0.85em; margin-top: 0.25rem; }
 </style>
