@@ -74,7 +74,8 @@
     <div class="doc-ref">pahamonem_260358_009.docx</div>
 
     <div class="page">
-        <div class="logo">{{ config('app.name') }}</div>
+        <!-- <div class="logo">{{ config('app.name') }}</div> -->
+        <div class="logo">[Logo]</div>
 
         <h1 class="title">Business Purpose Declaration</h1>
         <p class="subtitle">(Individual borrowers only)</p>

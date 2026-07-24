@@ -94,25 +94,9 @@
 
 <div class="deed-page deed-toc">
     <h2 class="deed-toc-heading">Contents</h2>
-    <table class="deed-toc-table">
-        @foreach($tocMain as [$num, $title, $page])
-            <tr class="{{ strpos($num, '.') === false && $num !== '' ? 'deed-toc-main' : 'deed-toc-sub' }}">
-                <td class="deed-toc-num">{{ $num }}</td>
-                <td class="deed-toc-title"><span class="deed-toc-text">{{ $title }}</span><span class="deed-toc-leader"></span></td>
-                <td class="deed-toc-page">{{ $page }}</td>
-            </tr>
-        @endforeach
-    </table>
+    @include('shared.loan-deed.toc-entries', ['entries' => $tocMain])
 </div>
 
 <div class="deed-page deed-toc">
-    <table class="deed-toc-table">
-        @foreach($tocSecond as [$num, $title, $page])
-            <tr class="{{ strpos($num, '.') === false && $num !== '' ? 'deed-toc-main' : 'deed-toc-sub' }}">
-                <td class="deed-toc-num">{{ $num }}</td>
-                <td class="deed-toc-title"><span class="deed-toc-text">{{ $title }}</span><span class="deed-toc-leader"></span></td>
-                <td class="deed-toc-page">{{ $page }}</td>
-            </tr>
-        @endforeach
-    </table>
+    @include('shared.loan-deed.toc-entries', ['entries' => $tocSecond])
 </div>
