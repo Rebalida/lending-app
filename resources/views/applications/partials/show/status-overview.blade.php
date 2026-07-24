@@ -74,8 +74,8 @@
             <div>
                 <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Term</dt>
                 <dd class="mt-2 text-2xl font-bold text-gray-900">
-                    {{ $application->term_months }}
-                    <span class="text-sm font-normal text-gray-500">months</span>
+                    {{ $application->term_weeks }}
+                    <span class="text-sm font-normal text-gray-500">weeks</span>
                 </dd>
             </div>
 
