@@ -299,9 +299,12 @@ class BasiqController extends Controller
     /**
      * Record that the client has completed the Basiq consent journey.
      *
-     * Called via AJAX from `basiq.js` after the Basiq UI SDK fires its success
-     * event. Sets `bank_api_completed_at` so the progress bar can update and
-     * `canBeSubmitted()` can pass.
+     * Called via AJAX after the popup closes. The popup closing is NOT proof of
+     * success on its own (the user may have simply cancelled or closed it before
+     * finishing) — so this endpoint only marks the application connected if either:
+     *  - the webhook already confirmed completion (`bank_api_completed_at` set), or
+     *  - Basiq itself now reports an active connection for this user, verified
+     *    directly via the Basiq API.
      *
      * Idempotent — safe to call multiple times; subsequent calls return success
      * without modifying the record or writing an additional activity log entry.
@@ -310,33 +313,146 @@ class BasiqController extends Controller
      * Basiq webhook handler — this endpoint only marks consent completion.
      *
      * @param  Application  $application  The bound application model instance.
-     * @return JsonResponse               Success confirmation.
+     * @return JsonResponse               `completed` reflects verified state, not just that this endpoint was called.
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException  If the user lacks `update` policy.
      *
-     * @response 200 { "success": true, "message": "Bank statements marked as connected." }
+     * @response 200 { "success": true, "completed": true, "message": "Bank statements marked as connected." }
+     * @response 200 { "success": true, "completed": false, "message": "Bank connection not yet confirmed." }
      */
     public function complete(Application $application): JsonResponse
     {
         $this->authorize('connectBank', $application);
 
-        if (! $application->bank_api_completed_at) {
-            $application->update([
-                'bank_api_completed_at'  => now(),
-                'bank_api_provider_name' => self::PROVIDER_NAME,
-            ]);
+        // ── TEMPORARY DIAGNOSTIC — remove after root-cause investigation ────────
+        Log::info('[BASIQ-DIAG] complete() called', [
+            'controller'      => static::class,
+            'method'          => 'complete',
+            'application_id'  => $application->id,
+            'request_url'     => request()->fullUrl(),
+            'request_method'  => request()->method(),
+            'value_before'    => optional($application->bank_api_completed_at)->toIso8601String(),
+            'query'           => request()->query(),
+            'body'            => request()->all(),
+            'headers'         => request()->headers->all(),
+            'referer'         => request()->headers->get('referer'),
+            'user_agent'      => request()->headers->get('user-agent'),
+            'stack_trace'     => collect(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10))
+                                    ->map(fn($t) => ($t['class'] ?? '') . ($t['type'] ?? '') . ($t['function'] ?? '') . ':' . ($t['line'] ?? ''))
+                                    ->all(),
+            'timestamp'       => now()->toDateTimeString(),
+        ]);
+        // ── END TEMPORARY DIAGNOSTIC ──────────────────────────────────────────
 
-            ActivityLog::logActivity(
-                'bank_statements_connected',
-                'Client completed Basiq bank statement connection',
-                $application
-            );
+        $application->refresh();
+
+        // Already confirmed — most commonly by the webhook. Nothing left to verify.
+        if ($application->bank_api_completed_at) {
+            Log::info('[BASIQ-DIAG] complete() — already completed, fast-path no-op', [
+                'application_id' => $application->id,
+                'reason'         => 'bank_api_completed_at already set before this call',
+                'timestamp'      => now()->toDateTimeString(),
+            ]);
+            return response()->json([
+                'success'   => true,
+                'completed' => true,
+                'message'   => 'Bank statements marked as connected.',
+            ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Bank statements marked as connected.',
+        // No webhook confirmation yet — the popup closing is not evidence of success
+        // by itself, so verify directly with Basiq before trusting the client.
+        if (! $this->hasActiveConnection($application)) {
+            Log::info('[BASIQ-DIAG] complete() — hasActiveConnection() returned false, NOT writing bank_api_completed_at', [
+                'application_id' => $application->id,
+                'timestamp'      => now()->toDateTimeString(),
+            ]);
+            return response()->json([
+                'success'   => true,
+                'completed' => false,
+                'message'   => 'Bank connection not yet confirmed.',
+            ]);
+        }
+
+        // ── TEMPORARY DIAGNOSTIC ──────────────────────────────────────────────
+        Log::warning('[BASIQ-DIAG] complete() — WRITING bank_api_completed_at', [
+            'application_id' => $application->id,
+            'reason'         => 'hasActiveConnection() verified an active Basiq connection via live API check',
+            'timestamp'      => now()->toDateTimeString(),
         ]);
+        // ── END TEMPORARY DIAGNOSTIC ──────────────────────────────────────────
+
+        $application->update([
+            'bank_api_completed_at'  => now(),
+            'bank_api_provider_name' => self::PROVIDER_NAME,
+        ]);
+
+        ActivityLog::logActivity(
+            'bank_statements_connected',
+            'Client completed Basiq bank statement connection',
+            $application
+        );
+
+        return response()->json([
+            'success'   => true,
+            'completed' => true,
+            'message'   => 'Bank statements marked as connected.',
+        ]);
+    }
+
+    /**
+     * Verify directly with Basiq whether the application's user has an active
+     * bank connection, rather than trusting that the client called this endpoint.
+     *
+     * Used as the guard in `complete()` for the case where the client-side popup
+     * closed without the webhook having fired yet — closing the popup (e.g. via
+     * cancellation) must never be treated as proof of a successful connection.
+     *
+     * @param  Application  $application  The application whose Basiq user is checked.
+     * @return bool                       True only if Basiq reports a connection with status "active".
+     */
+    private function hasActiveConnection(Application $application): bool
+    {
+        $userId = $application->bank_api_user_ref;
+
+        if (! $userId) {
+            return false;
+        }
+
+        $apiKey = $this->apiKey();
+
+        if (empty($apiKey)) {
+            return false;
+        }
+
+        try {
+            $token    = $this->getServerToken($apiKey);
+            $response = Http::withToken($token)
+                ->withHeaders(['basiq-version' => '3.0'])
+                ->get("{$this->baseUrl()}/users/{$userId}/connections");
+
+            if ($response->failed()) {
+                Log::warning('[Basiq] Connection status check failed', [
+                    'application_id' => $application->id,
+                    'status'         => $response->status(),
+                ]);
+                return false;
+            }
+
+            $connections = $response->json('data') ?? [];
+
+            foreach ($connections as $connection) {
+                if (($connection['status'] ?? null) === 'active') {
+                    return true;
+                }
+            }
+
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error('[Basiq] Connection status check exception: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // =========================================================================
@@ -477,6 +593,7 @@ class BasiqController extends Controller
         $application->update([
             'bank_api_user_ref'      => $userRef,
             'bank_api_provider_name' => self::PROVIDER_NAME,
+            'bank_api_phone_used'    => $application->personalDetails?->mobile_phone,
         ]);
     }
 
@@ -484,7 +601,35 @@ class BasiqController extends Controller
     {
         $this->authorize('connectBank', $application);
 
+        // ── TEMPORARY DIAGNOSTIC — remove after root-cause investigation ────────
+        Log::warning('[BASIQ-DIAG] completeRedirect() called', [
+            'controller'      => static::class,
+            'method'          => 'completeRedirect',
+            'application_id'  => $application->id,
+            'request_url'     => request()->fullUrl(),
+            'request_method'  => request()->method(),
+            'value_before'    => optional($application->bank_api_completed_at)->toIso8601String(),
+            'query'           => request()->query(),
+            'body'            => request()->all(),
+            'headers'         => request()->headers->all(),
+            'referer'         => request()->headers->get('referer'),
+            'user_agent'      => request()->headers->get('user-agent'),
+            'stack_trace'     => collect(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10))
+                                    ->map(fn($t) => ($t['class'] ?? '') . ($t['type'] ?? '') . ($t['function'] ?? '') . ':' . ($t['line'] ?? ''))
+                                    ->all(),
+            'timestamp'       => now()->toDateTimeString(),
+        ]);
+        // ── END TEMPORARY DIAGNOSTIC ──────────────────────────────────────────
+
         if (! $application->bank_api_completed_at) {
+            // ── TEMPORARY DIAGNOSTIC ──────────────────────────────────────────
+            Log::warning('[BASIQ-DIAG] completeRedirect() — WRITING bank_api_completed_at (UNCONDITIONAL, no verification)', [
+                'application_id' => $application->id,
+                'reason'         => 'completeRedirect() has no guard beyond "not already set" — this write is unconditional',
+                'timestamp'      => now()->toDateTimeString(),
+            ]);
+            // ── END TEMPORARY DIAGNOSTIC ──────────────────────────────────────
+
             $application->update([
                 'bank_api_completed_at'  => now(),
                 'bank_api_provider_name' => self::PROVIDER_NAME,
@@ -495,6 +640,11 @@ class BasiqController extends Controller
                 'Client completed Basiq bank statement connection via redirect',
                 $application
             );
+        } else {
+            Log::info('[BASIQ-DIAG] completeRedirect() — already completed, no-op', [
+                'application_id' => $application->id,
+                'timestamp'      => now()->toDateTimeString(),
+            ]);
         }
 
         // Self-closing page — the parent polls for completion independently
@@ -526,6 +676,18 @@ class BasiqController extends Controller
     public function checkCompletion(Application $application): JsonResponse
     {
         $this->authorize('view', $application);
+
+        // ── TEMPORARY DIAGNOSTIC — remove after root-cause investigation ────────
+        Log::info('[BASIQ-DIAG] checkCompletion() called', [
+            'controller'      => static::class,
+            'method'          => 'checkCompletion',
+            'application_id'  => $application->id,
+            'request_url'     => request()->fullUrl(),
+            'request_method'  => request()->method(),
+            'current_value'   => optional($application->bank_api_completed_at)->toIso8601String(),
+            'timestamp'       => now()->toDateTimeString(),
+        ]);
+        // ── END TEMPORARY DIAGNOSTIC ──────────────────────────────────────────
 
         return response()->json([
             'completed' => (bool) $application->bank_api_completed_at,

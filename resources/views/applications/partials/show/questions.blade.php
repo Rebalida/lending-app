@@ -37,6 +37,14 @@
                 // Get active bank provider (defaults to creditsense if not set)
                 $activeProvider = \App\Models\Setting::get('active_bank_provider', 'creditsense');
 
+                // Completion state must follow whichever provider is actually active —
+                // Basiq writes bank_api_completed_at, CreditSense writes credit_sense_completed_at.
+                $bankConnectedAt = match($activeProvider) {
+                    'creditsense' => $application->credit_sense_completed_at,
+                    default       => $application->bank_api_completed_at,
+                };
+                $bankConnected = $bankConnectedAt !== null;
+
                 $docCategoryLabels = [
                     'id'          => 'Identification',
                     'income'      => 'Income Documentation',
@@ -113,7 +121,7 @@
                              data-config-route="{{ route('creditsense.config', $application) }}"
                              data-complete-route="{{ route('creditsense.complete', $application) }}">
 
-                            @if($application->credit_sense_completed_at)
+                            @if($bankConnected)
                             {{-- Already connected — show confirmation --}}
                             <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-green-200 bg-green-50"
                                  role="status">
@@ -124,8 +132,8 @@
                                     <p class="text-xs font-semibold text-green-800">Bank account already connected</p>
                                     <p class="text-xs text-green-600">
                                         Connected
-                                        <time datetime="{{ $application->credit_sense_completed_at->toIso8601String() }}">
-                                            {{ $application->credit_sense_completed_at->format('d M Y, g:ia') }}
+                                        <time datetime="{{ $bankConnectedAt->toIso8601String() }}">
+                                            {{ $bankConnectedAt->format('d M Y, g:ia') }}
                                         </time>
                                     </p>
                                 </div>
@@ -339,11 +347,11 @@
                         </svg>
                         <div>
                             <p class="text-xs font-semibold text-green-800">Bank account connected</p>
-                            @if($application->credit_sense_completed_at)
+                            @if($bankConnectedAt)
                             <p class="text-xs text-green-600">
                                 Completed
-                                <time datetime="{{ $application->credit_sense_completed_at->toIso8601String() }}">
-                                    {{ $application->credit_sense_completed_at->format('d M Y, g:ia') }}
+                                <time datetime="{{ $bankConnectedAt->toIso8601String() }}">
+                                    {{ $bankConnectedAt->format('d M Y, g:ia') }}
                                 </time>
                             </p>
                             @endif

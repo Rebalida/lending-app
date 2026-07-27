@@ -92,6 +92,8 @@ class Application extends Model
         'submission_ip',
         'bank_api_provider_name',
         'bank_api_user_ref',
+        'bank_api_phone_used',
+        'bank_api_completed_at',
         'bank_api_report',
         'bank_api_report_received_at',
         'return_reason',
@@ -157,6 +159,7 @@ class Application extends Model
         'business_declaration_requested_at' => 'datetime',
         'document_signing_data'            => 'array',
         'bank_api_report_received_at' => 'datetime',
+        'bank_api_completed_at'       => 'datetime',
         'credit_sense_report_received_at' => 'datetime',
     ];
 
