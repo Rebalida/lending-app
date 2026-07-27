@@ -114,7 +114,7 @@
                     @endif
 
                     {{-- Activity Log --}}
-                    @if($application->activityLogs->count() > 0)
+                    @if($application->activity_logs_count > 0)
                         @include('admin.applications.partials.show.activity-log')
                     @endif
 

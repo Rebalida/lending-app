@@ -32,6 +32,7 @@ namespace App\Http\Controllers\Admin;
 use App\Events\Application\ApplicationReturned;
 use App\Events\Application\ApplicationStatusChanged;
 use App\Helpers\ActivityLogFormatter;
+use App\Helpers\ActivityLogPresenter;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Application;
@@ -39,11 +40,13 @@ use App\Models\Question;
 use App\Models\User;
 use App\Services\MessagingService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use App\Actions\Application\GenerateGuarantorForm;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -124,6 +127,11 @@ class ApplicationController extends Controller
      * query batch. Automatically marks all unread answered questions as read
      * and logs the review activity when questions are present.
      *
+     * The Activity Log panel is populated independently by
+     * activity-log.blade.php via ActivityLogFormatter::forApplicationPaginated()
+     * — this method deliberately does not fetch activity log data itself,
+     * to avoid paying for a query whose result nothing renders.
+     *
      * @param  Application  $application  The bound application model instance.
      * @return View                       The `admin.applications.show` view.
      */
@@ -133,9 +141,77 @@ class ApplicationController extends Controller
 
         $this->markUnreadQuestionsAsRead($application);
 
-        $activityLogs = ActivityLogFormatter::forApplication($application);
+        return view('admin.applications.show', compact('application'));
+    }
 
-        return view('admin.applications.show', compact('application', 'activityLogs'));
+    /**
+     * Return a batch of activity log rows for the "Load More" control, and
+     * for the filter toolbar's search/category/actor/date-range filtering.
+     *
+     * Purely additive to the show view — renders the same
+     * activity-log-rows partial the initial page load uses, so icon/color/
+     * pill/day-grouping logic exists in exactly one place. `continue_group`
+     * lets the client tell the server "the last day-group header I showed
+     * was X", so a group split across a page boundary doesn't print its
+     * header a second time. When a filter changes, the client omits
+     * `before` and replaces the visible list rather than appending to it —
+     * that distinction lives entirely on the client; this endpoint always
+     * just returns "the next matching batch after this cursor" regardless
+     * of which UI action triggered the request.
+     *
+     * Category/actor values are validated against
+     * ActivityLogPresenter::categoryOptions()/actorOptions() directly,
+     * rather than a hand-maintained duplicate list, so validation can never
+     * drift from the taxonomy those filters actually query against.
+     *
+     * KNOWN LIMITATION (pre-existing, not introduced here): like show(),
+     * this method has no $this->authorize() call and relies solely on the
+     * `role:admin|assessor` route-group middleware — an assessor can reach
+     * this endpoint for any application, not just ones assigned to them,
+     * the same gap show() already has. Deliberately left unchanged rather
+     * than fixed as a side effect of this feature; track/fix as its own
+     * security task, ideally alongside show().
+     *
+     * @param  Request      $request      Query params: before, continue_group,
+     *                                     search, category, actor, date_from, date_to.
+     * @param  Application  $application  The bound application model instance.
+     * @return JsonResponse               { html, has_more, next_cursor }
+     */
+    public function activityLog(Request $request, Application $application): JsonResponse
+    {
+        $validated = $request->validate([
+            'before'         => ['nullable', 'integer'],
+            'continue_group' => ['nullable', 'string', 'max:20'],
+            'search'         => ['nullable', 'string', 'max:100'],
+            'category'       => ['nullable', 'string', Rule::in(array_keys(ActivityLogPresenter::categoryOptions()))],
+            'actor'          => ['nullable', 'string', Rule::in(array_keys(ActivityLogPresenter::actorOptions()))],
+            'date_from'      => ['nullable', 'date'],
+            'date_to'        => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $page = ActivityLogFormatter::forApplicationPaginated(
+            $application,
+            ActivityLogFormatter::PER_PAGE,
+            $validated['before'] ?? null,
+            [
+                'search'    => $validated['search'] ?? null,
+                'category'  => $validated['category'] ?? null,
+                'actor'     => $validated['actor'] ?? null,
+                'date_from' => $validated['date_from'] ?? null,
+                'date_to'   => $validated['date_to'] ?? null,
+            ]
+        );
+
+        $html = view('admin.applications.partials.show.activity-log-rows', [
+            'logs'          => $page['logs'],
+            'continueGroup' => $validated['continue_group'] ?? null,
+        ])->render();
+
+        return response()->json([
+            'html'        => $html,
+            'has_more'    => $page['has_more'],
+            'next_cursor' => $page['next_cursor'],
+        ]);
     }
 
     // =========================================================================
@@ -510,6 +586,15 @@ class ApplicationController extends Controller
     /**
      * Eager-load all relationships required by the application show view.
      *
+     * Deliberately does NOT eager-load `activityLogs` — that relation can
+     * grow to hundreds of rows per application, and both consumers of it
+     * (ActivityLogFormatter::forApplication()/forApplicationPaginated()/
+     * forDocuments()) now query the database directly for just the rows
+     * they need instead of depending on a bulk in-memory collection. Only
+     * a lightweight count is loaded here, for the panel-visibility check in
+     * show.blade.php — same `withCount` pattern already used for `questions`
+     * in buildIndexQuery() above.
+     *
      * @param  Application  $application  The application to hydrate.
      * @return void
      */
@@ -528,7 +613,6 @@ class ApplicationController extends Controller
             'tasks',
             'declarations',
             'creditChecks',
-            'activityLogs.user',
             'assignedTo',
             'directorAssets.history.changedBy',
             'directorLiabilities.history.changedBy',
@@ -540,6 +624,8 @@ class ApplicationController extends Controller
             'assessorEmploymentVerification.initiatedBy',
             'assessorEmploymentVerification.verifiedBy',
         ]);
+
+        $application->loadCount('activityLogs');
     }
 
     /**

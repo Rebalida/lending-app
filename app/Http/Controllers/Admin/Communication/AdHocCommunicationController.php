@@ -27,6 +27,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AdHocCommunicationController extends Controller
 {
@@ -112,7 +113,20 @@ class AdHocCommunicationController extends Controller
                 ],
             ]);
 
-            ActivityLog::logActivity('ad_hoc_email_sent', 'Ad-hoc email sent to ' . $validated['recipient_email'], $application);
+            ActivityLog::logActivity(
+                'ad_hoc_email_sent',
+                'Ad-hoc email sent to ' . $validated['recipient_email'],
+                $application,
+                null,
+                [
+                    'direction' => 'outbound',
+                    'subject'   => $validated['subject'],
+                    'to'        => $validated['recipient_email'],
+                    'excerpt'   => Str::limit($validated['message'], 150),
+                    'status'    => 'sent',
+                    'is_ad_hoc' => true,
+                ]
+            );
 
             return response()->json([
                 'success' => true,
@@ -156,11 +170,12 @@ class AdHocCommunicationController extends Controller
         ]);
 
         try {
-            app(MessagingService::class)->send(
+            $result = app(MessagingService::class)->send(
                 $validated['recipient_phone'],
                 $validated['message'],
                 $application,
             );
+            $sent = $result['success'] ?? false;
 
             Communication::create([
                 'application_id' => $application->id,
@@ -179,7 +194,20 @@ class AdHocCommunicationController extends Controller
                 ],
             ]);
 
-            ActivityLog::logActivity('ad_hoc_sms_sent', 'Ad-hoc SMS sent to ' . $validated['recipient_phone'], $application);
+            ActivityLog::logActivity(
+                'ad_hoc_sms_sent',
+                'Ad-hoc SMS sent to ' . $validated['recipient_phone'],
+                $application,
+                null,
+                array_filter([
+                    'direction'   => 'outbound',
+                    'to'          => $validated['recipient_phone'],
+                    'excerpt'     => Str::limit($validated['message'], 150),
+                    'status'      => $sent ? ($result['status'] ?? 'sent') : 'sent',
+                    'message_sid' => $sent ? ($result['message_sid'] ?? null) : null,
+                    'is_ad_hoc'   => true,
+                ], fn ($value) => ! is_null($value))
+            );
 
             return response()->json([
                 'success' => true,

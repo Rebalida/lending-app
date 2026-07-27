@@ -428,6 +428,18 @@ class Application extends Model
      */
     public function getStatusBadgeColor(): string
     {
+        return self::statusBadgeColor($this->status);
+    }
+
+    /**
+     * Get the badge color for an arbitrary status value (not necessarily
+     * this model's current status). Extracted from getStatusBadgeColor()
+     * so historical status values (e.g. from an activity log entry) can be
+     * colored identically to the live status badge shown elsewhere in the
+     * admin UI, without duplicating the color map.
+     */
+    public static function statusBadgeColor(string $status): string
+    {
         $colors = [
             self::STATUS_APPLICATION => 'blue',
             self::STATUS_WIP         => 'yellow',
@@ -437,8 +449,8 @@ class Application extends Model
             self::STATUS_DEFERRED    => 'gray',
             self::STATUS_SETTLED     => 'green',
         ];
-        
-        return $colors[$this->status] ?? 'gray';
+
+        return $colors[$status] ?? 'gray';
     }
 
     /**
