@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\Communication\EmailCommunicationController;
 use App\Http\Controllers\Admin\Communication\SmsCommunicationController;
 use App\Http\Controllers\Admin\Communication\AdHocCommunicationController;
+use App\Http\Controllers\Admin\Communication\EmailDirectorsController;
 use App\Http\Controllers\Admin\CreditControllers\CreditSenseController;
 use App\Http\Controllers\Admin\CommunicationController;
 use App\Http\Controllers\Admin\UserController;
@@ -177,6 +178,9 @@ Route::prefix('applications/{application}')->group(function () {
     // Manual inbound email logging (admin use)
     Route::post('email-incoming',  [EmailCommunicationController::class, 'incoming'])->name('email.incoming');
 });
+
+Route::post('/applications/{application}/email-directors', [EmailDirectorsController::class, 'send'])
+    ->name('applications.email-directors.send');
 
 // Ad-hoc (freeform recipient) communications
 Route::prefix('applications/{application}')->group(function () {

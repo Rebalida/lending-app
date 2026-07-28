@@ -118,6 +118,19 @@
             </div>
         @endif
 
+        {{-- Email Directors --}}
+        <button type="button"
+                id="email-directors-btn"
+                class="w-full flex items-center gap-2.5 px-3 py-2 bg-white border border-gray-300
+                    rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition text-left">
+            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span id="email-directors-label">Email Directors</span>
+        </button>
+
         {{-- ── Approve / Decline ───────────────────────────────────────── --}}
         @if (!$isLocked)
             <div class="border-t border-gray-100"></div>
@@ -314,6 +327,35 @@
 </button>
 
 <script>
+const emailDirectorsBtn = document.getElementById('email-directors-btn');
+const emailDirectorsLabel = document.getElementById('email-directors-label');
+
+emailDirectorsBtn?.addEventListener('click', async () => {
+    if (!confirm('Send bank connection email to all directors?')) return;
+
+    emailDirectorsBtn.disabled = true;
+    emailDirectorsLabel.textContent = 'Sending...';
+
+    try {
+        const response = await fetch('{{ route('admin.applications.email-directors.send', $application) }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+
+        alert(data.message);
+    } catch (e) {
+        alert('Something went wrong. Please try again.');
+    } finally {
+        emailDirectorsBtn.disabled = false;
+        emailDirectorsLabel.textContent = 'Email Directors';
+    }
+});
+
 (() => {
     // Unhide the modal wrapper divs so their JS and Alpine work,
     // but keep the trigger buttons out of tab order / layout flow.
