@@ -242,6 +242,26 @@ class Application extends Model
         return $this->hasMany(Question::class);
     }
 
+    /**
+     * Assessment checklist completion for the client progress indicator.
+     * "Completed" = the client has nothing left to do on that item right
+     * now (review_status is awaiting_review or approved) — pending/returned
+     * items still need the client's action. Freeform questions (review_status
+     * null) are excluded entirely, so this only ever reflects the checklist.
+     */
+    public function assessmentChecklistProgress(): array
+    {
+        $items = $this->questions->whereNotNull('review_status');
+
+        return [
+            'total'     => $items->count(),
+            'completed' => $items->whereNotIn('review_status', [
+                Question::REVIEW_PENDING,
+                Question::REVIEW_RETURNED,
+            ])->count(),
+        ];
+    }
+
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);

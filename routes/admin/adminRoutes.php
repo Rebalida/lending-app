@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\AssessorEmploymentController;
 use App\Http\Controllers\LivingExpenseController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\Question\QuestionController;
+use App\Http\Controllers\Admin\Question\AssessmentChecklistController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\Communication\EmailCommunicationController;
 use App\Http\Controllers\Admin\Communication\SmsCommunicationController;
@@ -150,13 +151,23 @@ Route::delete('tasks/{task}',                   [TaskController::class, 'destroy
     ->name('tasks.destroy');
 Route::post('tasks/{task}/send-to-client',      [TaskController::class, 'sendToClient'])->name('tasks.sendToClient');
 
-// Questions (Admin Asks)
+// Questions (Admin Asks) — freeform, kept as a secondary option
 Route::post('applications/{application}/questions', [QuestionController::class, 'store'])
     ->name('questions.store');
 Route::delete('questions/{question}',               [QuestionController::class, 'destroy'])
     ->name('questions.destroy');
 Route::patch('questions/{question}/mark-read', [QuestionController::class, 'markAsRead'])
-->name('questions.markAsRead');
+    ->name('questions.markAsRead');
+Route::patch('questions/{question}/approve', [QuestionController::class, 'approve'])
+    ->name('questions.approve');
+Route::patch('questions/{question}/return',  [QuestionController::class, 'return'])
+    ->name('questions.return');
+
+// Assessment Checklist (Admin bulk-requests documents)
+Route::get('applications/{application}/assessment-checklist/preview', [AssessmentChecklistController::class, 'preview'])
+    ->name('assessmentChecklist.preview');
+Route::post('applications/{application}/assessment-checklist/send',   [AssessmentChecklistController::class, 'send'])
+    ->name('assessmentChecklist.send');
 
 // Email
 Route::prefix('applications/{application}')->group(function () {
