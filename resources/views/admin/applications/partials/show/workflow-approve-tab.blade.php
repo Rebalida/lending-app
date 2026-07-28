@@ -141,23 +141,6 @@
                     </div>
                 </div>
 
-            @else
-
-                {{-- Guarantor Not Required Notice ──────────────────────────────── --}}
-                <div class="border-l-4 border-gray-200 pl-6 py-4">
-                    <div class="flex items-center gap-2">
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-semibold text-gray-400">Guarantor Form — Not Required</h4>
-                            <p class="text-xs text-gray-400 mt-0.5">Skipped — no guarantor needed for this application.</p>
-                        </div>
-                    </div>
-                </div>
-
             @endif
 
             {{-- Loan Deed step ───────────────────────────────────────────────────── --}}

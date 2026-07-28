@@ -12,25 +12,22 @@
             </td>
         </tr>
         <tr>
-            <td class="deed-sched-label">Commencement Date</td>
-            <td>{{ $d['commencement_date'] ?: 'the date Lender advanced or advances the Principal Sum to Borrowers (or as otherwise notified by Lender to Borrowers in writing)' }}</td>
-        </tr>
-        <tr>
             <td class="deed-sched-label">Default Rate</td>
             <td>{{ $d['default_rate'] ? $d['default_rate'] . ' per annum' : 'xx% per annum' }}</td>
         </tr>
-        <tr>
-            <td class="deed-sched-label">Guarantor</td>
-            <td>
-                {{ $d['guarantor_name'] ?: '[insert]' }}<br>
-                email: {{ $d['guarantor_email'] ?: '[insert]' }}<br>
-                (<strong>Guarantor</strong>)
-            </td>
-        </tr>
-        <tr>
-            <td class="deed-sched-label">Establishment Fee</td>
-            <td>{{ $d['establishment_fee'] ?: '$' }}</td>
-        </tr>
+        @if(!empty($d['guarantors']))
+            <tr>
+                <td class="deed-sched-label">Guarantor</td>
+                <td>
+                    @foreach($d['guarantors'] as $guarantor)
+                        {{ $guarantor['full_name'] ?: '[insert]' }}<br>
+                        email: {{ $guarantor['email'] ?: '[insert]' }}<br>
+                        (<strong>Guarantor</strong>)
+                        @if(!$loop->last)<br><br>@endif
+                    @endforeach
+                </td>
+            </tr>
+        @endif
         <tr>
             <td class="deed-sched-label">Legal Fees</td>
             <td>Professional fees, disbursements and associated taxes as per invoice of solicitors for the Lender</td>
@@ -44,14 +41,6 @@
             <td>{{ $d['break_cost'] ?: '' }}</td>
         </tr>
         <tr>
-            <td class="deed-sched-label">Loan Purpose</td>
-            <td>{{ $d['loan_purpose'] ?: '[insert]' }}</td>
-        </tr>
-        <tr>
-            <td class="deed-sched-label">Interest Rate</td>
-            <td>{{ $d['interest_rate'] ? $d['interest_rate'] . ' per annum' : '[insert]% per annum' }}</td>
-        </tr>
-        <tr>
             <td class="deed-sched-label">Permitted Encumbrance</td>
             <td>{{ $d['permitted_encumbrance'] ?: '' }}</td>
         </tr>
@@ -60,12 +49,23 @@
             <td>{{ $d['principal_sum'] ?: '$[insert]' }}</td>
         </tr>
         <tr>
-            <td class="deed-sched-label">Repayment Date</td>
-            <td>{{ $d['repayment_date'] ?: '' }}</td>
-        </tr>
-        <tr>
-            <td class="deed-sched-label">Secured Land</td>
-            <td>{{ $d['secured_land'] ?: '[insert title details and address]' }}</td>
+            <td class="deed-sched-label">Security</td>
+            <td>
+                @php
+                    $securityProperties = $d['security']['properties'] ?? [];
+                    $securityVehicles   = $d['security']['vehicles'] ?? [];
+                @endphp
+                @if(empty($securityProperties) && empty($securityVehicles))
+                    [insert title details and address]
+                @else
+                    @foreach($securityProperties as $property)
+                        Property Address {{ $property['address'] ?: '[insert]' }} with Volume and Folio Number {{ $property['volume_folio'] ?: '[insert]' }} will be taken as security.<br>
+                    @endforeach
+                    @foreach($securityVehicles as $vehicle)
+                        Brand {{ $vehicle['brand'] ?: '[insert]' }} Model {{ $vehicle['model'] ?: '[insert]' }} VIN {{ $vehicle['vin'] ?: '[insert]' }} will be taken as security.<br>
+                    @endforeach
+                @endif
+            </td>
         </tr>
     </table>
 </div>

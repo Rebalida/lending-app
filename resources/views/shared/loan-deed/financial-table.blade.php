@@ -20,6 +20,7 @@
     <tr><td>Legal Fee</td><td></td><td>{{ $d['legal_fee'] ?: '<>' }}</td></tr>
     <tr><td>Security Registration Fee</td><td></td><td>{{ $d['security_registration_fee'] ?: '<>' }}</td></tr>
     <tr><td>Valuation Fee</td><td></td><td>{{ $d['valuation_fee'] ?: '<>' }}</td></tr>
+    <tr><td>Manual Allocation Fee</td><td>Charged each time an allocation is made manually.</td><td>$15 per time</td></tr>
     <tr><td><strong>Fees and charges which ARE payable AFTER the settlement date:</strong></td><td></td><td></td></tr>
     <tr><td>Monthly Account Fee</td><td></td><td>{{ $d['monthly_account_fee'] ?: '<>' }}</td></tr>
     <tr>
