@@ -23,16 +23,20 @@
     <p class="deed-p">Address: {{ $d['borrower_address'] ?: '<>' }}</p>
     <p class="deed-p">Electronic Address: {{ $d['borrower_email'] ?: '<>' }}</p>
 
-    <p class="deed-p">and</p>
+    @if(!empty($d['guarantors']))
+        <p class="deed-p">and</p>
 
-    <p class="deed-p">
-        each person specified in the schedule as a Guarantor<br>
-        (each a <strong>Guarantor</strong>)
-    </p>
+        <p class="deed-p">
+            each person specified in the schedule as a Guarantor<br>
+            (each a <strong>Guarantor</strong>)
+        </p>
 
-    <p class="deed-p">Name: {{ $d['guarantor_name'] ?: '<>' }}</p>
-    <p class="deed-p">Address: {{ $d['guarantor_address'] ?: '<>' }}</p>
-    <p class="deed-p">Electronic Address: {{ $d['guarantor_email'] ?: '<>' }}</p>
+        @foreach($d['guarantors'] as $guarantor)
+            <p class="deed-p">Name: {{ $guarantor['full_name'] ?: '<>' }}</p>
+            <p class="deed-p">Address: {{ $guarantor['address'] ?: '<>' }}</p>
+            <p class="deed-p">Electronic Address: {{ $guarantor['email'] ?: '<>' }}</p>
+        @endforeach
+    @endif
 
     <p class="deed-p">
         We above enter into a loan contract as below on the term set out in the schedule below, along with the

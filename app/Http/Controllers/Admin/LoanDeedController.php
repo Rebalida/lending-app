@@ -75,25 +75,31 @@ class LoanDeedController extends Controller
             'valuation_fee'              => 'nullable|string|max:50',
             'monthly_account_fee'        => 'nullable|string|max:50',
             'annual_review_fee'          => 'nullable|string|max:50',
-            'establishment_fee'          => 'nullable|string|max:50',
             'exit_fee'                   => 'nullable|string|max:100',
             'break_cost'                 => 'nullable|string|max:100',
+            'include_upfront_fees_in_loan_amount'    => 'sometimes|boolean',
+            'include_monthly_fee_in_first_repayment' => 'sometimes|boolean',
 
             // Schedule values
-            'commencement_date'     => 'nullable|string|max:255',
-            'repayment_date'        => 'nullable|string|max:255',
             'disclosure_date'       => 'nullable|string|max:50',
-            'interest_rate'         => 'required|string|max:50',
             'default_rate'          => 'nullable|string|max:50',
-            'lower_rate'            => 'nullable|string|max:50',
-            'loan_purpose'          => 'required|string|max:255',
             'permitted_encumbrance' => 'nullable|string|max:500',
-            'secured_land'          => 'nullable|string|max:500',
 
-            // Schedule 2 — repayment schedule
-            'repayment_schedule'          => 'nullable|array',
-            'repayment_schedule.*.date'   => 'nullable|string|max:50',
-            'repayment_schedule.*.amount' => 'nullable|string|max:50',
+            // Security
+            'security.properties'                              => 'nullable|array',
+            'security.properties.*.address'                    => 'nullable|string|max:500',
+            'security.properties.*.owners'                     => 'nullable|array',
+            'security.properties.*.owners.*'                   => 'nullable|string|max:255',
+            'security.properties.*.owners_are_guarantors'      => 'sometimes|boolean',
+            'security.properties.*.valuation'                  => 'nullable|string|max:100',
+            'security.properties.*.volume_folio'               => 'nullable|string|max:255',
+            'security.properties.*.council_rate_notice_sighted' => 'sometimes|boolean',
+            'security.vehicles'                                => 'nullable|array',
+            'security.vehicles.*.brand'                        => 'nullable|string|max:255',
+            'security.vehicles.*.model'                        => 'nullable|string|max:255',
+            'security.vehicles.*.vin'                          => 'nullable|string|max:100',
+            'security.vehicles.*.price'                        => 'nullable|string|max:50',
+            'security.vehicles.*.km_travelled'                 => 'nullable|string|max:50',
 
             // Witness (optional)
             'witness_name'       => 'nullable|string|max:255',
@@ -101,11 +107,35 @@ class LoanDeedController extends Controller
             'witness_signature'  => 'nullable|string',
         ]);
 
-        // Drop empty repayment schedule rows
-        $validated['repayment_schedule'] = array_values(array_filter(
-            $validated['repayment_schedule'] ?? [],
-            fn ($row) => !empty($row['date']) || !empty($row['amount'])
-        ));
+        // Checkboxes are absent from the request entirely when unchecked
+        $validated['include_upfront_fees_in_loan_amount']    = $request->boolean('include_upfront_fees_in_loan_amount');
+        $validated['include_monthly_fee_in_first_repayment'] = $request->boolean('include_monthly_fee_in_first_repayment');
+
+        // Security — normalize per-card checkboxes, drop blank owner rows, drop entirely-blank cards
+        $validated['security']['properties'] = collect($validated['security']['properties'] ?? [])
+            ->map(function ($property, $i) use ($request) {
+                $property['owners'] = array_values(array_filter(
+                    $property['owners'] ?? [],
+                    fn ($owner) => trim((string) $owner) !== ''
+                ));
+                $property['owners_are_guarantors']       = $request->boolean("security.properties.$i.owners_are_guarantors");
+                $property['council_rate_notice_sighted'] = $request->boolean("security.properties.$i.council_rate_notice_sighted");
+
+                return $property;
+            })
+            ->filter(fn ($property) => !empty($property['address']) || !empty($property['owners'])
+                || !empty($property['valuation']) || !empty($property['volume_folio']))
+            ->values()
+            ->all();
+
+        $validated['security']['vehicles'] = collect($validated['security']['vehicles'] ?? [])
+            ->filter(fn ($vehicle) => !empty($vehicle['brand']) || !empty($vehicle['model'])
+                || !empty($vehicle['vin']) || !empty($vehicle['price']) || !empty($vehicle['km_travelled']))
+            ->values()
+            ->all();
+
+        // Schedule 2 — always regenerated from the current repayment settings above, never manually entered
+        $validated['repayment_schedule'] = $this->generateRepaymentSchedule($validated);
 
         // Preserve non-form keys already persisted (directors snapshot, signatures)
         $existing = $application->loan_deed_data ?? [];
@@ -196,5 +226,61 @@ class LoanDeedController extends Controller
         );
  
         return $pdf->download('loan-deed-' . $application->application_number . '.pdf');
+    }
+
+    /**
+     * Auto-generate the repayment schedule (Schedule 2) from the Financial Table's repayment
+     * settings — first repayment date, repayment cycle, total number of repayments, and amount
+     * per repayment — instead of the admin typing each row manually.
+     *
+     * Returns [] when there isn't enough information to generate from yet (e.g. the admin hasn't
+     * filled in the date/cycle/count), leaving Schedule 2 blank rather than erroring the save.
+     */
+    private function generateRepaymentSchedule(array $data): array
+    {
+        $firstDate = $data['first_repayment_date'] ?? null;
+        $cycle     = $data['repayment_cycle'] ?? null;
+        $count     = (int) ($data['total_repayments'] ?? 0);
+
+        if (empty($firstDate) || empty($cycle) || $count < 1) {
+            return [];
+        }
+
+        $amount = $data['amount_per_repayment'] ?? '';
+        $schedule = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $date = \Illuminate\Support\Carbon::parse($firstDate);
+            $date = $cycle === 'Monthly'
+                ? $date->addMonths($i)
+                : $date->addDays(($cycle === 'Fortnightly' ? 14 : 7) * $i);
+
+            $rowAmount = $amount;
+            if ($i === 0 && ($data['include_monthly_fee_in_first_repayment'] ?? false)) {
+                $rowAmount = $this->addAmountStrings($amount, $data['monthly_account_fee'] ?? '');
+            }
+
+            $schedule[] = [
+                'date'   => $date->format('d/m/Y'),
+                'amount' => $rowAmount,
+            ];
+        }
+
+        return $schedule;
+    }
+
+    /**
+     * Add two free-text currency strings (e.g. "$120.00" + "$15") numerically.
+     */
+    private function addAmountStrings(string $amount, string $fee): string
+    {
+        $amountNum = (float) preg_replace('/[^0-9.\-]/', '', $amount);
+        $feeNum    = (float) preg_replace('/[^0-9.\-]/', '', $fee);
+
+        if ($amountNum === 0.0 && $feeNum === 0.0) {
+            return $amount;
+        }
+
+        return '$' . number_format($amountNum + $feeNum, 2);
     }
 }

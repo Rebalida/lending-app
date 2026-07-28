@@ -12,19 +12,29 @@
                     {{ $application->questions->count() }}
                 </span>
             </h3>
-            <button id="toggle-ask-form-btn"
-                    type="button"
-                    aria-expanded="false"
-                    aria-controls="ask-question-form"
-                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent
-                           rounded-md font-semibold text-xs text-white uppercase tracking-widest
-                           hover:bg-indigo-700 transition
-                           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
-                </svg>
-                Ask Question
-            </button>
+            <div class="flex items-center gap-2">
+                <button id="toggle-ask-form-btn"
+                        type="button"
+                        aria-expanded="false"
+                        aria-controls="ask-question-form"
+                        class="inline-flex items-center px-3 py-2 bg-white border border-gray-300
+                               rounded-md font-medium text-xs text-gray-600 uppercase tracking-widest
+                               hover:bg-gray-50 hover:text-gray-800 transition
+                               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    Ask a one-off question
+                </button>
+                <button id="open-assessment-checklist-btn"
+                        type="button"
+                        class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent
+                               rounded-md font-semibold text-xs text-white uppercase tracking-widest
+                               hover:bg-indigo-700 transition
+                               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
+                    </svg>
+                    Request Assessment Documents
+                </button>
+            </div>
         </div>
 
         {{-- Live region for screen reader announcements --}}
@@ -245,13 +255,15 @@
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
                     </svg>
-                    <p class="mt-2 text-sm text-gray-500">No questions yet. Click "Ask Question" to start.</p>
+                    <p class="mt-2 text-sm text-gray-500">No questions yet. Click "Request Assessment Documents" to start.</p>
                 </div>
             @endforelse
         </div>
 
     </div>
 </div>
+
+@include('admin.applications.partials.question.assessment-checklist-modal', ['application' => $application])
 
 <script>
     window.APP_QUESTION ??= {};

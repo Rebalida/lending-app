@@ -23,15 +23,19 @@
             </div>
         </div>
 
-        <p class="deed-cover-and">and</p>
+        @if(!empty($d['guarantors']))
+            <p class="deed-cover-and">and</p>
 
-        <div class="deed-cover-party">
-            <span class="deed-cover-dash">-</span>
-            <div>
-                {{ $d['guarantor_name'] ?: '[insert]' }}<br>
-                <strong>(Director Guarantors)</strong>
+            <div class="deed-cover-party">
+                <span class="deed-cover-dash">-</span>
+                <div>
+                    @foreach($d['guarantors'] as $guarantor)
+                        {{ $guarantor['full_name'] ?: '[insert]' }}<br>
+                    @endforeach
+                    <strong>(Director Guarantors)</strong>
+                </div>
             </div>
-        </div>
+        @endif
     </div>
 
     <div class="deed-cover-firm">

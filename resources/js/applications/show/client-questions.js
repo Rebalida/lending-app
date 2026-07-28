@@ -366,6 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (config.already_completed) {
                 markCardAnswered(card, new Date().toIso8601String());
+                updatePendingBanner();
+                updateAssessmentProgress();
                 return;
             }
 
@@ -510,6 +512,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (answerData.success) {
                 markCardAnswered(card, new Date().toISOString());
+                updatePendingBanner();
+                updateAssessmentProgress();
                 showToast('Bank connection successful!', 'success');
                 announce('Bank account connected and question answered');
             }
@@ -538,9 +542,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Submit handler ────────────────────────────────────────────────────────
 
     async function handleSubmit(btn) {
-        const questionId  = btn.dataset.questionId;
-        const requiresDoc = btn.dataset.requiresDoc === 'true';
-        const docCategory = btn.dataset.docCategory;
+        const questionId     = btn.dataset.questionId;
+        const requiresDoc    = btn.dataset.requiresDoc === 'true';
+        const answerRequired = btn.dataset.answerRequired !== 'false'; // default true, matches existing behaviour
+        const docCategory    = btn.dataset.docCategory;
 
         const card      = section.querySelector(`#client-question-card-${questionId}`);
         const textarea  = card?.querySelector('.answer-input');
@@ -549,9 +554,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!card || !textarea) return;
 
         const answerText = textarea.value.trim();
+        const fileInput   = card.querySelector('.doc-file-input');
+        const hasFile     = requiresDoc && fileInput?.files[0];
 
-        if (!answerText) {
-            showUploadError(answerErr, 'Please enter an answer.');
+        // File-only checklist items don't need typed text — but if it's
+        // required (everything else, unchanged from today) and there's no
+        // file either, still block submission with the existing message.
+        if (!answerText && (answerRequired || !hasFile)) {
+            showUploadError(answerErr, answerRequired ? 'Please enter an answer.' : 'Please enter a comment or attach a file.');
             textarea.setAttribute('aria-invalid', 'true');
             textarea.focus();
             return;
@@ -581,18 +591,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(answerData.message || 'Failed to submit answer.');
             }
 
-            if (requiresDoc) {
-                const fileInput = card.querySelector('.doc-file-input');
-                const file = fileInput?.files[0];
-
-                if (file) {
-                    await uploadDocument(card, file, docCategory, questionId);
-                }
+            if (hasFile) {
+                await uploadDocument(card, fileInput.files[0], docCategory, questionId);
             }
 
             card._pendingAnswerText = answerText;
             markCardAnswered(card, answerData.answered_at);
             updatePendingBanner();
+            updateAssessmentProgress();
             showToast(answerData.message ?? 'Answer submitted successfully.', 'success');
             announce(answerData.message ?? 'Answer submitted.');
 
@@ -620,6 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('document',          file);
             formData.append('document_category', docCategory);
             formData.append('description',       `Uploaded in response to question #${questionId}`);
+            formData.append('question_id',       questionId);
             formData.append('_token', csrf());
 
             const xhr = new XMLHttpRequest();
@@ -681,24 +688,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── DOM: mark a card as answered ─────────────────────────────────────────
 
     function markCardAnswered(card, answeredAt) {
-        const isBankConnect = card.dataset.bankConnect === 'true';
+        const isBankConnect    = card.dataset.bankConnect === 'true';
+        const isChecklistItem  = !!card.dataset.reviewStatus; // was pending|returned before this call
 
-        card.classList.replace('bg-amber-50', 'bg-gray-50');
-        card.classList.replace('border-amber-200', 'border-gray-200');
+        card.classList.remove('bg-amber-50', 'border-amber-200', 'bg-red-50', 'border-red-200');
+        card.classList.add('bg-gray-50', 'border-gray-200');
         card.dataset.status = 'answered';
+        if (isChecklistItem) card.dataset.reviewStatus = 'awaiting_review';
 
         const badge = card.querySelector('.question-status');
         if (badge) {
             badge.className = badge.className
-                .replace('bg-amber-100 text-amber-700', 'bg-green-100 text-green-700');
-            badge.textContent = 'Answered';
-            badge.setAttribute('aria-label', 'Status: Answered');
+                .replace(/bg-\S+ text-\S+/, isChecklistItem ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700');
+            badge.textContent = isChecklistItem ? 'Awaiting Review' : 'Answered';
+            badge.setAttribute('aria-label', `Status: ${badge.textContent}`);
         }
+
+        // The "returned" reason banner (if present) no longer applies once resubmitted.
+        card.querySelector('.bg-red-50.border-red-200')?.remove();
 
         const iconWrap = card.querySelector('[aria-hidden="true"].rounded-full');
         if (iconWrap) {
-            iconWrap.classList.replace('bg-amber-100', 'bg-gray-200');
-            iconWrap.querySelector('svg')?.classList.replace('text-amber-600', 'text-gray-500');
+            iconWrap.classList.remove('bg-amber-100', 'bg-red-100');
+            iconWrap.classList.add('bg-gray-200');
+            const icon = iconWrap.querySelector('svg');
+            icon?.classList.remove('text-amber-600', 'text-red-600');
+            icon?.classList.add('text-gray-500');
         }
 
         if (answeredAt) {
@@ -736,7 +751,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Pending banner update ─────────────────────────────────────────────────
 
     function updatePendingBanner() {
-        const remaining = section.querySelectorAll('.question-card[data-status="pending"]').length;
+        const remaining = section.querySelectorAll(
+            '.question-card[data-status="pending"], .question-card[data-review-status="returned"]'
+        ).length;
         const banner    = document.getElementById('pending-questions-warning');
         if (!banner) return;
 
@@ -749,6 +766,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const badgeEl = document.getElementById('pending-badge');
             if (countEl) countEl.textContent = remaining;
             if (badgeEl) badgeEl.textContent  = remaining;
+        }
+    }
+
+    // ── Assessment progress indicator ────────────────────────────────────────
+
+    function updateAssessmentProgress() {
+        const wrap = document.getElementById('assessment-progress');
+        if (!wrap) return;
+
+        const remainingNeedsAction = section.querySelectorAll(
+            '.question-card[data-review-status="pending"], .question-card[data-review-status="returned"]'
+        ).length;
+        const total = parseInt(wrap.dataset.total, 10) || 0;
+        const completed = Math.max(0, total - remainingNeedsAction);
+
+        wrap.dataset.completed = completed;
+        const countEl = document.getElementById('assessment-progress-count');
+        const barEl   = document.getElementById('assessment-progress-bar');
+        if (countEl) countEl.textContent = completed;
+        if (barEl && total > 0) {
+            barEl.style.width = `${Math.round((completed / total) * 100)}%`;
+            barEl.closest('[role="progressbar"]')?.setAttribute('aria-valuenow', completed);
         }
     }
 
