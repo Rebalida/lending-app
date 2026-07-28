@@ -14,6 +14,7 @@ class DirectorBankConnectionEmail extends Notification
     public function __construct(
         public Application $application,
         public string $directorName,
+        public string $signedUrl,
     ) {}
 
     public function via($notifiable): array
@@ -23,15 +24,13 @@ class DirectorBankConnectionEmail extends Notification
 
     public function toMail($notifiable): MailMessage
     {
-        $mail = (new MailMessage)
+        return (new MailMessage)
             ->subject('Bank Statement Connection Required')
             ->greeting('Hello!')
             ->line('Dear ' . $this->directorName . ',')
-            ->line('We require you to connect your bank account as part of the loan application process.')
+            ->line('We require you to fill in your living expenses as part of the loan application process.')
             ->line('Application: ' . $this->application->application_number)
-            ->action('Connect Bank Account', route('applications.show', $this->application))
+            ->action('Fill In Living Expenses', $this->signedUrl)
             ->line('If you have any questions, please don\'t hesitate to contact us.');
-
-        return $mail;
     }
 }

@@ -9,6 +9,7 @@ use App\Models\ActivityLog;
 use App\Notifications\Admin\DirectorBankConnectionEmail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
 
 class EmailDirectorsController extends Controller
 {
@@ -26,11 +27,20 @@ class EmailDirectorsController extends Controller
         }
 
         $subject = 'Bank Statement Connection Required';
-        $message = 'Please connect your bank account. [Dummy message for now]';
+        $body    = 'We require you to fill in your living expenses as part of the loan application process.';
 
         foreach ($directors as $director) {
-        Notification::route('mail', $director->email)
-            ->notify(new DirectorBankConnectionEmail($application, $director->full_name));
+            $signedUrl = URL::signedRoute('director.expenses.show', [
+                'application' => $application->id,
+                'director'    => $director->id,
+            ]);
+
+            Notification::route('mail', $director->email)
+                ->notify(new DirectorBankConnectionEmail(
+                    $application,
+                    $director->full_name,
+                    $signedUrl,
+                ));
 
             Communication::create([
                 'application_id' => $application->id,
@@ -40,7 +50,7 @@ class EmailDirectorsController extends Controller
                 'from_address'   => config('mail.from.address'),
                 'to_address'     => $director->email,
                 'subject'        => $subject,
-                'body'           => $message,
+                'body'           => $body,
                 'status'         => 'sent',
                 'sent_at'        => now(),
             ]);

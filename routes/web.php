@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\DirectorExpenseController;
 use App\Http\Controllers\Auth\EmailTwoFactorChallengeController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,3 +26,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     ->prefix('admin')
     ->name('admin.')
     ->group(base_path('routes/admin/adminRoutes.php'));
+
+Route::get('/director-expenses/{application}/{director}',
+    [DirectorExpenseController::class, 'show'])
+    ->name('director.expenses.show')
+    ->middleware('signed');
+
+Route::post('/director-expenses/{application}/{director}',
+    [DirectorExpenseController::class, 'store'])
+    ->name('director.expenses.store');
