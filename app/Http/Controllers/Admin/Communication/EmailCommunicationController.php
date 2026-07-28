@@ -29,6 +29,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class EmailCommunicationController extends Controller
 {
@@ -89,7 +90,20 @@ class EmailCommunicationController extends Controller
             $this->logOutboundCommunication($request, $application, $validated);
             $this->maybeStampLetterTimestamp($application, $validated['letter_type'] ?? null);
 
-            ActivityLog::logActivity('email_sent', 'Email sent to client', $application);
+            ActivityLog::logActivity(
+                'email_sent',
+                'Email sent to client',
+                $application,
+                null,
+                [
+                    'direction' => 'outbound',
+                    'subject'   => $validated['subject'],
+                    'to'        => $application->user->email,
+                    'excerpt'   => Str::limit($validated['message'], 150),
+                    'status'    => 'sent',
+                    'template'  => $validated['template_label'] ?? null,
+                ]
+            );
 
             return response()->json([
                 'success' => true,
@@ -187,7 +201,18 @@ class EmailCommunicationController extends Controller
         try {
             $communication = $this->logInboundCommunication($request, $application, $fromEmail, $subject, $body, $messageId);
 
-            ActivityLog::logActivity('email_received', 'Inbound email received from client', $application);
+            ActivityLog::logActivity(
+                'email_received',
+                'Inbound email received from client',
+                $application,
+                null,
+                [
+                    'direction' => 'inbound',
+                    'subject'   => $subject,
+                    'from'      => $fromEmail,
+                    'excerpt'   => Str::limit($body, 150),
+                ]
+            );
 
             $this->forwardToArchive($fromEmail, $subject, $body, $application);
 

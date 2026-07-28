@@ -92,6 +92,8 @@ class Application extends Model
         'submission_ip',
         'bank_api_provider_name',
         'bank_api_user_ref',
+        'bank_api_phone_used',
+        'bank_api_completed_at',
         'bank_api_report',
         'bank_api_report_received_at',
         'return_reason',
@@ -157,6 +159,7 @@ class Application extends Model
         'business_declaration_requested_at' => 'datetime',
         'document_signing_data'            => 'array',
         'bank_api_report_received_at' => 'datetime',
+        'bank_api_completed_at'       => 'datetime',
         'credit_sense_report_received_at' => 'datetime',
     ];
 
@@ -428,6 +431,18 @@ class Application extends Model
      */
     public function getStatusBadgeColor(): string
     {
+        return self::statusBadgeColor($this->status);
+    }
+
+    /**
+     * Get the badge color for an arbitrary status value (not necessarily
+     * this model's current status). Extracted from getStatusBadgeColor()
+     * so historical status values (e.g. from an activity log entry) can be
+     * colored identically to the live status badge shown elsewhere in the
+     * admin UI, without duplicating the color map.
+     */
+    public static function statusBadgeColor(string $status): string
+    {
         $colors = [
             self::STATUS_APPLICATION => 'blue',
             self::STATUS_WIP         => 'yellow',
@@ -437,8 +452,8 @@ class Application extends Model
             self::STATUS_DEFERRED    => 'gray',
             self::STATUS_SETTLED     => 'green',
         ];
-        
-        return $colors[$this->status] ?? 'gray';
+
+        return $colors[$status] ?? 'gray';
     }
 
     /**

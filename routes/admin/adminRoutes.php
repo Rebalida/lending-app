@@ -41,6 +41,8 @@ Route::get('/applications',                                 [ApplicationControll
     ->name('applications.index');
 Route::get('/applications/{application}',                   [ApplicationController::class, 'show'])
     ->name('applications.show');
+Route::get('/applications/{application}/activity-log',      [ApplicationController::class, 'activityLog'])
+    ->name('applications.activityLog');
 Route::patch('/applications/{application}/status',          [ApplicationController::class, 'updateStatus'])
     ->name('applications.updateStatus');
 Route::patch('/applications/{application}/assign',          [ApplicationController::class, 'assign'])

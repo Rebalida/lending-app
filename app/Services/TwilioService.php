@@ -10,6 +10,8 @@ namespace App\Services;
 
 use Twilio\Rest\Client;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use App\Models\ActivityLog;
 use App\Models\Communication;
 use App\Models\Application;
 use App\Models\Setting;
@@ -172,6 +174,25 @@ class TwilioService
 
         if ($application) {
             $this->logCommunication($application, $type, 'inbound', $cleanFrom, $body, $messageSid, 'delivered');
+
+            // handleIncoming() is the actual entry point for inbound SMS/WhatsApp —
+            // SmsCommunicationController::incoming() only delegates here and never
+            // sees $application/$cleanFrom/$body itself, so this is the only place
+            // this data is available to log against.
+            ActivityLog::logActivity(
+                'sms_received',
+                $type === 'whatsapp'
+                    ? "Incoming WhatsApp message from {$cleanFrom}"
+                    : "Incoming SMS from {$cleanFrom}",
+                $application,
+                null,
+                [
+                    'direction' => 'inbound',
+                    'from'      => $cleanFrom,
+                    'channel'   => $type,
+                    'excerpt'   => $body ? Str::limit($body, 150) : null,
+                ]
+            );
         }
 
         Log::info("Incoming {$type} from {$cleanFrom}: {$body}");

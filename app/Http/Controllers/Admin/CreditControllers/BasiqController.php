@@ -64,17 +64,23 @@ class BasiqController extends Controller
     ];
 
     /**
-     * Webhook events that signal the client's consent journey is complete.
+     * Webhook events that signal a bank connection has actually been established.
      *
      * When any of these event types is received and `bank_api_completed_at`
      * is not yet set, the application is marked as bank-connected.
      *
+     * `consent.created` was previously included here but was removed after
+     * diagnostic logs from a real abandoned-popup reproduction proved it can
+     * fire alone — with no `connection.created`/`connection.activated` and no
+     * report event ever following — meaning it does not reliably indicate a
+     * completed connection. Every captured successful connection included
+     * `connection.created`; the one captured failed/abandoned connection did not.
+     *
      * @var string[]
      */
-     private const COMPLETION_EVENTS = [
+    private const COMPLETION_EVENTS = [
         'connection.created',
         'connection.activated',
-        'consent.created',
     ];
 
     // =========================================================================
@@ -149,6 +155,19 @@ class BasiqController extends Controller
      */
     public function webhook(Request $request): JsonResponse
     {
+        // ── TEMPORARY DIAGNOSTIC — remove after root-cause investigation ────────
+        Log::info('[BASIQ-DIAG] webhook() called', [
+            'controller'      => static::class,
+            'method'          => 'webhook',
+            'request_url'     => $request->fullUrl(),
+            'request_method'  => $request->method(),
+            'query'           => $request->query(),
+            'body'            => $request->all(),
+            'headers'         => $request->headers->all(),
+            'timestamp'       => now()->toDateTimeString(),
+        ]);
+        // ── END TEMPORARY DIAGNOSTIC ──────────────────────────────────────────
+
         if (! $this->verifyWebhookSignature($request)) {
             Log::warning('[Basiq] Webhook signature mismatch.');
             return response()->json(['error' => 'Invalid signature.'], 401);
@@ -294,6 +313,21 @@ class BasiqController extends Controller
     {
         $isReportEvent = in_array($eventTypeId, self::REPORT_EVENTS);
 
+        // ── TEMPORARY DIAGNOSTIC — remove after root-cause investigation ────────
+        Log::info('[BASIQ-DIAG] handleReportEvent() called', [
+            'controller'       => static::class,
+            'method'           => 'handleReportEvent',
+            'application_id'   => $application->id,
+            'event_type'       => $eventTypeId,
+            'is_report_event'  => $isReportEvent,
+            'report_value_before' => $application->bank_api_report_received_at?->toIso8601String(),
+            'stack_trace'      => collect(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10))
+                                    ->map(fn($t) => ($t['class'] ?? '') . ($t['type'] ?? '') . ($t['function'] ?? '') . ':' . ($t['line'] ?? ''))
+                                    ->all(),
+            'timestamp'        => now()->toDateTimeString(),
+        ]);
+        // ── END TEMPORARY DIAGNOSTIC ──────────────────────────────────────────
+
         if (! $isReportEvent) {
             return;
         }
@@ -411,13 +445,47 @@ class BasiqController extends Controller
      */
     private function handleCompletionEvent(string $eventType, Application $application): void
     {
+        // ── TEMPORARY DIAGNOSTIC — remove after root-cause investigation ────────
+        Log::info('[BASIQ-DIAG] handleCompletionEvent() called', [
+            'controller'      => static::class,
+            'method'          => 'handleCompletionEvent',
+            'application_id'  => $application->id,
+            'event_type'      => $eventType,
+            'in_completion_events' => in_array($eventType, self::COMPLETION_EVENTS),
+            'value_before'    => optional($application->bank_api_completed_at)->toIso8601String(),
+            'stack_trace'     => collect(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10))
+                                    ->map(fn($t) => ($t['class'] ?? '') . ($t['type'] ?? '') . ($t['function'] ?? '') . ':' . ($t['line'] ?? ''))
+                                    ->all(),
+            'timestamp'       => now()->toDateTimeString(),
+        ]);
+        // ── END TEMPORARY DIAGNOSTIC ──────────────────────────────────────────
+
         if (! in_array($eventType, self::COMPLETION_EVENTS)) {
+            Log::info('[BASIQ-DIAG] handleCompletionEvent() — event not in COMPLETION_EVENTS, no-op', [
+                'application_id' => $application->id,
+                'event_type'     => $eventType,
+                'timestamp'      => now()->toDateTimeString(),
+            ]);
             return;
         }
 
         if ($application->bank_api_completed_at) {
+            Log::info('[BASIQ-DIAG] handleCompletionEvent() — already completed, no-op', [
+                'application_id' => $application->id,
+                'event_type'     => $eventType,
+                'timestamp'      => now()->toDateTimeString(),
+            ]);
             return;
         }
+
+        // ── TEMPORARY DIAGNOSTIC ──────────────────────────────────────────────
+        Log::warning('[BASIQ-DIAG] handleCompletionEvent() — WRITING bank_api_completed_at via webhook', [
+            'application_id' => $application->id,
+            'event_type'     => $eventType,
+            'reason'         => "webhook event '{$eventType}' is in COMPLETION_EVENTS",
+            'timestamp'      => now()->toDateTimeString(),
+        ]);
+        // ── END TEMPORARY DIAGNOSTIC ──────────────────────────────────────────
 
         $application->update([
             'bank_api_completed_at'  => now(),

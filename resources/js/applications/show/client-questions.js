@@ -239,6 +239,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let pollInterval = null;
         let pollTimeouts = 0;
+        let popupClosedAt = null;
+        // Same window whether the popup is open or already closed — the webhook
+        // is the source of truth and may legitimately land any time within it,
+        // even after the user has closed the popup.
         const MAX_POLL_DURATION = 15 * 60 * 1000; // 15 minutes
 
         try {
@@ -259,37 +263,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             pollInterval = setInterval(async () => {
 
-                // ── Primary signal: popup was closed by user ──────────────────────
-                if (popup.closed) {
-                    clearInterval(pollInterval);
-
+                // ── Popup was closed by the user — don't give up immediately.
+                //    The webhook is async and may land any time up to the overall
+                //    timeout below, so just keep polling check-completion. ──────
+                if (popup.closed && popupClosedAt === null) {
+                    popupClosedAt = Date.now();
                     if (connectLabel) connectLabel.textContent = 'Verifying connection…';
-
-                    try {
-                        // Always call /complete — it's idempotent, safe to call even if
-                        // the server already knows (e.g. via webhook)
-                        await fetch(`/applications/${appId}/basiq/complete`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrf(),
-                            },
-                        });
-
-                        await autoAnswerBankConnectQuestion(questionId, appId, card);
-
-                    } catch (e) {
-                        console.error('[Basiq] Failed to mark complete after popup closed', e);
-                        connectBtn.disabled = false;
-                        connectIcon?.classList.remove('hidden');
-                        connectSpinner?.classList.add('hidden');
-                        if (connectLabel) connectLabel.textContent = 'Connect My Bank';
-                        showToast('Could not confirm bank connection. Please try again.', 'error');
-                    }
-                    return;
                 }
 
-                // ── Fallback: server already knows (webhook fired while popup open) ─
+                // ── Poll the existing completion endpoint — covers both "webhook
+                //    fired while popup still open" and "webhook fires shortly
+                //    after the popup closes" with the same check. ───────────────
                 try {
                     const checkRes = await fetch(`/applications/${appId}/basiq/check-completion`, {
                         headers: { 'X-CSRF-TOKEN': csrf() },
@@ -299,19 +283,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (checkData.completed) {
                         clearInterval(pollInterval);
                         try { popup.close(); } catch (e) {}
-                        await autoAnswerBankConnectQuestion(questionId, appId, card);
+
+                        // Idempotent — the DB is already marked complete by the webhook,
+                        // this just confirms it via the existing completion flow.
+                        await fetch(`/applications/${appId}/basiq/complete`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrf(),
+                            },
+                        });
+
+                        await autoAnswerBankConnectQuestion(questionId, appId, card, 'basiq');
                         return;
                     }
                 } catch (err) {
                     console.error('[Basiq] Poll check failed:', err);
                 }
 
-                // ── Timeout guard ─────────────────────────────────────────────────
+                // ── Timeout guard — applies whether the popup is open or closed.
+                //    Closing the popup must not shorten how long we're willing to
+                //    wait for the webhook; only the overall timeout gives up. ────
                 pollTimeouts += 2000;
                 if (pollTimeouts > MAX_POLL_DURATION) {
                     clearInterval(pollInterval);
                     try { popup.close(); } catch (e) {}
-                    showToast('Connection timed out. Please try again.', 'error');
+                    showToast(
+                        popupClosedAt !== null
+                            ? 'Bank connection was not completed. Please try again.'
+                            : 'Connection timed out. Please try again.',
+                        'error'
+                    );
                     connectBtn.disabled = false;
                     connectIcon?.classList.remove('hidden');
                     connectSpinner?.classList.add('hidden');
@@ -476,16 +478,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function autoAnswerBankConnectQuestion(questionId, appId, card) {
+    async function autoAnswerBankConnectQuestion(questionId, appId, card, provider = 'creditsense') {
         try {
-            // Mark CreditSense complete on server
-            await fetch(`/applications/${appId}/creditsense/complete`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrf(),
-                },
-            });
+            // Only mark the provider that actually drove this completion.
+            // Basiq already recorded its own completion (via /basiq/complete)
+            // before calling this function — calling CreditSense's endpoint
+            // here as well would incorrectly stamp CreditSense fields and
+            // overwrite bank_api_provider_name back to "CreditSense".
+            if (provider === 'creditsense') {
+                await fetch(`/applications/${appId}/creditsense/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf(),
+                    },
+                });
+            }
 
             // Submit answer
             const answerRes = await fetch(card.dataset.answerRoute, {
@@ -501,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const answerData = await answerRes.json();
 
             if (answerData.success) {
-                markCardAnswered(card, new Date().toIso8601String());
+                markCardAnswered(card, new Date().toISOString());
                 showToast('Bank connection successful!', 'success');
                 announce('Bank account connected and question answered');
             }
