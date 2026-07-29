@@ -241,12 +241,12 @@ class SettingsController extends Controller
             'is_secret' => false,
             'hint'      => 'Default: https://api.creditsense.com.au — only change if CreditSense instructs otherwise.',
         ],
-        'creditsense_webhook_secret' => [
+        'creditsense_webhook_token' => [
             'group'     => 'creditsense',
-            'label'     => 'Webhook Secret',
+            'label'     => 'Webhook Token',
             'type'      => 'password',
             'is_secret' => true,
-            'hint'      => 'Used to verify the HMAC signature on incoming webhook payloads. Obtain from your CreditSense account manager.',
+            'hint'      => 'Token appended to the webhook URL for verification. Provided by CreditSense.',
         ],
         'creditsense_js_cdn' => [
             'group'     => 'creditsense',

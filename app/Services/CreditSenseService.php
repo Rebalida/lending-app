@@ -344,6 +344,7 @@ class CreditSenseService
                     'cs_app_id' => $csAppId,
                     'status'    => $response->status(),
                     'body'      => $body,
+                    'raw_body'  => $response->body(),
                 ]);
 
                 return $this->failFromBody($body, $response);

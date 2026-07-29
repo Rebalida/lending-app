@@ -176,6 +176,50 @@
 
             <span class="block text-xs font-medium text-gray-500 mb-1.5">Actions</span>
 
+            @if(\App\Models\Setting::where('key', 'active_bank_provider')->value('value') === 'creditsense')
+                <div x-data="{ fetching: false, message: null, isError: false }">
+                    <button type="button"
+                            :disabled="fetching"
+                            @click="
+                                fetching = true;
+                                message  = null;
+                                fetch('{{ route('admin.creditsense.fetchReport', $application) }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Accept': 'application/json',
+                                    },
+                                })
+                                .then(r => r.json())
+                                .then(d => {
+                                    fetching = false;
+                                    isError  = !d.success;
+                                    message  = d.message ?? d.error;
+                                    if (d.success) setTimeout(() => location.reload(), 1500);
+                                })
+                                .catch(() => {
+                                    fetching = false;
+                                    isError  = true;
+                                    message  = 'Request failed. Please try again.';
+                                });
+                            "
+                            class="w-full flex items-center gap-2.5 px-3 py-2 bg-white border border-gray-300
+                                rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50
+                                disabled:opacity-60 disabled:cursor-not-allowed transition text-left">
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        <span x-text="fetching ? 'Fetching…' : 'Fetch CS Report'"></span>
+                    </button>
+                    <p x-show="message"
+                    x-text="message"
+                    :class="isError ? 'text-red-600' : 'text-green-600'"
+                    class="mt-1 text-xs px-1"
+                    aria-live="polite"></p>
+                </div>
+            @endif
+
             {{-- Export PDF --}}
             <a href="{{ route('admin.applications.exportPdf', $application) }}"
                id="export-pdf-btn"

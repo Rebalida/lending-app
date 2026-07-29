@@ -208,9 +208,11 @@ class CreditSenseController extends Controller
      */
     public function webhook(Request $request): JsonResponse
     {
-        if (! $this->verifyWebhookSignature($request)) {
-            Log::warning('[CreditSense] Webhook signature mismatch.');
-            return response()->json(['error' => 'Invalid signature.'], 401);
+        $expectedToken = Setting::where('key', 'creditsense_webhook_token')->value('value');
+
+        if ($expectedToken && $request->query('token') !== $expectedToken) {
+            Log::warning('[CreditSense] Webhook token mismatch.');
+            return response()->json(['error' => 'Unauthorized.'], 401);
         }
 
         $payload = $request->all();
