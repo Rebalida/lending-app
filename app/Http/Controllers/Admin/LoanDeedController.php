@@ -57,14 +57,13 @@ class LoanDeedController extends Controller
             'guarantor_email'     => 'nullable|email|max:255',
             'guarantor_address'   => 'nullable|string|max:500',
 
-            // Financial table
+            // Financial table (Loan Detail) — total_repayments/total_repayment_amount/total_interest
+            // are computed below, never accepted from the request
             'principal_sum'          => 'required|string|max:50',
             'annual_percentage_rate' => 'required|string|max:50',
-            'total_interest'         => 'nullable|string|max:50',
             'repayment_cycle'        => 'required|string|max:50',
-            'total_repayments'       => 'nullable|string|max:50',
+            'loan_term_weeks'        => 'nullable|numeric|max:9999',
             'amount_per_repayment'   => 'nullable|string|max:50',
-            'total_repayment_amount' => 'nullable|string|max:50',
             'first_repayment_date'   => 'nullable|string|max:50',
 
             // Fees
@@ -134,8 +133,35 @@ class LoanDeedController extends Controller
             ->values()
             ->all();
 
+        // Total Number of Repayments — computed from Loan Term (Weeks) + Repayment Frequency,
+        // then fed into the existing repayment-schedule generator exactly as before (that method
+        // itself is unchanged — it already reads total_repayments from $data).
+        $validated['total_repayments'] = $this->calculateTotalRepayments(
+            $validated['loan_term_weeks'] ?? '',
+            $validated['repayment_cycle'] ?? ''
+        );
+
         // Schedule 2 — always regenerated from the current repayment settings above, never manually entered
         $validated['repayment_schedule'] = $this->generateRepaymentSchedule($validated);
+
+        // Total Repayment Amount — summed from the schedule just generated (which already applies
+        // the monthly-fee-in-first-repayment rule), not recalculated separately.
+        $validated['total_repayment_amount'] = $this->sumRepaymentAmounts($validated['repayment_schedule']);
+
+        // Loan Lent Including Fee — Loan Amount plus the settlement-time fees that are actually
+        // capitalized into the loan (Application/Legal/Valuation/Security Search/Security
+        // Registration), only when the "Include Upfront Fees in Loan Amount" checkbox is set.
+        // Exit Fee, Break Cost, and the fixed Manual Allocation Fee are deliberately excluded —
+        // they're contingent/later charges, not money advanced at drawdown (mirrors how the deed's
+        // own financial-table.blade.php already keeps Exit Fee/Break Cost out of its "due
+        // immediately" fee group).
+        $validated['loan_lent_including_fee'] = $this->calculateLoanLentIncludingFee($validated);
+
+        // Total Interest Payable — Total Repayment Amount minus Loan Lent Including Fee.
+        $validated['total_interest'] = $this->calculateTotalInterest(
+            $validated['total_repayment_amount'],
+            $validated['loan_lent_including_fee']
+        );
 
         // Preserve non-form keys already persisted (directors snapshot, signatures)
         $existing = $application->loan_deed_data ?? [];
@@ -274,13 +300,105 @@ class LoanDeedController extends Controller
      */
     private function addAmountStrings(string $amount, string $fee): string
     {
-        $amountNum = (float) preg_replace('/[^0-9.\-]/', '', $amount);
-        $feeNum    = (float) preg_replace('/[^0-9.\-]/', '', $fee);
+        $amountNum = $this->parseAmountString($amount);
+        $feeNum    = $this->parseAmountString($fee);
 
         if ($amountNum === 0.0 && $feeNum === 0.0) {
             return $amount;
         }
 
         return '$' . number_format($amountNum + $feeNum, 2);
+    }
+
+    /**
+     * Total Number of Repayments — Loan Term (Weeks) ÷ weeks-per-repayment for the selected
+     * Repayment Frequency (Weekly = 1, Fortnightly = 2, Monthly = 4), rounded up to the next
+     * whole repayment. Returns '' when there isn't enough information yet (mirrors the same
+     * "leave blank rather than error" behaviour generateRepaymentSchedule() already uses).
+     */
+    private function calculateTotalRepayments(string $loanTermWeeks, string $cycle): string
+    {
+        $weeks = (float) $loanTermWeeks;
+
+        if ($weeks <= 0 || empty($cycle)) {
+            return '';
+        }
+
+        $weeksPerRepayment = match ($cycle) {
+            'Fortnightly' => 2,
+            'Monthly'     => 4,
+            default       => 1, // Weekly
+        };
+
+        return (string) (int) ceil($weeks / $weeksPerRepayment);
+    }
+
+    /**
+     * Total Repayment Amount — summed from the already-generated repayment schedule, so the
+     * monthly-fee-in-first-repayment rule (already applied per row by generateRepaymentSchedule())
+     * is never recalculated a second time here.
+     */
+    private function sumRepaymentAmounts(array $schedule): string
+    {
+        if (empty($schedule)) {
+            return '';
+        }
+
+        $total = array_sum(array_map(
+            fn ($row) => $this->parseAmountString($row['amount'] ?? ''),
+            $schedule
+        ));
+
+        return '$' . number_format($total, 2);
+    }
+
+    /**
+     * Loan Lent Including Fee = Loan Amount + the settlement-time fees that are actually
+     * capitalized into the loan (Application/Legal/Valuation/Security Search/Security
+     * Registration), only when "Include Upfront Fees in Loan Amount" is checked. Exit Fee, Break
+     * Cost, and the fixed Manual Allocation Fee are deliberately excluded.
+     */
+    private function calculateLoanLentIncludingFee(array $data): string
+    {
+        $principalSum = $data['principal_sum'] ?? '';
+
+        if ($principalSum === '') {
+            return '';
+        }
+
+        if (empty($data['include_upfront_fees_in_loan_amount'])) {
+            return $principalSum;
+        }
+
+        $total = $this->parseAmountString($principalSum)
+            + $this->parseAmountString($data['application_fee'] ?? '')
+            + $this->parseAmountString($data['legal_fee'] ?? '')
+            + $this->parseAmountString($data['valuation_fee'] ?? '')
+            + $this->parseAmountString($data['security_search_fee'] ?? '')
+            + $this->parseAmountString($data['security_registration_fee'] ?? '');
+
+        return '$' . number_format($total, 2);
+    }
+
+    /**
+     * Total Interest Payable = Total Repayment Amount − Loan Lent Including Fee.
+     */
+    private function calculateTotalInterest(string $totalRepaymentAmount, string $loanLentIncludingFee): string
+    {
+        if ($totalRepaymentAmount === '' || $loanLentIncludingFee === '') {
+            return '';
+        }
+
+        $total = $this->parseAmountString($totalRepaymentAmount) - $this->parseAmountString($loanLentIncludingFee);
+
+        return '$' . number_format($total, 2);
+    }
+
+    /**
+     * Extract a numeric value from a free-text currency string (e.g. "$1,200.50" -> 1200.5).
+     */
+    private function parseAmountString(string $amount): float
+    {
+        return (float) preg_replace('/[^0-9.\-]/', '', $amount);
     }
 }

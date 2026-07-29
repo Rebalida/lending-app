@@ -169,36 +169,33 @@
                     </div>
                 @endif
 
-                {{-- Section 3: Financial Table --}}
+                {{-- Section 3: Loan Detail --}}
                 <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden mb-6">
                     <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
                         <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">
-                            Section 3 — Financial Table
+                            Section 3 — Loan Detail
                         </h3>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Total Number of Repayments, Total Repayment Amount and Total Interest Payable are calculated automatically from the fields below once saved.
+                        </p>
                     </div>
                     <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount of Capital Provided (Principal Sum) <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Loan Amount <span class="text-red-500">*</span></label>
                             <input type="text" name="principal_sum"
                                    value="{{ old('principal_sum', $deedData['principal_sum'] ?? '') }}"
                                    class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500" required>
                             @error('principal_sum')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Annual Percentage Rate <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Annual Interest Rate <span class="text-red-500">*</span></label>
                             <input type="text" name="annual_percentage_rate" placeholder="e.g. 12.5%"
                                    value="{{ old('annual_percentage_rate', $deedData['annual_percentage_rate'] ?? '') }}"
                                    class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500" required>
                             @error('annual_percentage_rate')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Total Interest Payable</label>
-                            <input type="text" name="total_interest"
-                                   value="{{ old('total_interest', $deedData['total_interest'] ?? '') }}"
-                                   class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Repayment Cycle <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Repayment Frequency <span class="text-red-500">*</span></label>
                             <select name="repayment_cycle"
                                     class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500" required>
                                 @foreach(['Weekly', 'Fortnightly', 'Monthly'] as $cycle)
@@ -209,10 +206,17 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Total Number of Repayments</label>
-                            <input type="text" name="total_repayments"
-                                   value="{{ old('total_repayments', $deedData['total_repayments'] ?? '') }}"
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Loan Term (Weeks)</label>
+                            <input type="number" name="loan_term_weeks" min="0" step="1"
+                                   value="{{ old('loan_term_weeks', $deedData['loan_term_weeks'] ?? '') }}"
                                    class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            @error('loan_term_weeks')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Total Number of Repayments</label>
+                            <p class="text-sm text-gray-900 border border-gray-200 rounded-md bg-gray-50 px-3 py-2">
+                                {{ $deedData['total_repayments'] ?: '—' }}
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Amount Per Repayment</label>
@@ -221,16 +225,32 @@
                                    class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Total Amount of Repayment</label>
-                            <input type="text" name="total_repayment_amount"
-                                   value="{{ old('total_repayment_amount', $deedData['total_repayment_amount'] ?? '') }}"
-                                   class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Total Repayment Amount</label>
+                            <p class="text-sm text-gray-900 border border-gray-200 rounded-md bg-gray-50 px-3 py-2">
+                                {{ $deedData['total_repayment_amount'] ?: '—' }}
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Date of First Repayment</label>
                             <input type="date" name="first_repayment_date"
                                    value="{{ old('first_repayment_date', $deedData['first_repayment_date'] ?? '') }}"
                                    class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Loan Lent Including Fee</label>
+                            <p class="text-sm text-gray-900 border border-gray-200 rounded-md bg-gray-50 px-3 py-2">
+                                {{ $deedData['loan_lent_including_fee'] ?: '—' }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Loan Amount plus Application, Legal, Valuation, Security Interest Search and Security
+                                Registration Fees when "Include Upfront Fees in Loan Amount" is checked in Section 4.
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Total Interest Payable</label>
+                            <p class="text-sm text-gray-900 border border-gray-200 rounded-md bg-gray-50 px-3 py-2">
+                                {{ $deedData['total_interest'] ?: '—' }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -478,22 +498,22 @@
                 </div>
 
                 {{-- Section 6: Loan Repayment Schedule (Schedule 2) — auto-generated on save from
-                     Section 3's First Repayment Date, Repayment Cycle and Total Number of Repayments
-                     (plus the Monthly Fee checkbox in Section 4), not manually entered. --}}
+                     Section 3's Loan Term (Weeks), Repayment Frequency, First Repayment Date and
+                     Amount Per Repayment (plus the Monthly Fee checkbox in Section 4), not manually entered. --}}
                 <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden mb-6">
                     <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
                         <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">
                             Section 6 — Loan Repayment Schedule
                         </h3>
                         <p class="text-xs text-gray-500 mt-1">
-                            Automatically generated from the First Repayment Date, Repayment Cycle and Total Number of
-                            Repayments in Section 3 once saved. Fill those in and save to see the schedule here.
+                            Automatically generated from the Loan Term (Weeks), Repayment Frequency, First Repayment Date
+                            and Amount Per Repayment in Section 3 once saved. Fill those in and save to see the schedule here.
                         </p>
                     </div>
                     <div class="p-6">
                         @php $repaymentRows = $deedData['repayment_schedule'] ?? []; @endphp
                         @if(empty($repaymentRows))
-                            <p class="text-sm text-gray-500">No schedule generated yet — save the form with a First Repayment Date, Repayment Cycle and Total Number of Repayments.</p>
+                            <p class="text-sm text-gray-500">No schedule generated yet — save the form with a Loan Term (Weeks), Repayment Frequency, First Repayment Date and Amount Per Repayment.</p>
                         @else
                             <table class="w-full text-sm">
                                 <thead>

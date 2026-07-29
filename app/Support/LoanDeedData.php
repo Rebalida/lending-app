@@ -89,15 +89,19 @@ class LoanDeedData
                 'email'     => $d->email,
             ])->values()->all(),
 
-            // Financial table
+            // Financial table (Loan Detail)
             'principal_sum'       => '$' . number_format((float) $application->loan_amount, 2),
             'annual_percentage_rate' => '',
-            'total_interest'      => '',
             'repayment_cycle'     => 'Weekly',
-            'total_repayments'    => (string) ($application->term_weeks ?? ''),
+            'loan_term_weeks'     => (string) ($application->term_weeks ?? ''),
             'amount_per_repayment' => '',
-            'total_repayment_amount' => '',
             'first_repayment_date' => '',
+
+            // Computed by Admin\LoanDeedController::store() from the fields above — never admin-typed
+            'total_repayments'          => '',
+            'total_repayment_amount'    => '',
+            'loan_lent_including_fee'   => '',
+            'total_interest'            => '',
 
             // Fees (editable amounts; fixed ones are hardcoded in the template)
             'application_fee'     => '',
