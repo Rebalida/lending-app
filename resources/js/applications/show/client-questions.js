@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elementSelector:     iframeSelector,
                 enableDynamicHeight: true,
                 params: { appRef: config.app_ref, centrelink: true },
-                callback: (code) => handleCsCallbackFromQuestion(code, appId, questionId, card, config),
+                callback: (code, csAppId) => handleCsCallbackFromQuestion(code, csAppId, appId, questionId, card, config),
             });
 
             connectBtn.closest('.flex.items-center')?.classList.add('hidden');
@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleCsCallbackFromQuestion(code, appId, questionId, card, config) {
+    function handleCsCallbackFromQuestion(code, csAppId, appId, questionId, card, config) {
         const iframeLoading = card.querySelector('.cs-iframe-loading');
         const iframeEl      = card.querySelector('.cs-iframe');
         const iframeError   = card.querySelector('.cs-iframe-error');
@@ -441,6 +441,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             case '3':
                 if (iframeLoading) iframeLoading.textContent = 'Verifying account…';
+
+                // Persist CreditSense's numeric App_ID so the admin "Fetch Report"
+                // action has a real App_ID to send to /report/download instead of
+                // falling back to the internal application_number.
+                if (csAppId && config.save_app_id_route) {
+                    fetch(config.save_app_id_route, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrf(),
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ app_id: csAppId }),
+                    }).catch(() => {}); // fire and forget
+                }
                 break;
 
             case '99':
