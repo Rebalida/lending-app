@@ -155,15 +155,17 @@
             position: relative;
         }
 
-        .progress-step::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            width: 100%;
-            height: 2px;
-            background: #E5E7EB;
-            z-index: -1;
+        @media (min-width: 768px) {
+            .progress-step::after {
+                content: '';
+                position: absolute;
+                top: 20px;
+                left: 50%;
+                width: 100%;
+                height: 2px;
+                background: #E5E7EB;
+                z-index: -1;
+            }
         }
 
         .progress-step:last-child::after {
