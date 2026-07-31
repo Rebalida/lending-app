@@ -45,7 +45,7 @@
             </div>
             <div>
                 <span class="text-sm font-medium text-gray-500">Loan Purpose:</span>
-                <p class="mt-1 text-xl font-semibold text-gray-900">{{ ucwords(str_replace('_', ' ', $application->loan_purpose)) }}</p>
+                <p class="mt-1 text-xl font-semibold text-gray-900">{{ \App\Support\LoanPurpose::label($application->loan_purpose) }}</p>
             </div>
             <div>
                 <span class="text-sm font-medium text-gray-500">Term:</span>

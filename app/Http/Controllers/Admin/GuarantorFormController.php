@@ -140,7 +140,7 @@ class GuarantorFormController extends Controller
             'borrower_name'         => $borrower?->company_name ?? $application->user->name,
             'borrower_abn'          => $borrower?->abn ?? '',
             'borrower_address'      => $borrower?->registered_address ?? '',
-            'facility_type'         => ucwords(str_replace('_', ' ', $application->loan_purpose ?? '')),
+            'facility_type'         => \App\Support\LoanPurpose::label($application->loan_purpose),
             'loan_amount'           => '$' . number_format($application->loan_amount, 2),
 
             'witness_full_name'     => '',

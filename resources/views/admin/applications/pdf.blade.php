@@ -357,12 +357,12 @@
         <tr><th>Application Number</th><td>{{ $application->application_number }}</td></tr>
         <tr><th>Loan Amount</th><td>${{ number_format($application->loan_amount, 2) }}</td></tr>
         <tr><th>Term</th><td>{{ $application->term_weeks }} weeks</td></tr>
-        <tr><th>Purpose</th><td>{{ ucwords(str_replace('_', ' ', $application->loan_purpose)) }}</td></tr>
+        <tr><th>Purpose</th><td>{{ \App\Support\LoanPurpose::label($application->loan_purpose) }}</td></tr>
         @if($application->loan_purpose_details)
         <tr><th>Purpose Details</th><td>{{ $application->loan_purpose_details }}</td></tr>
         @endif
         @if($application->security_type)
-        <tr><th>Security Type</th><td>{{ ucwords(str_replace('_', ' ', $application->security_type)) }}</td></tr>
+        <tr><th>Security Type</th><td>{{ \App\Support\SecurityType::label($application->security_type) }}</td></tr>
         @endif
         <tr>
             <th>Submitted At</th>

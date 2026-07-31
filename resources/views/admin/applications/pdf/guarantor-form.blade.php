@@ -99,7 +99,7 @@
             </div>
             <div class="loan-box-col">
                 <div class="lbl">Purpose</div>
-                <div class="val" style="font-size:10pt;">{{ ucwords(str_replace('_', ' ', $application->loan_purpose ?? 'N/A')) }}</div>
+                <div class="val" style="font-size:10pt;">{{ $application->loan_purpose ? \App\Support\LoanPurpose::label($application->loan_purpose) : 'N/A' }}</div>
             </div>
             <div class="loan-box-clear"></div>
         </div>

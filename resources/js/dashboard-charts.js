@@ -63,7 +63,7 @@ function initPurposeChart(data) {
     const el = document.getElementById('purposeChart');
     if (!el || !data.loanPurposeData?.length) return;
 
-    const labels = data.loanPurposeData.map(d => formatLabel(d.loan_purpose));
+    const labels = data.loanPurposeData.map(d => d.loan_purpose);
     const counts  = data.loanPurposeData.map(d => d.count);
 
     buildLegend('legend-purpose', labels.map((l, i) => ({

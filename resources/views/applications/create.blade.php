@@ -623,12 +623,9 @@
                                         <select name="loan_purpose" id="loan_purpose" required
                                                 class="form-input form-select @error('loan_purpose') error @enderror">
                                             <option value="">Select purpose...</option>
-                                            <option value="business_expansion" {{ old('loan_purpose') == 'business_expansion' ? 'selected' : '' }}>Business Expansion</option>
-                                            <option value="equipment_purchase" {{ old('loan_purpose') == 'equipment_purchase' ? 'selected' : '' }}>Equipment Purchase</option>
-                                            <option value="working_capital" {{ old('loan_purpose') == 'working_capital' ? 'selected' : '' }}>Working Capital</option>
-                                            <option value="property_purchase" {{ old('loan_purpose') == 'property_purchase' ? 'selected' : '' }}>Property Purchase</option>
-                                            <option value="debt_consolidation" {{ old('loan_purpose') == 'debt_consolidation' ? 'selected' : '' }}>Debt Consolidation</option>
-                                            <option value="other" {{ old('loan_purpose') == 'other' ? 'selected' : '' }}>Other</option>
+                                            @foreach (\App\Support\LoanPurpose::OPTIONS as $value => $label)
+                                                <option value="{{ $value }}" {{ old('loan_purpose') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                            @endforeach
                                         </select>
                                         @error('loan_purpose')
                                             <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
@@ -666,11 +663,9 @@
                                             <select name="security_type" id="security_type"
                                                     class="form-input form-select">
                                                 <option value="">Select security type...</option>
-                                                <option value="property" {{ old('security_type') == 'property' ? 'selected' : '' }}>Property</option>
-                                                <option value="equipment" {{ old('security_type') == 'equipment' ? 'selected' : '' }}>Equipment</option>
-                                                <option value="vehicle" {{ old('security_type') == 'vehicle' ? 'selected' : '' }}>Vehicle</option>
-                                                <option value="unsecured" {{ old('security_type') == 'unsecured' ? 'selected' : '' }}>Unsecured</option>
-                                                <option value="other" {{ old('security_type') == 'other' ? 'selected' : '' }}>Other</option>
+                                                @foreach (\App\Support\SecurityType::CREATE_OPTIONS as $value => $label)
+                                                    <option value="{{ $value }}" {{ old('security_type') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                @endforeach
                                             </select>
                                         </div>
                                     </div>

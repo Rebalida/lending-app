@@ -31,6 +31,7 @@ use App\Models\Application;
 use App\Models\Question;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\LoanPurpose;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -333,7 +334,11 @@ class DashboardController extends Controller
                 ->whereNotNull('loan_purpose')
                 ->groupBy('loan_purpose')
                 ->selectRaw('loan_purpose, COUNT(*) as count')
-                ->get(),
+                ->get()
+                ->map(fn ($row) => [
+                    'loan_purpose' => LoanPurpose::label($row->loan_purpose),
+                    'count' => $row->count,
+                ]),
 
             'statusData' => Application::query()
                 ->groupBy('status')

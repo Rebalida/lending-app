@@ -13,7 +13,7 @@
                 ?? $application->user->name;
     $appNumber   = $application->application_number;
     $loanAmount  = number_format($application->loan_amount, 2);
-    $loanPurpose = ucwords(str_replace('_', ' ', $application->loan_purpose ?? ''));
+    $loanPurpose = \App\Support\LoanPurpose::label($application->loan_purpose);
     $termMonths  = $application->term_months;
     $fromName    = config('app.name', 'Our Team');
 @endphp

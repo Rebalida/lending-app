@@ -263,16 +263,16 @@
                         <div>
                             <div class="flex justify-between items-center mb-4">
                                 <label class="text-sm font-semibold text-gray-700">Loan Amount</label>
-                                <span class="text-2xl font-bold text-indigo-600" id="loanAmount">$100,000</span>
+                                <span class="text-2xl font-bold text-indigo-600" id="loanAmount">$20,000</span>
                             </div>
                             <div class="py-2 range-wrapper">
                                 <div class="range-background"></div>
                                 <div class="range-fill" id="loanFill"></div>
-                                <input type="range" min="10000" max="1000000" value="100000" step="10000" id="loanSlider" class="w-full">
+                                <input type="range" min="3000" max="150000" value="20000" step="1000" id="loanSlider" class="w-full">
                             </div>
                             <div class="flex justify-between text-xs text-gray-500 mt-2">
-                                <span>$10K</span>
-                                <span>$1M</span>
+                                <span>$3K</span>
+                                <span>$150K</span>
                             </div>
                         </div>
 
@@ -280,16 +280,16 @@
                         <div>
                             <div class="flex justify-between items-center mb-4">
                                 <label class="text-sm font-semibold text-gray-700">Loan Term</label>
-                                <span class="text-xl font-bold text-indigo-600" id="loanTerm">36 months</span>
+                                <span class="text-xl font-bold text-indigo-600" id="loanTerm">12 months</span>
                             </div>
                             <div class="py-2 range-wrapper">
                                 <div class="range-background"></div>
                                 <div class="range-fill" id="termFill"></div>
-                                <input type="range" min="12" max="84" value="36" step="12" id="termSlider" class="w-full">
+                                <input type="range" min="3" max="60" value="12" step="1" id="termSlider" class="w-full">
                             </div>
                             <div class="flex justify-between text-xs text-gray-500 mt-2">
-                                <span>12 months</span>
-                                <span>84 months</span>
+                                <span>3 months</span>
+                                <span>60 months</span>
                             </div>
                         </div>
 
@@ -314,15 +314,15 @@
                         <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 mt-6">
                             <div class="flex justify-between items-center mb-4">
                                 <span class="text-gray-700 font-medium">Monthly Payment</span>
-                                <span class="text-3xl font-bold text-indigo-600" id="monthlyPayment">$3,133</span>
+                                <span class="text-3xl font-bold text-indigo-600" id="monthlyPayment">$1,853</span>
                             </div>
                             <div class="flex justify-between items-center mb-4">
                                 <span class="text-gray-700 font-medium">Total Interest</span>
-                                <span class="text-xl font-semibold text-gray-900" id="totalInterest">$12,788</span>
+                                <span class="text-xl font-semibold text-gray-900" id="totalInterest">$2,233</span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-gray-700 font-medium">Total Repayment</span>
-                                <span class="text-xl font-semibold text-gray-900" id="totalRepayment">$112,788</span>
+                                <span class="text-xl font-semibold text-gray-900" id="totalRepayment">$22,233</span>
                             </div>
                         </div>
 

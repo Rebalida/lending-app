@@ -37,7 +37,7 @@ class BusinessDeclarationData
         return [
             'borrower_name'       => $borrower?->borrower_name ?? $personal?->full_name ?? $application->user->name,
             'loan_purpose'        => trim(
-                ucwords(str_replace('_', ' ', $application->loan_purpose ?? ''))
+                LoanPurpose::label($application->loan_purpose)
                 . ($application->loan_purpose_details ? ' — ' . $application->loan_purpose_details : '')
             ),
             'loan_amount_display' => '$' . number_format((float) $application->loan_amount, 2),
